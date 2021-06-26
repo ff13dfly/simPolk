@@ -1,0 +1,20 @@
+<div class="row" id="node_list">
+	
+</div>
+<script type="text/javascript" charset="utf-8" src="lib/pager.js"></script>
+<script type="text/javascript">
+	var dt='<div class="col-lg-12">{url} : {account}</div>';
+	var translate=function(){};
+	var con='#node_list';
+	var ajaxFun=function(page,ck){
+		simPolk.request('node','list',{},function(res){
+			console.log(res)
+			ck && ck(res.node);
+		});
+	}
+	var auto=[];
+	var setting={};
+	var events={}
+	pager.show(dt,translate,con,ajaxFun,auto,setting,events);
+	
+</script>

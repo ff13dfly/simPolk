@@ -1,0 +1,20 @@
+<div class="row">
+	<div class="col-lg-9">
+		<input type="text" class="form-control" name="storage_key" id="storage_key" value="" />
+	</div>
+	<div class="col-lg-3">
+		<button class="btn btn-lg btn-primary" id="storage_search">Search Storage</button>
+	</div>
+</div>
+
+<script type="text/javascript">
+	$('#storage_search').on('click',function(){
+		var k=$('#storage_key').val();
+		if(!k) return false;
+		
+		simPolk.request('storage','key',{'k':k},function(res){
+			console.log(res)
+		});
+		
+	});
+</script>

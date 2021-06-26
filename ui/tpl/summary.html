@@ -1,0 +1,22 @@
+<div class="row">
+	<div class="col-sm-7">
+		<h3>simPolk is a simulator for polkadot. ok?</h3>
+	</div>
+	<div class="col-sm-4 text-right">
+		<button class="btn btn-lg btn-primary" id="init_network">Restruct data</button>
+		<button class="btn btn-lg btn-danger" id="reset_network">Reset network</button>
+	</div>
+</div>
+
+<div class="row">
+	<div class="col-lg-12">
+	</div>
+</div>
+
+<script type="text/javascript">
+	$('#reset_network').on('click',function(){
+		simPolk.request('chain','reset',{},function(res){
+			console.log(res)
+		});
+	});
+</script>
