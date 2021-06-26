@@ -32,52 +32,52 @@
 		
 		'nodes'		=>	array(
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_01.php',
+				'url'		=>	'http://localhost/simPolk/network/s_01.php',
 				'account'	=>	'5r9E41L7tb8PstabiPKsJm56q8XeMqoA43Zmxbn9NwTmvKh75468McNpv2ZYTH8i',
 				'sign'		=>	'',
 			),
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_02.php',
+				'url'		=>	'http://localhost/simPolk/network/s_02.php',
 				'account'	=>	'GiPLyuNqog6FYypM1saRXfsJh2PDVRSH6G7gg4oYMF894SE3kAC7dhutUVFHG42T',
 				'sign'		=>	'',
 			),
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_03.php',
+				'url'		=>	'http://localhost/simPolk/network/s_03.php',
 				'account'	=>	'hmAaXc3K4mLTf8LdhnrmrWE92smnj4nzpf9NNaxZSkhV6gPi2SzC5Ye3VFYQBPME',
 				'sign'		=>	'',
 			),
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_04.php',
+				'url'		=>	'http://localhost/simPolk/network/s_04.php',
 				'account'	=>	'tYRDbF6M2HUtmJ4bcPc1Sr7LyykN6WtBwAus5bWmhmdEhEYH5hXjsJ4HteQNKFLN',
 				'sign'		=>	'',
 			),
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_05.php',
+				'url'		=>	'http://localhost/simPolk/network/s_05.php',
 				'account'	=>	'VBtXmdeYKZD96KfwrAg8PCPBN8XhLw77Nznn3mWhp1QKEer5ezYcuEJ3MyA3Pm7Y',
 				'sign'		=>	'',
 			),
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_06.php',
+				'url'		=>	'http://localhost/simPolk/network/s_06.php',
 				'account'	=>	'8ZBtjgKDgMP4MikruFcUqejToht97PTnnVQCDBUZ6GnLBtmxnduyCZaX2JG2yhK7',
 				'sign'		=>	'',
 			),
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_07.php',
+				'url'		=>	'http://localhost/simPolk/network/s_07.php',
 				'account'	=>	'CNJViGivLzcZiXDC6YSDKYYYvjSuZCqpEd8CCB9AK7ue6pcpY9YAeRgpouLPAWtJ',
 				'sign'		=>	'',
 			),
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_08.php',
+				'url'		=>	'http://localhost/simPolk/network/s_08.php',
 				'account'	=>	'tC3dfEdQMT3pGXvuzchn6fpLBzaf8TBD2N5HN7yyo1fqzRzCkJopso7Uf3DWGQ5m',
 				'sign'		=>	'',
 			),
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_09.php',
+				'url'		=>	'http://localhost/simPolk/network/s_09.php',
 				'account'	=>	'RnHHuSfeJE3HvduemawHWAJijZUAzx5RpUzwrQX7BYBGrjkNVHcppyaoWKn9TLz9',
 				'sign'		=>	'',
 			),
 			array(
-				'url'		=>	'http://127.0.0.1/world/simulator/network/s_10.php',
+				'url'		=>	'http://localhost/simPolk/network/s_10.php',
 				'account'	=>	'4ijWvnXuCmzZy1ACUVJsjc7RQ5qXmqNbtJPcfrZtWE8ukfRMW5HyStHP88Tga3Yv',
 				'sign'		=>	'',
 			),
