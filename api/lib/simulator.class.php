@@ -50,7 +50,9 @@ class Simulator extends CORE{
 	
  	public function __construct(){}
 	public function __destruct(){}
-	public static function getInstance(){ return CORE::init(get_class());}
+	public static function getInstance(){
+		return CORE::init(get_class());
+	}
 	
 	//主入口，进行自动路由的地方
 	

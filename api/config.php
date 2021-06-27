@@ -5,6 +5,13 @@
 		'basecoin'		=>	100,			//reward for creating block
 		'password'		=>	'123456',		//default password for simulate account
 		
+		'redis'			=>	array(			//redis setting
+			'host'		=>	'localhost',
+			'port'		=>	6379,
+			'auth'		=>	'authKEY',
+			'timeout'	=>	3600,
+		),
+
 		'prefix'		=>	array(
 			'chain'		=>	'ch_',			//block number prefix
 			'storage'	=>	'sg_',			//storage key prefix

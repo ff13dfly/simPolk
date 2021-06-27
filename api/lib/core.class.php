@@ -1,22 +1,22 @@
 <?php
-
-define('CACHE_REIDS_HOST',		'localhost');
-define('CACHE_REIDS_PORT',		6379);
-define('CACHE_REIDS_AUTH',		'authKEY');
-define('CACHE_REIDS_TIMEOUT',	3600);
-
 class CORE {
 	private static $instanceMap = array();
 	private $cRedis;
+	private $redis_config;
 	public function __clone(){trigger_error('[core]Clone is not allow!', E_USER_ERROR);}
 	
 	protected static function init($className) {
+		
 		if (!isset(self::$instanceMap[$className])){
 			$object = new $className;
 			if ($object instanceof CORE) self::$instanceMap[$className] = $object;
 			else exit('[core]error,please check your code...');
 		}
 		return self::$instanceMap[$className];
+	}
+
+	public function setRedisConfig($redis){
+		$this->redis_config=$redis;
 	}
 	
 	/*Merkle tree*/
@@ -189,8 +189,9 @@ class CORE {
 		if(!class_exists('Redis')){exit('no redis support');}
 		if(!$this->cRedis){
 			$redis=new Redis();
-			if($redis->connect(CACHE_REIDS_HOST,CACHE_REIDS_PORT)){
-				$redis->auth(CACHE_REIDS_AUTH);
+			$rcfg=$this->redis_config;
+			if($redis->connect($rcfg['host'],$rcfg['port'])){
+				$redis->auth($rcfg['auth']);
 				$this->cRedis=$redis;
 				return true;
 			}else{

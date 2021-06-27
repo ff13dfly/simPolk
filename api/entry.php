@@ -21,6 +21,7 @@ include 'lib'.DS.'core.class.php';
 include 'lib'.DS.'simulator.class.php';
 
 $a=Simulator::getInstance();		//初始化，后面才能调用
+$a->setRedisConfig($cfg['redis']);
 
 $res=$a->autoRun($cfg,$a);
 
