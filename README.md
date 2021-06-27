@@ -42,9 +42,9 @@ git clone https://github.com/ff13dfly/simPolk
 
 ```javascript
 {
-    'url'		=>	'http://localhost/simPolk/network/s_01.php',
-    'account'	=>	'5r9E41L7tb8PstabiPKsJm56q8XeMqoA43Zmxbn9NwTmvKh75468McNpv2ZYTH8i',
-	'sign'		=>	'',
+    'url'      :    'http://localhost/simPolk/network/s_01.php',
+    'account'  :    '5r9E41L7tb8PstabiPKsJm56q8XeMqoA43Zmxbn9NwTmvKh75468McNpv2ZYTH8i',
+    'sign'     :    '',
 }
 ```
 
