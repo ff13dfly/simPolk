@@ -30,7 +30,7 @@ class Block{
 				break;
 				
 			case 'current':
-				$list=$core->getList($cfg['keys']['collected']);
+				$list=$core->getList($cfg['keys']['transfer_collected']);
 				$cs=array();
 				$mtree=array();
 				foreach($list as $v){

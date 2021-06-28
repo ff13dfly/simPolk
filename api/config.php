@@ -25,12 +25,14 @@
 		),
 		
 		'keys'			=>	array(
-			'start'			=>	'sim_start',		//simulator start timestamp, used to calc block number
-			'collected'		=>	'sim_collected',	//what is collected now.
-			'height'		=>	'block_height',		//now height
-			'storage'		=>	'sim_storage',		//storage map entry key
-			'accounts'		=>	'sim_accounts',		//account hashmap entry
-			'account_list'	=>	'all_accounts',		//account list
+			'start'					=>	'sim_start',		//simulator start timestamp, used to calc block number
+			'transfer_collected'	=>	'sim_collected',	//what is collected now.
+			'storage_collected'		=>	'sim_storage',		//storage map entry key
+			'contact_collected'		=>	'sim_contact',		//contact map entry key
+
+			'height'				=>	'block_height',		//now height
+			'accounts'				=>	'sim_accounts',		//account hashmap entry
+			'account_list'			=>	'all_accounts',		//account list
 		),
 		'white_list'	=>	array(				//request server control
 		

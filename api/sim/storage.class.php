@@ -8,8 +8,22 @@ class Storage{
 				
 				return $this->getStorage($k);
 				break;
+
 			case 'get':
 				return $this->blockList(0,30);
+				break;
+
+			case 'set':
+				$row=array(
+					
+				);
+				$key=$cfg['keys']['collected'];
+				$core->pushList($key,json_encode($row));
+				return array(
+					'success'	=>TRUE,
+					'count'		=>$core->lenList($key),
+				);
+				break;
 			default:
 				
 				break;

@@ -64,7 +64,7 @@ class Chain{
 				$row['from']['account']=$param['from'];
 				$row['from']['stamp']=time();
 				
-				$key=$cfg['keys']['collected'];
+				$key=$cfg['keys']['transfer_collected'];
 				
 				$core->pushList($key,json_encode($row));
 				return array(

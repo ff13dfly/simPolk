@@ -76,7 +76,7 @@ class Simulator extends CORE{
 		//echo json_encode($cur).'<hr>';
 		
 		//2.处理遗留的block生成，检查数据和区块高度
-		$key_collected=$cfg['keys']['collected'];
+		$key_collected=$cfg['keys']['transfer_collected'];
 		$height=$core->getKey($cfg['keys']['height']);
 		if($core->existsKey($key_collected)){
 			$data=json_decode($core->getKey($key_collected));
