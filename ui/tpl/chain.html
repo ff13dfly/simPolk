@@ -1,0 +1,65 @@
+<div class="row">
+    <div class="col-lg-9">
+        <h4 id="block_current"></h4>
+        <p>Current block height</p>
+    </div>
+
+    <div class="col-lg-9" id="server_current">
+
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <hr>
+    </div>
+    <div class="col-lg-9">
+        <h4>Collected Transfer List</h4>
+    </div>
+</div>
+<div class="row" id="collected_transfer">
+
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <hr>
+    </div>
+    <div class="col-lg-9">
+        <h4>Collected Storage List</h4>
+    </div>
+</div>
+<div class="row" id="collected_storage">
+
+</div>
+
+<div class="row">
+    <div class="col-lg-12">
+        <hr>
+    </div>
+    <div class="col-lg-9">
+        <h4>Collected Contact List</h4>
+    </div>
+</div>
+<div class="row" id="collected_contact">
+
+</div>
+
+<script type="text/javascript">
+    simPolk.request('chain', 'current', {}, function(res) {
+        //console.log(res)
+        $('#block_current').html(res.current.current_block);
+        $('#server_current').html(res.current.server.url);
+
+        var dom = '';
+        for (var k in res.data) {
+            var row = res.data[k];
+
+            dom += '<div class="col-lg-12">' + JSON.stringify(row) + '</div>'
+        }
+        $('#collected_transfer').html(dom);
+
+        var mtree = '<h5>Merkle tree</h5>' + JSON.stringify(res.merkle)
+        $('#collected_transfer').append(mtree);
+    });
+</script>

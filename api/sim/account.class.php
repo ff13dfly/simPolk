@@ -4,12 +4,20 @@ class Account{
 	private $cur;
 	private $db;
 	
+	//account struct
 	private $struct=array(
 		'type'		=>	'user',
 		'nickname'	=>	'',
 		'uxto'		=>	array(),
 	);
 	
+	/* router
+	@param	$act	string		//$_GET['act],router key
+	@param	$param	array		//params from URI
+	@param	&$core	object		//link to redis db object
+	@param	$cur	array		//current blockchain status, calced by simulator.class.php
+	@param	$cfg	array		//the global config
+	*/
 	public function task($act,$param,&$core,$cur,$cfg){
 		$this->env=$cfg;
 		$this->cur=$cur;

@@ -30,24 +30,7 @@ class Block{
 				break;
 				
 			case 'current':
-				$list=$core->getList($cfg['keys']['transfer_collected']);
-				$cs=array();
-				$mtree=array();
-				foreach($list as $v){
-					$cs[]=json_decode($v,TRUE);
-					$mtree[]=$core->encry($v);
-				}
 				
-				if(!empty($mtree)){
-					$core->merkle($mtree);
-				}
-				
-				return array(
-					'success'	=>	TRUE,
-					'data'		=>	$cs,
-					'current'	=>	$cur,
-					'merkle'	=>	$mtree,
-				);
 				
 				break;
 			
