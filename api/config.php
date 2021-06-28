@@ -1,10 +1,6 @@
 <?php
 	return array(
-		'name'			=>	'VBC',			//coin name
-		'speed'			=>	30,				//block created speed (block/second)
-		'basecoin'		=>	100,			//reward for creating block
-		'password'		=>	'123456',		//default password for simulate account
-		
+		//sim-chain db setting
 		'redis'			=>	array(			//redis setting
 			'host'		=>	'localhost',
 			'port'		=>	6379,
@@ -12,18 +8,18 @@
 			'timeout'	=>	3600,
 		),
 
-		'prefix'		=>	array(
-			'chain'		=>	'ch_',			//block number prefix
-			'storage'	=>	'sg_',			//storage key prefix
-			'coins'		=>	'uc_',			//use coin ammount prefix
-		),
-		
+		//sim-chain basic setting
+		'name'			=>	'VBC',			//coin name
+		'speed'			=>	30,				//block created speed (block/second)
+		'basecoin'		=>	100,			//reward for creating block
+		'password'		=>	'123456',		//default password for simulate account
 		'cost'			=>	array(
 			'transfer'	=>	0,
 			'storage'	=>	10,
 			'contact'	=>	10,
 		),
 		
+		//sim-chain db keys setting
 		'keys'			=>	array(
 			'start'					=>	'sim_start',		//simulator start timestamp, used to calc block number
 			'transfer_collected'	=>	'sim_collected',	//what is collected now.
@@ -34,6 +30,13 @@
 			'accounts'				=>	'sim_accounts',		//account hashmap entry
 			'account_list'			=>	'all_accounts',		//account list
 		),
+		'prefix'		=>	array(
+			'chain'		=>	'ch_',			//block number prefix
+			'storage'	=>	'sg_',			//storage key prefix
+			'coins'		=>	'uc_',			//use coin ammount prefix
+		),
+		
+		//sim-chain network setting
 		'white_list'	=>	array(				//request server control
 		
 		),

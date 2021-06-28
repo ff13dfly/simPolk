@@ -1,15 +1,25 @@
-# simPolk的UI使用
+# simPolk的API说明
 
-## 概述部分
+## 结构设计
 
-## 区块信息
+## 调用方式
+通过调用URI参数里的mod和act进行路由，mod对应的是sim目录下对应的类，每个类下都有一个task方法，通过参数act进行内部路由。
+## 功能说明
 
-## 账户管理
+* 自动补块
+* 梅克尔树
+### lib目录
+* core.class.php
 
-## 转账功能
+* simulator.class.php
 
-## 链上存储
+### sim目录
+* account.class.php
 
-## 智能合约
+* block.class.php
 
-## 服务器节点
+* chain.class.php
+
+* node.class.php
+
+* storage.class.php
