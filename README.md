@@ -17,47 +17,26 @@ simPolk是一套完整的区块链模拟器，可以在单台主机上模拟区�
 
 ## 快速部署simPolk（约3分钟）
 1.使用以下命令拷贝simPolk到支持php运行的目录。
+```
 git clone https://github.com/ff13dfly/simPolk
+```
 
 2.配置redis运行环境。
 如您未对redis进行配置的话，默认参数即可以正常的运行。
 或者，您可以编辑配置文件，输入正确的redis运行参数。
 
 3.现在，您就可以在浏览器里查看模拟链的运行情况啦
-请在浏览器里输入以下网址：http://localhost/simPolk/ui
-
-## simPolk功能
-### 账户建立
-
-### 进行转账
-
-### 区块浏览
-
-### 链上数据
-### 智能合约
-
-## 更多的区块链配置
-1.模拟服务器的配置
-位于config的nodes键值下，数据结构为：
-
-```javascript
-{
-    'url'      :    'http://localhost/simPolk/network/s_01.php',
-    'account'  :    '5r9E41L7tb8PstabiPKsJm56q8XeMqoA43Zmxbn9NwTmvKh75468McNpv2ZYTH8i',
-    'sign'     :    '',
-}
+请在浏览器里输入以下网址：
+```
+http://localhost/simPolk/ui
 ```
 
-2.出块速度的配置
+## 更多功能
 
-3.模拟链的经济系统配置
+* [simPolk功能](manual/ui_zh.md)
 
-## 深入了解simPolk
+* [模拟链配置](manual/config_zh.md)
 
-### 10分钟建立模拟器
-### simPolk的操作
-### simPolk的接口调用
-### simPolk的智能合约
-## 发展规划
-### 多种区块链数据模拟
-### 可选的跨链连接
+* [模拟链节点配置](manual/node_zh.md)
+
+* [模拟链开发](manual/api_zh.md)
