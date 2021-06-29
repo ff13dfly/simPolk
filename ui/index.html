@@ -3,11 +3,12 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Polkadot Simulator v0.1</title>
     <link rel="stylesheet" type="text/css" href="lib/bootstrap/css/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="css/common.css" />
     <script type="text/javascript" charset="utf-8" src="lib/jquery/jquery-3.1.1.min.js"></script>
-    <script type="text/javascript" charset="utf-8" src="lib/bootstrap/js/bootstrap.min.js"></script>
+    <script type="text/javascript" charset="utf-8" src="lib/bootstrap/js/bootstrap.bundle.min.js"></script>
     <script type="text/javascript" charset="utf-8" src="lib/framework.js"></script>
     <script type="text/javascript" charset="utf-8" src="lib/request.js"></script>
     <style type="text/css">
@@ -20,66 +21,72 @@
 </head>
 
 <body>
-    <section>
-        <div class="content-wrapper">
+    <main>
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Ninth navbar example">
+            <div class="container-xl">
+                <a class="navbar-brand" href="#">simPolk , a polkdot simulator</a>
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+              </button>
 
-            <div class="navbar navbar-fixed-top" id="menu">
-                <div class="navbar-inner">
-                    <div class="container">
-                        <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                            <span class="icon-bar"></span>
-                        </a>
-                        <a class="brand" href="#">
-                            <img loading="lazy" src="static/logo.png" width="35" alt="Polkadot simulator logo" />
-                        </a>
-                        <div class="nav-collapse">
-                            <ul class="nav">
-                                <li class="active">
-                                    <a href="#summary">Summary</a>
-                                </li>
-                                <li>
-                                    <a href="#chain">Chain</a>
-                                </li>
-                                <li>
-                                    <a href="#account">Account</a>
-                                </li>
-                                <li>
-                                    <a href="#transfer">Transfer</a>
-                                </li>
-                                <li>
-                                    <a href="#storage">Storage</a>
-                                </li>
-                                <li>
-                                    <a href="#contact">Contact</a>
-                                </li>
-                                <li>
-                                    <a href="#node">Node</a>
-                                </li>
+                <div class="collapse navbar-collapse" id="navbarsExample07XL">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <li class="nav-item">
+                            <a class="nav-link active" href="#summary">Summary</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#chain">Chain</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#account">Account</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#transfer">Transfer</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#storage">Storage</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#contact">Contact</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="#node">Node</a>
+                        </li>
+                        <!-- <li class="nav-item">
+                            <a class="nav-link disabled" href="#" tabindex="-1" aria-disabled="true">Disabled</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="dropdown07XL" data-bs-toggle="dropdown" aria-expanded="false">Dropdown</a>
+                            <ul class="dropdown-menu" aria-labelledby="dropdown07XL">
+                                <li><a class="dropdown-item" href="#">Action</a></li>
+                                <li><a class="dropdown-item" href="#">Another action</a></li>
+                                <li><a class="dropdown-item" href="#">Something else here</a></li>
                             </ul>
-                        </div>
-                    </div>
+                        </li> -->
+                    </ul>
+                    <form>
+                        <input class="form-control" type="text" placeholder="Search" aria-label="Search">
+                    </form>
                 </div>
             </div>
-            <div id="template" style="display: none;">
-
-            </div>
-        </div>
-        <section>
+        </nav>
+    </main>
+    <section id="template" style="display: none;">
+    </section>
 </body>
 <script type="text/javascript">
-    $('.nav li a').on('click', function() {
+    $('.navbar-nav .nav-item a').on('click', function() {
+        //console.log('hello')
         $(this).parent().addClass('active').siblings().removeClass('active');
         simPolk.load($(this).attr('href').slice(1), '#template');
     });
 
-    $('.nav').find('.active a').trigger('click');
+    $('.nav-item').find('.active a').trigger('click');
 
     $(function() {
         if (location.hash) {
             var tag = location.hash.slice(1);
-            $('.nav').find('a[href="#' + tag + '"]').trigger('click');
+            $('.nav-item').find('a[href="#' + tag + '"]').trigger('click');
         }
     });
 </script>

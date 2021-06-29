@@ -13,6 +13,9 @@ class Sample{
 			case 'list':
 				return array(
 					'success'	=>	TRUE,
+					'node'		=>	$cfg['nodes'],
+					'cur'		=>	$cur,
+					'param'		=>	$param,
 				);
 				
 				break;

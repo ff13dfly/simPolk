@@ -32,7 +32,6 @@ class Chain{
 				break;
 				
 			case 'reset':		//重置模拟的blockchain网络
-				
 				foreach($cfg['keys'] as $key){
 					$core->delKey($key);
 				}
@@ -41,6 +40,9 @@ class Chain{
 					'success'	=>	TRUE,
 				);
 				
+				break;
+			case 'restruct':	//restruct all data
+
 				break;
 				
 			case 'save':		//处理保存，调用definition对key进行定义
@@ -68,15 +70,7 @@ class Chain{
 				);
 				break;
 				
-			case 'transfer':
-				//echo json_encode($param).'<hr>';
-				
-				//1.检查account的hash，看看是不是可以进行交易;
-				
-				//2.拆分好交易信息，写入数据
-				
-				//return $this->transferTo();
-				
+			case 'transfer':				
 				$row=$this->transfer;
 				$row['from']['account']=$param['from'];
 				$row['from']['stamp']=time();
