@@ -71,15 +71,15 @@
         $('#server_current').html(res.current.server.url);
 
         var tdom = self.domList(res.transfer.data);
-        $('#collected_transfer').html(tdom);
-
         var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transfer.merkle)
-        $('#collected_transfer').append(mtree);
+        $('#collected_transfer').html(tdom).append(mtree);
 
         var sdom = self.domList(res.storage.data);
-        $('#collected_storage').html(sdom);
-
         var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
-        $('#collected_storage').append(stree);
+        $('#collected_storage').html(sdom).append(stree);
+
+        var cdom = self.domList(res.contact.data);
+        var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
+        $('#collected_contact').html(cdom).append(ctree);
     });
 </script>

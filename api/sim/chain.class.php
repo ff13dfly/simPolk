@@ -55,6 +55,7 @@ class Chain{
 					'success'	=>	TRUE,
 					'transfer'	=>	$this->getCollected($cfg['keys']['transfer_collected']),		//collected transfer
 					'storage'	=>	$this->getCollected($cfg['keys']['storage_collected']),			//collected storage
+					'contact'	=>	$this->getCollected($cfg['keys']['contact_collected']),			//collected storage
 					'current'	=>	$cur,
 				);
 				break;

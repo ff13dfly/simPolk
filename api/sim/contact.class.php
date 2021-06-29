@@ -10,6 +10,20 @@ class Contact{
 			case 'exec':	//contact autorun 
 
 				break;
+			case 'add':
+				$row=array(
+					'body'	=>	$param['body'],
+					'owner'	=>	$param['u'],
+					'stamp'	=>	time(),
+				);
+				$key=$cfg['keys']['contact_collected'];
+				$core->pushList($key,json_encode($row));
+				return array(
+					'success'	=>TRUE,
+					'count'		=>$core->lenList($key),
+				);
+
+				break;
 			case 'list':
 				$list=$this->contactList($param['p'],$param['count']);
 				return array(
