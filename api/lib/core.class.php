@@ -95,7 +95,7 @@ class CORE {
 	}
 	
 	public function delKey($key){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->del($key);
 	}
@@ -123,63 +123,63 @@ class CORE {
 	
 	/*list部分的操作*/
 	public function existsList($key){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->exists($key);
 	}
 	
 	public function delList($key){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->del($key);
 	}
 	
 	public function pushList($key,$val){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->rpush($key,$val);
 	}
 	
 	public function popList($key){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->rpop($key);
 	}
 	
 	public function getList($key){
 		//echo $key;
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->lrange($key,0,-1);
 	}
 	
 	public function indexList($key,$index){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->rindex($key,$index);
 	}
 	
 	public function lenList($key){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->llen($key);
 	}
 	
 	public function setList($key,$index,$val){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->lset($key,$index,$val);
 	}
 	
 	public function removeList($key,$val){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		$count=0;			//0为删除所有的
 		return $this->cRedis->lrem($key,$val,$count);	
 	}
 	
 	public function trimList($key,$start,$stop){
-		if(!$this->cRedis)$this->redisLink($server,true);
+		if(!$this->cRedis)$this->redisLink();
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->lTrim($key,$start,$stop);	
 	}
