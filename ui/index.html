@@ -73,11 +73,14 @@
     </section>
 </body>
 <script type="text/javascript">
+    var curTab = '';
     $('.navbar-nav .nav-item a').on('click', function() {
-        //console.log('hello')
+        if (curTab == $(this).attr('href')) return false;
+        curTab = $(this).attr('href');
+
         $('.nav-link').removeClass('active');
         $(this).addClass('active')
-
+        $('#container').hide();
         simPolk.load($(this).attr('href').slice(1), '#template');
     });
 
