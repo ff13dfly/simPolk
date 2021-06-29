@@ -19,9 +19,12 @@ class Storage{
 
 			case 'set':
 				$row=array(
-					
+					'key'	=>	$param['k'],
+					'value'	=>	$param['v'],
+					'owner'	=>	$param['u'],
+					'stamp'	=>	time(),
 				);
-				$key=$cfg['keys']['collected'];
+				$key=$cfg['keys']['storage_collected'];
 				$core->pushList($key,json_encode($row));
 				return array(
 					'success'	=>TRUE,

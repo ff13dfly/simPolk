@@ -8,7 +8,7 @@
     var con = '#contact_list';
     var ajaxFun = function(page, ck) {
         simPolk.request('contact', 'list', {
-            p: 1,
+            p: page,
             count: 10
         }, function(res) {
             //console.log(res)

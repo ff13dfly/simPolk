@@ -50,23 +50,12 @@ class Chain{
 				break;
 
 			case 'current':
-				$list=$core->getList($cfg['keys']['transfer_collected']);
-				$cs=array();
-				$mtree=array();
-				foreach($list as $v){
-					$cs[]=json_decode($v,TRUE);
-					$mtree[]=$core->encry($v);
-				}
-				
-				if(!empty($mtree)){
-					$core->merkle($mtree);
-				}
 				
 				return array(
 					'success'	=>	TRUE,
-					'data'		=>	$cs,
+					'transfer'	=>	$this->getCollected($cfg['keys']['transfer_collected']),		//collected transfer
+					'storage'	=>	$this->getCollected($cfg['keys']['storage_collected']),			//collected storage
 					'current'	=>	$cur,
-					'merkle'	=>	$mtree,
 				);
 				break;
 				
@@ -89,6 +78,24 @@ class Chain{
 				
 				break;
 		}
+	}
+
+	private function getCollected($key){
+		$list=$this->db->getList($key);
+		$cs=array();
+		$mtree=array();
+		foreach($list as $v){
+			$cs[]=json_decode($v,TRUE);
+			$mtree[]=$this->db->encry($v);
+		}
+		
+		if(!empty($mtree)){
+			$this->db->merkle($mtree);
+		}
+		return array(
+			'data'		=>	$list,
+			'merkle'	=>	$mtree,
+		);
 	}
 	
 	private function transferTo(){

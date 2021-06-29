@@ -46,20 +46,40 @@
 </div>
 
 <script type="text/javascript">
+    var self = {
+        domList: function(list) {
+            var dom = '';
+            for (var k in list) {
+                var row = list[k];
+                dom += '<div class="col-lg-1">' + k + '</div>' + '<div class="col-lg-11">' + row + '</div>'
+            }
+            return dom;
+        },
+        domMerkle: function(arr) {
+            var dom = '';
+            for (var k in arr) {
+                var row = arr[k];
+                dom += '<div class="col-lg-1">' + k + '</div>' + '<div class="col-lg-11">' + row + '</div>'
+            }
+            return dom;
+        }
+    }
+
     simPolk.request('chain', 'current', {}, function(res) {
         //console.log(res)
         $('#block_current').html(res.current.current_block);
         $('#server_current').html(res.current.server.url);
 
-        var dom = '';
-        for (var k in res.data) {
-            var row = res.data[k];
+        var tdom = self.domList(res.transfer.data);
+        $('#collected_transfer').html(tdom);
 
-            dom += '<div class="col-lg-12">' + JSON.stringify(row) + '</div>'
-        }
-        $('#collected_transfer').html(dom);
-
-        var mtree = '<h5>Merkle tree</h5>' + JSON.stringify(res.merkle)
+        var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transfer.merkle)
         $('#collected_transfer').append(mtree);
+
+        var sdom = self.domList(res.storage.data);
+        $('#collected_storage').html(sdom);
+
+        var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
+        $('#collected_storage').append(stree);
     });
 </script>
