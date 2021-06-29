@@ -13,16 +13,14 @@
     <script type="text/javascript" charset="utf-8" src="lib/request.js"></script>
     <style type="text/css">
         #template {
-            width: 100%;
-            max-width: 940px;
-            margin: 0 auto;
+            margin-top: 15px;
         }
     </style>
 </head>
 
 <body>
     <main>
-        <nav class="navbar navbar-expand-lg navbar-dark bg-dark" aria-label="Ninth navbar example">
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
             <div class="container-xl">
                 <a class="navbar-brand" href="#">simPolk , a polkdot simulator</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarsExample07XL" aria-controls="navbarsExample07XL" aria-expanded="false" aria-label="Toggle navigation">
@@ -35,7 +33,7 @@
                             <a class="nav-link active" href="#summary">Summary</a>
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" href="#chain">Chain</a>
+                            <a class="nav-link active" href="#chain">Chain</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" href="#account">Account</a>
@@ -64,24 +62,26 @@
                             </ul>
                         </li> -->
                     </ul>
-                    <form>
+                    <!-- <form>
                         <input class="form-control" type="text" placeholder="Search" aria-label="Search">
-                    </form>
+                    </form> -->
                 </div>
             </div>
         </nav>
     </main>
-    <section id="template" style="display: none;">
+    <section class="container" id="template" style="display: none;">
     </section>
 </body>
 <script type="text/javascript">
     $('.navbar-nav .nav-item a').on('click', function() {
         //console.log('hello')
-        $(this).parent().addClass('active').siblings().removeClass('active');
+        $('.nav-link').removeClass('active');
+        $(this).addClass('active')
+
         simPolk.load($(this).attr('href').slice(1), '#template');
     });
 
-    $('.nav-item').find('.active a').trigger('click');
+    $('.nav-link').find('.active').trigger('click');
 
     $(function() {
         if (location.hash) {
