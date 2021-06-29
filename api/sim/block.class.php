@@ -1,8 +1,6 @@
 <?php
 define('MAX_BLOCK_LIST', 100);
 
-
-
 class Block{
 	//调用方式，
 	private $definition=array(

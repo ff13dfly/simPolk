@@ -1,5 +1,5 @@
 <?php
-class Sample{
+class Node{
 	private $env;
 	private $cur;
 	private $db;
@@ -13,23 +13,22 @@ class Sample{
 			case 'list':
 				return array(
 					'success'	=>	TRUE,
+					'node'		=>	$cfg['nodes'],
+					'cur'		=>	$cur,
+					'param'		=>	$param,
 				);
+				
 				
 				break;
 				
 			case 'view':	
-				return $this->viewSample($param);
+				
+				
 				break;
 
 			default:
 				
 				break;
 		}
-	}
-
-	private function viewSample($param){
-		return array(
-			'success'	=>	TRUE,
-		);
 	}
 }

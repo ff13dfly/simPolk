@@ -31,12 +31,12 @@ class Storage{
 	}
 	
 	
-	public function setStorage(){
+	private function setStorage(){
 		
 	}
 	
 	
-	public function getKey($param){
+	private function getKey($param){
 		
 	}
 	

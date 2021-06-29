@@ -6,6 +6,19 @@ class Simulator extends CORE{
 	private $callback=0;					//js回调的放置位置
 	private $setting=array();
 	private $db=null;
+
+	//block head struct
+	private $head=array(
+		'parent_hash'		=>	'',
+		'version'			=>	1,
+		'stamp'				=>	0,
+		'diffcult'			=>	0,
+		'nonce'				=>	0,
+		'height'			=>	0,
+		'merkle_root'		=>	array(),
+		'merkle_storage'	=>	array(),
+		'merkle_contact'	=>	array(),
+	);
 	
 	//标准block的数据结构,供修改输出来用
 	private $struct=array(
@@ -45,8 +58,6 @@ class Simulator extends CORE{
 			'mrkl_tree'	=>	array(),
 		),
 	);
-	
-	
 	
  	public function __construct(){}
 	public function __destruct(){}
