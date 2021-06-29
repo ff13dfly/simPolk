@@ -1,5 +1,4 @@
 <?php
-
 define('LENGTH_MAX', 256);		//simple string max length
 
 class Simulator extends CORE{	
@@ -9,15 +8,15 @@ class Simulator extends CORE{
 
 	//block head struct
 	private $head=array(
-		'parent_hash'		=>	'',
-		'version'			=>	1,
-		'stamp'				=>	0,
-		'diffcult'			=>	0,
-		'nonce'				=>	0,
-		'height'			=>	0,
-		'merkle_root'		=>	array(),
-		'merkle_storage'	=>	array(),
-		'merkle_contact'	=>	array(),
+		'parent_hash'		=>	'',				//parent hash , used to vertify the blockchain data
+		'version'			=>	'simPolk 0.1',	//datastruct version		
+		'stamp'				=>	0,				//timestamp
+		'diffcult'			=>	0,				//diffcult for server to calc hash
+		'nonce'				=>	0,				//salt of the block
+		'height'			=>	0,				//index of blockchain
+		'merkle_root'		=>	array(),		//merkle tree for transfer
+		'merkle_storage'	=>	array(),		//merkle tree for storage
+		'merkle_contact'	=>	array(),		//merkle tree for contact
 	);
 	
 	//标准block的数据结构,供修改输出来用
@@ -84,7 +83,6 @@ class Simulator extends CORE{
 		
 		//1.对配置进行检测，处理初始化
 		$cur=$this->autoConfig();
-		//echo json_encode($cur).'<hr>';
 		
 		//2.处理遗留的block生成，检查数据和区块高度
 		$key_collected=$cfg['keys']['transfer_collected'];
@@ -99,15 +97,20 @@ class Simulator extends CORE{
 		
 		
 		//4.加载对应的模块进行处理
+		$a=$this->loadClass($cls);
+		if(empty($a)) return $this->error('Failed to load class');
+
+		return $a->task($act,$this->getParam(),$core,$cur,$cfg);
+	}
+
+	private function loadClass($cls){
 		spl_autoload_register(function($class_name) {
 			$target='sim'.DS.$class_name.'.class.php';
-			if(!file_exists($target)) $this->error('no such module');
+			if(!file_exists($target)) return false;
 		    require_once $target;
 		});
-		if(!class_exists($cls)) $this->error('no such module');
-		
-		$a=new $cls();
-		return $a->task($act,$this->getParam(),$core,$cur,$cfg);
+		if(!class_exists($cls)) return false;
+		return new $cls();
 	}
 	
 	//自动写块，处理已经收集信息的方法
@@ -126,7 +129,9 @@ class Simulator extends CORE{
 			$start=time();
 			$core->setKey($key_start,$start);
 		}
-		$result['current_block']=ceil((time()-$start)/$cfg['speed']);
+
+		$curBlock=ceil((time()-$start)/$cfg['speed']);
+		$result['current_block']=$curBlock;
 		
 		//2.获取当前正在收集的数据
 		$key_height=$cfg['keys']['height'];
@@ -136,15 +141,13 @@ class Simulator extends CORE{
 			$height=0;
 		}
 		
-		if($result['current_block']>$height+1){
-			for($i=$height;$i<$result['current_block'];$i++){
+		if($curBlock>$height+1){
+			for($i=$height;$i<$curBlock;$i++){
 				$this->createBlankBlock($i);
 			}
-			$core->setKey($key_height,$result['current_block']);
+			$core->setKey($key_height,$curBlock);
 		}
 		
-		//echo $height;
-		//exit();
 		
 		//2.1.将数据写入到块里
 			

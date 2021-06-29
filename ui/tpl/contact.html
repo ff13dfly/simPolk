@@ -1,0 +1,22 @@
+<div class="row" id="contact_list">
+
+</div>
+<script type="text/javascript" charset="utf-8" src="lib/pager.js"></script>
+<script type="text/javascript">
+    var dt = '<div class="col-lg-12">{hash} : {body}</div>';
+    var translate = function() {};
+    var con = '#contact_list';
+    var ajaxFun = function(page, ck) {
+        simPolk.request('contact', 'list', {
+            p: 1,
+            count: 10
+        }, function(res) {
+            //console.log(res)
+            ck && ck(res.list);
+        });
+    }
+    var auto = [];
+    var setting = {};
+    var events = {}
+    pager.show(dt, translate, con, ajaxFun, auto, setting, events);
+</script>
