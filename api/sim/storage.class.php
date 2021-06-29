@@ -6,11 +6,15 @@ class Storage{
 			case 'key':
 				$key=$param['k'];
 				
-				return $this->getStorage($k);
+				return array(
+					'success'	=>	true
+				);
 				break;
 
 			case 'get':
-				return $this->blockList(0,30);
+				return array(
+					'success'	=>	true
+				);
 				break;
 
 			case 'set':
