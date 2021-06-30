@@ -15,7 +15,7 @@ simPolk是一套完整的区块链模拟器，可以在单台主机上模拟区�
 
 基于简单使用的考虑，simPolk使用php语言开发，使用redis作为数据存储引擎，调用部分使用jsonp方式进行跨域访问。
 
-## 快速部署simPolk（约3分钟）
+## 快速部署simPolk（约10分钟）
 * 1.使用以下命令拷贝simPolk到支持php运行的目录。
 ```
 git clone https://github.com/ff13dfly/simPolk
