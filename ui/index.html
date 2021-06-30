@@ -79,8 +79,7 @@
         curTab = $(this).attr('href');
 
         $('.nav-link').removeClass('active');
-        $(this).addClass('active')
-        $('#container').hide();
+        $(this).addClass('active');
         simPolk.load($(this).attr('href').slice(1), '#template');
     });
 
