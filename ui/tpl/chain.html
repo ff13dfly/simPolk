@@ -55,8 +55,11 @@
                 <input type="text" class="form-control" name="block_num" id="block_num" value="">
             </div>
             <div class="col-lg-12 text-right">
-                <button class="btn btn-lg btn-primary" id="contact_search">View Block Data</button>
+                <button class="btn btn-lg btn-primary" id="block_view">View Block Data</button>
             </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-12" id="block_info"></div>
         </div>
     </div>
 </div>
@@ -97,5 +100,16 @@
         var cdom = self.domList(res.contact.data);
         var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
         $('#collected_contact').html(cdom).append(ctree);
+    });
+
+    $('#block_view').off('click').on('click', function() {
+        var num = parseInt($('#block_num').val());
+        if (!num) return false;
+        simPolk.request('chain', 'view', {
+            n: num
+        }, function(res) {
+            if (!res.success) return false;
+            $('#block_info').html(JSON.stringify(res.data));
+        });
     });
 </script>

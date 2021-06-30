@@ -27,8 +27,11 @@ class Chain{
 		switch ($act) {
 			case 'view':
 				
-				return $this->chainView($param['n']);
-				
+				$block= $this->chainView($param['n']);
+				return array(
+					'success'	=>	TRUE,
+					'data'		=>	json_decode($block,true),
+				);
 				break;
 				
 			case 'reset':		//重置模拟的blockchain网络
@@ -104,7 +107,7 @@ class Chain{
 	}
 	
 	private function chainView($n){
-		echo $key=$this->env['prefix']['chain'].$n;
+		$key=$this->env['prefix']['chain'].$n;
 		if(!$this->db->existsKey($key)){
 			return false;
 		}

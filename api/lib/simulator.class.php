@@ -170,7 +170,7 @@ class Simulator extends CORE{
 		$nodes=$this->setting['nodes'];
 		$svc=$nodes[rand(0, count($nodes)-1)];
 		
-		$data=$this->struct;
+		$data=$this->head;
 		$data['creator']=$svc['account'];
 		$data['reward']=$this->setting['basecoin'];
 		$data['index']=$n;
