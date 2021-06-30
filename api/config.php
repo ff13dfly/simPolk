@@ -14,7 +14,7 @@
 		'basecoin'		=>	100,			//reward for creating block
 		'password'		=>	'123456',		//default password for simulate account
 		'cost'			=>	array(
-			'transfer'	=>	0,
+			'transfer'	=>	array(1,20),	//transfer cost range
 			'storage'	=>	10,
 			'contact'	=>	10,
 		),
@@ -29,11 +29,17 @@
 			'height'				=>	'block_height',		//now height
 			'accounts'				=>	'sim_accounts',		//account hashmap entry
 			'account_list'			=>	'all_accounts',		//account list
+
+			'chain_entry'			=>	'en_chain',
+			'storage_entry'			=>	'en_storage',
+			'contact_entry'			=>	'en_contact',
 		),
 		'prefix'		=>	array(
+			'coins'		=>	'cc_',			//choins record
+
 			'chain'		=>	'ch_',			//block number prefix
 			'storage'	=>	'sg_',			//storage key prefix
-			'coins'		=>	'uc_',			//use coin ammount prefix
+			'contact'	=>	'ct_',			//storage key prefix
 		),
 		
 		//sim-chain network setting

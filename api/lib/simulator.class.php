@@ -82,7 +82,7 @@ class Simulator extends CORE{
 		$act=$_GET['act'];
 		
 		//1.对配置进行检测，处理初始化
-		$cur=$this->autoConfig();
+		$cur=$this->autoConfig();		//自动处理空缺的区块
 		
 		//2.处理遗留的block生成，检查数据和区块高度
 		$key_collected=$cfg['keys']['transfer_collected'];
@@ -90,11 +90,8 @@ class Simulator extends CORE{
 		if($core->existsKey($key_collected)){
 			$data=json_decode($core->getKey($key_collected));
 			//2.1.创建目标区块
-			
+			$this->createBlock($height);
 		}
-		
-		//3.处理断档的block的激励
-		
 		
 		//4.加载对应的模块进行处理
 		$a=$this->loadClass($cls);
@@ -103,6 +100,8 @@ class Simulator extends CORE{
 		return $a->task($act,$this->getParam(),$core,$cur,$cfg);
 	}
 
+
+	//自动加载class的方法
 	private function loadClass($cls){
 		spl_autoload_register(function($class_name) {
 			$target='sim'.DS.$class_name.'.class.php';
@@ -143,51 +142,65 @@ class Simulator extends CORE{
 		
 		if($curBlock>$height+1){
 			for($i=$height;$i<$curBlock;$i++){
-				$this->createBlankBlock($i);
+				$this->createBlock($i,false);
 			}
 			$core->setKey($key_height,$curBlock);
 		}
-		
-		
-		//2.1.将数据写入到块里
 			
-		//2.2.处理响应的coin的增减
-			
-		//2.3.自动执行智能合约的内容		
 		
 		$index=$this->getServer($cfg['nodes']);
-		$result['server']=$cfg['nodes'][$index];
-		
-		//$res=$this->createNewBlock($data,$svc,$cfg);
-		
-		//3.测试账号生成
-		//echo $core->newAccount();
-		
+		$result['server']=$cfg['nodes'][$index];		
 		return $result;
 	}
 	
-	public function createBlankBlock($n){
+	public function createBlock($n,$blank=true){
 		$nodes=$this->setting['nodes'];
 		$svc=$nodes[rand(0, count($nodes)-1)];
-		
-		$data=$this->head;
-		$data['creator']=$svc['account'];
-		$data['reward']=$this->setting['basecoin'];
-		$data['index']=$n;
+
+		//1.空白数据处理
+		if(!$blank){
+			$data=$this->structBlockData($n);
+		}else{
+			$data=$this->head;
+			$data['creator']=$svc['account'];
+			$data['reward']=$this->setting['basecoin'];
+			$data['index']=$n;
+		}	
 		
 		$this->saveToChain($n,$data);
 		return TRUE;
 	}
-	
-	//写新块的方法，将随机选择服务器
-	//$data为需要写入到块里的内容
-	public function createNewBlock($data,$server,&$cfg){
-		echo json_encode($data);
-		echo json_encode($server);
-		echo '<hr>';
+
+	private function structBlockData($n){
+		$cfg=$this->setting;
+		$block=$this->head;
+
+		//1.获取transfer的值，进行UXTO处理
+		$fs=$this->getCollected($cfg['keys']['transfer_collected']);
+		$block['merkle_root']=$fs['merkle'][count($fs['merkle'])-1];
+
+		//2.获取storage的值，进行数据处理
+		$ss=$this->getCollected($cfg['keys']['storage_collected']);
+		$block['merkle_storage']=$ss['merkle'][count($ss['merkle'])-1];
+
+		//3.获取constact的值，进行数据处理
+		$ts=$this->getCollected($cfg['keys']['storage_collected']);
+		$block['merkle_contact']=$ts['merkle'][count($ts['merkle'])-1];
+
+		$block['stamp']=time();
+		$block['height']=$n;
+		$block['list']=array(
+			'uxto'		=>	$fs['data'],
+			'storage'	=>	$ss['data'],
+			'contact'	=>	$ts['data'],	
+		);
+		return $block;
 	}
 
 	private function saveToChain($n,$data){
+		//echo json_encode($data);
+		//echo '<hr>';
+
 		$key=$this->setting['prefix']['chain'].$n;
 		
 		//1.保存数据
@@ -195,9 +208,9 @@ class Simulator extends CORE{
 		
 		
 		//2.更新挖到矿的user的coin量，以便后面调用
-		$ukey=$this->setting['prefix']['coins'].$data['creator'];
-		if(!$this->db->existsKey($ukey)) $this->db->setKey($ukey,0);
-		$this->db->incKey($ukey,$data['reward']);
+		//$ukey=$this->setting['prefix']['coins'].$data['creator'];
+		//if(!$this->db->existsKey($ukey)) $this->db->setKey($ukey,0);
+		//$this->db->incKey($ukey,$data['reward']);
 		
 		//3.循环transfer部分的coin量，进行更新
 
@@ -277,24 +290,30 @@ class Simulator extends CORE{
 		}
 		return $result;
 	}
-	
-	//按照数组进行数据重建，获取数据通过哈市get即可
-	public function structData(&$list){
-		foreach($list as $v){
-			//1.按照transfer对交易进行hash的压栈
-			
-			//2.按照storage进行数据结构建立
-			
-			//3.按照智能合约，进行数据处理
-			
-		}
-	}
 
 	private function getEncryHash($data){
 		if(is_array($data)){
 			return hash('sha256', hash('sha256', json_encode($data), true), true);
 		}
 		return hash('sha256', hash('sha256',$data,true),true);
+	}
+
+	private function getCollected($key){
+		$list=$this->db->getList($key);
+		$cs=array();
+		$mtree=array();
+		foreach($list as $v){
+			$cs[]=json_decode($v,TRUE);
+			$mtree[]=$this->db->encry($v);
+		}
+		
+		if(!empty($mtree)){
+			$this->db->merkle($mtree);
+		}
+		return array(
+			'data'		=>	$list,
+			'merkle'	=>	$mtree,
+		);
 	}
 
 	/*******************************************************/
