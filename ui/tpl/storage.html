@@ -1,6 +1,9 @@
 <div class="row">
     <div class="col-lg-6">
         <div class="row">
+            <div class="col-lg-12 text-danger">
+                <h3 id="set_info"></h3>
+            </div>
             <div class="col-lg-12">
                 <label for="storage_key">Storage key</label>
                 <input type="text" class="form-control" name="storage_key" id="storage_key" value="" />
@@ -16,7 +19,7 @@
             <div class="col-lg-12">
                 <hr>
             </div>
-            <div class="col-lg-12 text-right">
+            <div class="col-lg-12 text-end">
                 <button class="btn btn-lg btn-primary" id="storage_set">Set Storage</button>
             </div>
         </div>
@@ -31,10 +34,12 @@
             <div class="col-lg-12">
                 <hr>
             </div>
-            <div class="col-lg-12">
+            <div class="col-lg-12 text-end">
                 <button class="btn btn-lg btn-primary" id="storage_search">Search Storage</button>
             </div>
-
+            <div class="col-lg-12">
+                <hr>
+            </div>
         </div>
         <div class="row">
             <div class="col-lg-12">
@@ -44,18 +49,28 @@
             <div class="col-lg-12">
                 <hr>
             </div>
-            <div class="col-lg-12">
+            <div class="col-lg-12 text-end">
                 <button class="btn btn-lg btn-primary" id="storage_search">Search Storage</button>
             </div>
         </div>
     </div>
 </div>
 <script type="text/javascript">
+    var self = {
+        info: function(txt, con) {
+            console.log(txt);
+            $(con).html(txt);
+            setTimeout(function() {
+                $(con).html('');
+            }, 1500);
+        },
+    }
+
     $('#storage_set').on('click', function() {
         var k = $('#storage_key').val();
         var v = $('#storage_value').val();
         var u = $('#storage_owner').val();
-        if (!k || !v || !u) return false;
+        if (!k || !v || !u || u.length != 64) return self.info('Parameter error', '#set_info');
 
         simPolk.request('storage', 'set', {
             'k': k,
