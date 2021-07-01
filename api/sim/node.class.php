@@ -1,5 +1,5 @@
 <?php
-class Sample{
+class Node{
 	private $env;
 	private $cur;
 	private $db;

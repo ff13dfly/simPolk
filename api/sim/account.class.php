@@ -75,6 +75,15 @@ class Account{
 			'data'			=>	$this->struct,
 		);
 	}
+
+	/*account create method backup*/
+	public function newAccount2($n=64){
+		$str='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+		$len=strlen($str);
+		$account='';
+		for($i=0;$i<$n;$i++)$account.=substr($str,rand(0, $len-1),1);
+		return $account;
+	}
 	
 	private function getPublicKey(){
 		return hash('sha256', uniqid());

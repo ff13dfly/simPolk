@@ -1,13 +1,12 @@
 <?php
-
+/*  definition for simulator  */
 define('SHUTDOWN',	FALSE);					//shutdown switcher
-define('DEBUG',		TRUE);					//debug switcher
-define('DS',		DIRECTORY_SEPARATOR);	
+define('DEBUG',		true);					//debug switcher
+define('DS',		DIRECTORY_SEPARATOR);	//file separator define, to adapt different OS
 
-$cfg=include 'config.php';						//get the config from config file.
-
-date_default_timezone_set('Asia/Shanghai');		//timezone set
-if(SHUTDOWN) exit('server is shutdown');		//shutdown the simPolk server
+/*  debug information  for simulator  */
+date_default_timezone_set('Asia/Shanghai');	//timezone set
+if(SHUTDOWN) exit('server is shutdown');	//shutdown the simPolk server
 if(DEBUG){
 	global $debug;
 	$debug['ms']=microtime(true);
@@ -16,16 +15,12 @@ if(DEBUG){
 	error_reporting(E_ALL);
 }
 
-//include the simulator framework
+/*  simulator logical  */
 include 'lib'.DS.'core.class.php';
 include 'lib'.DS.'simulator.class.php';
-$a=Simulator::getInstance();
+$a=Simulator::getInstance();				//instance the simulator
+$cfg=include 'config.php';					//get the config from config file.
+$a->setRedisConfig($cfg['redis']);			//set redis config
 
-//set redis config
-$a->setRedisConfig($cfg['redis']);
-
-//the simulator entry method
-$res=$a->autoRun($cfg,$a);
-
-//export the result
-$a->export($res);
+$res=$a->autoRun($cfg,$a);					//call the simulator entry method and get the result
+$a->export($res);							//export the result

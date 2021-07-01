@@ -19,7 +19,7 @@ class CORE {
 		$this->redis_config=$redis;
 	}
 	
-	/*Merkle tree*/
+	/*  Merkle tree  */
 	public function merkle(&$list,$start=0){
 		$len=count($list);
 		if($len==0) return FALSE;
@@ -37,18 +37,14 @@ class CORE {
 		return $this->merkle($list,$len);
 	}
 	
+	/* basic entry method
+	@param	$str	string		//the string need to encry
+	*/
 	public function encry($str){
 		return hash('sha256', hash('sha256', $str));
 	}
 	
-	/*account create*/
-	public function newAccount($n=64){
-		$str='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
-		$len=strlen($str);
-		$account='';
-		for($i=0;$i<$n;$i++)$account.=substr($str,rand(0, $len-1),1);
-		return $account;
-	}
+
 	
 	/*redis operations*/
 	public function existsKey($key){

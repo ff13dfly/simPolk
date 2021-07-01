@@ -15,8 +15,8 @@
 		'password'		=>	'123456',		//default password for simulate account
 		'cost'			=>	array(
 			'transfer'	=>	array(1,20),	//transfer cost range
-			'storage'	=>	10,
-			'contact'	=>	10,
+			'storage'	=>	10,				//storage set cost
+			'contact'	=>	10,				//contact run cost
 		),
 		
 		//sim-chain db keys setting
@@ -30,9 +30,9 @@
 			'accounts'				=>	'sim_accounts',		//account hashmap entry
 			'account_list'			=>	'all_accounts',		//account list
 
-			'chain_entry'			=>	'en_chain',
-			'storage_entry'			=>	'en_storage',
-			'contact_entry'			=>	'en_contact',
+			'chain_entry'			=>	'en_chain',			//block map entry name (for redis hash)
+			'storage_entry'			=>	'en_storage',		//storage map entry name (for redis hash)
+			'contact_entry'			=>	'en_contact',		//contact map entry name (for redis hash)
 		),
 		'prefix'		=>	array(
 			'coins'		=>	'cc_',			//choins record
