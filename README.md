@@ -1,6 +1,7 @@
-# simPolk , 10 minutes to join Polkadot development.
+# simPolk , 10 minutes to join Polkadot development
 
 ## 初衷
+
 即使像波卡这样把区块链开发弄得很简单和模块化了，但是使用门槛还是很高。因为需要熟悉很多全新的概念、搭建一个可用的区块链网络是一项巨大的工程，更不用说维护这个网络到新版本，在去开发更多的功能。
 
 自己作为一个想应用区块链技术的开发者，经历了这个耗时耗力的痛苦过程，迎接了巨大的挑战，从学习Rust到调试substrate，从增加Pallet到升级substrate版本，真的是花费了大量的时间和精力，然而，问题并没有得到很好的解决，请看[虚块世界](https://github.com/ff13dfly/VirtualBlockWorld)，如此，没法专注在应用程序的开发。
@@ -12,6 +13,7 @@
 自己深深的相信，随着区块链技术的成熟，应用开发者无需再去理解复杂的区块链技术是如何实现的，而是更关注应用本身是否能够解决用户的需求，就像关联数据库技术一样，如今，只需要会使用SQL即可，无需去理解各种数据库是如何实现的。
 
 ## simPolk功能简介
+
 simPolk是一套完整的区块链模拟器，可以在单台主机上模拟区块链的行为，模拟的部分包括区块的生成、区块的结构、交易的结构、链上存储的结构、智能合约的结构。这些结构以JSON的方式进行解析，方便阅读和使用。这些都来自于simPolk的设计理念，快速的阅读，快速的理解，快速的使用，在10分钟之内，就可以初步理解区块链涉及到的重要技术点，着手构建你自己的应用程序。
 
 基于简单使用的考虑，simPolk使用php语言开发，使用redis作为数据存储引擎，调用部分使用jsonp方式进行跨域访问。
@@ -23,9 +25,11 @@ simPolk用单一的php文件来模拟服务器，您可以快速的搭建一个�
 ## 快速部署simPolk（约10分钟）
 
 * 1.使用以下命令拷贝simPolk到支持php运行的目录。
-```
+
+```shell
 git clone https://github.com/ff13dfly/simPolk
 ```
+
 如您不熟悉php开发，请看这里[XAMPP,最受欢迎的PHP开发环境](https://www.apachefriends.org/index.html)
 
 * 2.配置redis运行环境。
@@ -34,7 +38,8 @@ git clone https://github.com/ff13dfly/simPolk
 
 * 3.现在，您就可以在浏览器里查看模拟链的运行情况啦
 请在浏览器里输入以下网址：
-```
+
+```text
 http://localhost/simPolk/ui
 ```
 
