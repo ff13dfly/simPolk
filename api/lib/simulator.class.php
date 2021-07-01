@@ -1,15 +1,15 @@
 <?php
 define('LENGTH_MAX', 256);		//simple string max length
-
 class Simulator extends CORE{	
-	private $callback=0;					//js回调的放置位置
+	private $callback=0;
 	private $setting=array();
 	private $db=null;
 
 	//block head struct
 	private $head=array(
 		'parent_hash'		=>	'',				//parent hash , used to vertify the blockchain data
-		'version'			=>	'simPolk 0.1',	//datastruct version		
+		'version'			=>	'simPolk 0.1',	//datastruct version
+		'height'			=>	0,				//block height		
 		'stamp'				=>	0,				//timestamp
 		'diffcult'			=>	0,				//diffcult for server to calc hash
 		'nonce'				=>	0,				//salt of the block
@@ -18,7 +18,31 @@ class Simulator extends CORE{
 		'merkle_storage'	=>	array(),		//merkle tree for storage
 		'merkle_contact'	=>	array(),		//merkle tree for contact
 	);
-	
+
+	//transaction data struct
+	private $uxto=array(
+		'from'	=>	array(),
+		'to'	=>	array(),
+		'stamp'	=>	0,
+	);
+
+	private $from=array(
+		'hash'			=>	'sha256_hash',
+		'amount'		=>	0,
+		'block_number'	=>	0,
+		'owner'			=>	'account_hash',
+	);
+
+	private $to=array(
+		'amount'		=>	0,
+		'transfer_to'	=>	'account_hash',
+	);
+
+	//storage data struct
+	private $storage=array(
+
+	);
+
 	//标准block的数据结构,供修改输出来用
 	private $struct=array(
 		'polkadot'	=>	array(

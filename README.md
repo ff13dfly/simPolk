@@ -1,4 +1,4 @@
-# simPolk , 10 minutes to join blockchain development.
+# simPolk , 10 minutes to join Polkadot development.
 
 ## 初衷
 即使像波卡这样把区块链开发弄得很简单和模块化了，但是使用门槛还是很高。因为需要熟悉很多全新的概念、搭建一个可用的区块链网络是一项巨大的工程，更不用说维护这个网络到新版本，支持更多的功能。
