@@ -23,16 +23,33 @@ simPolk的配置集中到config.php文件，位于API的根目录下，方便调
 
 ### lib目录
 * core.class.php
+数据操作类，Redis的各种操作、Merkle树的生成等功能，集成在这里。后继将实现用文件来实现redis的功能，进一步的降低部署的难度，也更方便对数据结构进行观察。
 
 * simulator.class.php
-
+模拟器实现类，跳块补全、区块生成、模拟挖矿、输入输出、自动加载等功能，集成在这里。
 ### sim目录
 * account.class.php
-
-* block.class.php
+- 账户创建
+- 账户列表
+- 账户可用输出列表
 
 * chain.class.php
+- 区块查看
+- 转账交易
+- 模拟链状态
+- 模拟链重置
+- 模拟链重建
 
 * node.class.php
+- 网络节点列表
 
 * storage.class.php
+- 设置链上数据
+- 读取链上数据
+
+* contact.class.php
+- 添加智能合约
+- 执行智能合约
+
+* sapmle.class.php
+该类用来模拟substrate下独立开发的pallet,可以通过统一的路由方式来进行访问。
