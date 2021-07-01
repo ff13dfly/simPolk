@@ -1,41 +1,40 @@
 <div class="row">
-	<div class="col-lg-9">
-		<h3>Create a new account can be used in the simulator.</h3>
-	</div>
-	<div class="col-lg-3">
-		<button class="btn btn-lg btn-primary" id="new_account">Create New Account</button>
-	</div>
+    <div class="col-lg-9">
+        <h3>Create a new account can be used in the simulator.</h3>
+    </div>
+    <div class="col-lg-3">
+        <button class="btn btn-lg btn-primary" id="new_account">Create New Account</button>
+    </div>
+    <div class="col-lg-12">
+        <hr>
+    </div>
 </div>
-
-<!--<div class="row">
-	<div class="col-lg-9">
-		<input type="text" class="form-control" name="account_search" id="account_search" value="" />
-	</div>
-</div>-->
 
 <div class="row" id="account_list">
 </div>
 
 <script type="text/javascript" charset="utf-8" src="lib/pager.js"></script>
 <script type="text/javascript">
-	$('#new_account').on('click',function(){
-		simPolk.request('account','new',{},function(res){
-			console.log(res)
-			if(res.success) return location.reload();
-		});
-		
-	});
-	
-	var dt='<div class="col-lg-12">{type} : {account}</div>';
-	var translate=function(){};
-	var con='#account_list';
-	var ajaxFun=function(page,ck){
-		simPolk.request('account','list',{p:1},function(res){
-			ck && ck(res.data);
-		});
-	}
-	var auto=[];
-	var setting={};
-	var events={}
-	pager.show(dt,translate,con,ajaxFun,auto,setting,events);
+    $('#new_account').on('click', function() {
+        simPolk.request('account', 'new', {}, function(res) {
+            console.log(res)
+            if (res.success) return location.reload();
+        });
+
+    });
+
+    var dt = '<div class="col-lg-12">{type} : {account}</div>';
+    var translate = function() {};
+    var con = '#account_list';
+    var ajaxFun = function(page, ck) {
+        simPolk.request('account', 'list', {
+            p: 1
+        }, function(res) {
+            ck && ck(res.data);
+        });
+    }
+    var auto = [];
+    var setting = {};
+    var events = {}
+    pager.show(dt, translate, con, ajaxFun, auto, setting, events);
 </script>

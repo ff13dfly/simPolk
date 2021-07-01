@@ -1,5 +1,5 @@
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-7">
         <div class="row">
             <div class="col-lg-9">
                 <h4 id="block_current"></h4>
@@ -48,22 +48,19 @@
         </div>
     </div>
     <div class="col-lg-1"></div>
-    <div class="col-lg-5">
+    <div class="col-lg-4">
         <div class="row">
             <div class="col-lg-12">
                 <label for="block_num">Block number</label>
                 <input type="text" class="form-control" name="block_num" id="block_num" value="">
             </div>
-            <div class="col-lg-12">
-                <hr>
-            </div>
-            <div class="col-lg-12 text-end">
+            <div class="col-lg-12 text-end gy-4">
                 <button class="btn btn-lg btn-primary" id="block_view">View Block Data</button>
             </div>
         </div>
 
         <div class="row">
-            <div class="col-lg-12" id="block_info"></div>
+            <div class="col-lg-12 text-break" id="block_info"></div>
         </div>
     </div>
 </div>
@@ -74,7 +71,7 @@
             var dom = '';
             for (var k in list) {
                 var row = list[k];
-                dom += '<div class="col-lg-1">' + k + '</div>' + '<div class="col-lg-11 text-justify">' + row + '</div>'
+                dom += '<div class="col-lg-1">' + k + '</div>' + '<div class="col-lg-11 text-break">' + row + '</div>'
             }
             return dom;
         },
@@ -82,7 +79,7 @@
             var dom = '';
             for (var k in arr) {
                 var row = arr[k];
-                dom += '<div class="col-lg-1">' + k + '</div>' + '<div class="col-lg-11 text-justify">' + row + '</div>'
+                dom += '<div class="col-lg-1">' + k + '</div>' + '<div class="col-lg-11 text-break">' + row + '</div>'
             }
             return dom;
         }
