@@ -119,9 +119,11 @@ class Simulator extends CORE{
 		$list=$this->db->getHash($keys['accounts'],array($hash));
 		if($list[$hash]==false){
 			$cls=$this->loadClass('account');
-			$cls->task('new',array(),$this,array(),$this->setting);
+			$fmt=$cls->getAccountFormat();
+			$fmt['last']=time();
 
-			//exit('new account add');
+			$this->setHash($keys['accounts'],$hash,json_encode($fmt));
+			$this->pushList($keys['account_list'],$hash);
 		}
 		return true;
 	}

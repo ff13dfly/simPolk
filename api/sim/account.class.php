@@ -13,6 +13,10 @@ class Account{
 		'storage'		=>	array(),		//hash stack
 		'contact'		=>	array(),		//hash stack
 	);
+
+	public function getAccountFormat(){
+		return $this->struct;
+	}
 	
 	/* router
 	@param	$act	string		//$_GET['act],router key
@@ -68,18 +72,17 @@ class Account{
 		}
 	}
 	
-	private function saveAccout($hash,$data,&$keys){
+	public function saveAccout($hash,$data,&$keys){
 		//1.建立根hash
 		$this->db->setHash($keys['accounts'],$hash,json_encode($data));
 		
 		//2.建立account的list
 		$this->db->pushList($keys['account_list'],$hash);
-
 	}
 	
 
 	/*account create method backup*/
-	public function newAccount($n=64){
+	private function newAccount($n=64){
 		$str='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 		$len=strlen($str);
 		$account='';
