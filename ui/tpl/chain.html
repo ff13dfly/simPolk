@@ -1,13 +1,14 @@
 <div class="row">
     <div class="col-lg-7  gy-4">
         <div class="row">
-            <div class="col-lg-9">
-                <h4 id="block_current"></h4>
-                <p>Current block height</p>
+            <div class="col-lg-7">
+                <small>Block height</small>
+                <h2 id="block_current" class="text-primary"></h2>
+                <small id="server_current"></small>
             </div>
 
-            <div class="col-lg-9" id="server_current">
-
+            <div class="col-lg-5 text-end  gy-4">
+                <button class="btn btn-lg btn-primary" id="collected_clean">Clean collected</button>
             </div>
         </div>
 
@@ -84,24 +85,25 @@
             return dom;
         }
     }
+    $(function() {
+        simPolk.request('chain', 'current', {}, function(res) {
+            $('#block_current').html(res.current.current_block);
+            $('#server_current').html(res.current.server.url);
 
-    simPolk.request('chain', 'current', {}, function(res) {
-        //console.log(res)
-        $('#block_current').html(res.current.current_block);
-        $('#server_current').html(res.current.server.url);
+            var tdom = self.domList(res.transfer.data);
+            var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transfer.merkle)
+            $('#collected_transfer').html(tdom).append(mtree);
 
-        var tdom = self.domList(res.transfer.data);
-        var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transfer.merkle)
-        $('#collected_transfer').html(tdom).append(mtree);
+            var sdom = self.domList(res.storage.data);
+            var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
+            $('#collected_storage').html(sdom).append(stree);
 
-        var sdom = self.domList(res.storage.data);
-        var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
-        $('#collected_storage').html(sdom).append(stree);
-
-        var cdom = self.domList(res.contact.data);
-        var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
-        $('#collected_contact').html(cdom).append(ctree);
+            var cdom = self.domList(res.contact.data);
+            var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
+            $('#collected_contact').html(cdom).append(ctree);
+        });
     });
+
 
     $('#block_view').off('click').on('click', function() {
         var num = parseInt($('#block_num').val());
@@ -111,6 +113,13 @@
         }, function(res) {
             if (!res.success) return false;
             $('#block_info').html(JSON.stringify(res.data));
+        });
+    });
+
+    $('#collected_clean').off('click').on('click', function() {
+        simPolk.request('chain', 'clean', {}, function(res) {
+            if (!res.success) return false;
+            location.reload();
         });
     });
 </script>

@@ -183,7 +183,9 @@ class Simulator extends CORE{
 
 		//1.空白数据处理
 		if(!$blank){
-			$data=$this->structBlockData($n);
+			$data=$this->getCollectedData($n);
+			//echo json_encode($data);
+			//exit();
 		}else{
 			$data=$this->head;
 			$data['creator']=$svc['account'];
@@ -195,21 +197,21 @@ class Simulator extends CORE{
 		return TRUE;
 	}
 
-	private function structBlockData($n){
+	private function getCollectedData($n){
 		$cfg=$this->setting;
 		$block=$this->head;
 
-		//1.获取transfer的值，进行UXTO处理
+		//1.获取transfer的值
 		$fs=$this->getCollected($cfg['keys']['transfer_collected']);
-		$block['merkle_root']=$fs['merkle'][count($fs['merkle'])-1];
+		$block['merkle_root']=empty($fs['merkle'])?false:$fs['merkle'][count($fs['merkle'])-1];
 
-		//2.获取storage的值，进行数据处理
+		//2.获取storage的值
 		$ss=$this->getCollected($cfg['keys']['storage_collected']);
-		$block['merkle_storage']=$ss['merkle'][count($ss['merkle'])-1];
+		$block['merkle_storage']=empty($ss['merkle'])?false:$ss['merkle'][count($ss['merkle'])-1];
 
-		//3.获取constact的值，进行数据处理
+		//3.获取constact的值
 		$ts=$this->getCollected($cfg['keys']['storage_collected']);
-		$block['merkle_contact']=$ts['merkle'][count($ts['merkle'])-1];
+		$block['merkle_contact']=empty($ts['merkle'])?false:$ts['merkle'][count($ts['merkle'])-1];
 
 		$block['stamp']=time();
 		$block['height']=$n;
@@ -222,22 +224,8 @@ class Simulator extends CORE{
 	}
 
 	private function saveToChain($n,$data){
-		//echo json_encode($data);
-		//echo '<hr>';
-
 		$key=$this->setting['prefix']['chain'].$n;
-		
-		//1.保存数据
 		$this->db->setKey($key,json_encode($data));
-		
-		
-		//2.更新挖到矿的user的coin量，以便后面调用
-		//$ukey=$this->setting['prefix']['coins'].$data['creator'];
-		//if(!$this->db->existsKey($ukey)) $this->db->setKey($ukey,0);
-		//$this->db->incKey($ukey,$data['reward']);
-		
-		//3.循环transfer部分的coin量，进行更新
-
 	}
 	
 	//获取写块服务器数据

@@ -52,6 +52,17 @@ class Chain{
 				
 				break;
 
+			case 'clean':		//处理保存，调用definition对key进行定义
+				$core->delKey($cfg['keys']['transfer_collected']);
+				$core->delKey($cfg['keys']['storage_collected']);
+				$core->delKey($cfg['keys']['contact_collected']);
+
+				return array(
+					'success'	=>	TRUE,
+					'time'		=>	time(),
+				);
+				break;
+
 			case 'current':
 				
 				return array(

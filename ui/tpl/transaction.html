@@ -1,26 +1,34 @@
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-7">
         <div class="row">
-            <div class="col-lg-12 gy-4">
-                <label for="from_account">Transfer from</label>
+            <div class="col-lg-10 gy-4">
+                <label for="from_account">Transfer from <span class="text-danger" id="from_error"></span></label>
                 <input type="text" class="form-control" name="from_account" id="from_account" value="" placeholder="Account hash" />
             </div>
-            <div class="col-lg-12 gy-4">
-                <label for="to_account">Transfer to</label>
+            <div class="col-lg-2 gy-4 text-center">
+                <label for="add_from">new account</label>
+                <button class="btn btn-md btn-primary" id="add_from">+</button>
+            </div>
+            <div class="col-lg-10 gy-4">
+                <label for="to_account">Transfer to <span class="text-danger" id="to_error"></span></label>
                 <input type="text" class="form-control" name="to_account" id="to_account" value="" placeholder="Account hash" />
             </div>
-            <div class="col-lg-12 gy-4">
-                <label for="trans_amount">Amount</label>
+            <div class="col-lg-2 gy-4  text-center">
+                <label for="add_to">new account</label>
+                <button class="btn btn-md btn-primary" id="add_to">+</button>
+            </div>
+            <div class="col-lg-10 gy-4">
+                <label for="trans_amount">Amount <span class="text-danger" id="amount_error"></span></label>
                 <input type="text" class="form-control" name="trans_amount" id="trans_amount" value="" placeholder="Transfer amount, must be integer" />
             </div>
-            <div class="col-lg-12 text-end gy-4">
+            <div class="col-lg-10 text-end gy-4">
                 <button class="btn btn-lg btn-primary" id="transfer_submit">Sent Coin To Account</button>
             </div>
 
         </div>
     </div>
     <div class="col-lg-1"></div>
-    <div class="col-lg-5">
+    <div class="col-lg-4">
         <div class="row">
             <div class="col-lg-12 gy-4">
                 <label for="from_account">Account</label>
@@ -35,6 +43,20 @@
 
 <script type="text/javascript">
     var self = {
+        info: function(txt, con, at) {
+            console.log(txt);
+            $(con).html(txt);
+            if (at != undefined) {
+                setTimeout(function() {
+                    $(con).html('');
+                }, at);
+            }
+        },
+        clearError: function() {
+            $('#from_error').html('');
+            $('#to_error').html('');
+            $('#amount_error').html('');
+        },
         cacheInput: function() {
             var data = {
                 from: $('#from_account').val(),
@@ -60,12 +82,45 @@
         self.setCache(dt);
     });
 
+    $('#add_from').off('click').on('click', function() {
+        simPolk.request('account', 'new', {}, function(res) {
+            if (!res.success) return false;
+            console.log(res);
+            $('#from_account').val(res.data.public_key);
+        });
+    });
+
+    $('#add_to').off('click').on('click', function() {
+        simPolk.request('account', 'new', {}, function(res) {
+            if (!res.success) return false;
+            $('#to_account').val(res.data.public_key);
+        });
+    });
+
+
     $('.form-control').off('blur').on('blur', self.cacheInput);
 
-    $('#transfer_submit').on('click', function() {
+    $('#transfer_submit').off('click').on('click', function() {
+        self.clearError();
         var a_from = $('#from_account').val();
         var a_to = $('#to_account').val();
-        var val = $('#trans_amount').val();
+        var val = parseInt($('#trans_amount').val());
+        var pass = true;
+        console.log(val);
+
+        if (!a_from || a_from.length != 64) {
+            pass = false;
+            self.info('Account error', '#from_error');
+        }
+        if (!a_to || a_to.length != 64) {
+            pass = false;
+            self.info('Account error', '#to_error');
+        }
+        if (val == 0 || isNaN(val)) {
+            pass = false;
+            self.info('amount error', '#amount_error');
+        }
+        if (!pass) return false;
 
         simPolk.request('chain', 'transfer', {
             from: a_from,

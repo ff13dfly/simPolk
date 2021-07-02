@@ -63,7 +63,7 @@
         var con = '#account_list';
         var ajaxFun = function(page, ck) {
             simPolk.request('account', 'list', {
-                p: 1
+                p: page
             }, function(res) {
                 ck && ck(res.data);
             });
