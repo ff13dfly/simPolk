@@ -60,8 +60,8 @@
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-lg-12 text-break" id="block_info"></div>
+        <div class="row text-break" id="block_info">
+
         </div>
     </div>
 </div>
@@ -81,6 +81,14 @@
             for (var k in arr) {
                 var row = arr[k];
                 dom += '<div class="col-lg-1">' + k + '</div>' + '<div class="col-lg-11 text-break">' + row + '</div>'
+            }
+            return dom;
+        },
+        domObject: function(obj) {
+            var dom = '';
+            for (var k in obj) {
+                var row = JSON.stringify(obj[k]);
+                dom += `<div class="col-lg-4 text-break" >${k}</div><div class="col-lg-8 text-break" >${row}</div>`;
             }
             return dom;
         }
@@ -112,7 +120,8 @@
             n: num
         }, function(res) {
             if (!res.success) return false;
-            $('#block_info').html(JSON.stringify(res.data));
+
+            $('#block_info').html(self.domObject(res.data));
         });
     });
 

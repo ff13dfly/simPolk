@@ -95,21 +95,19 @@ class Simulator extends CORE{
 
 		//basecoin UXTO data struct
 		$from=$this->from;
-		$from['hash']='';
 		$from['amount']=$this->setting['basecoin'];
-		$from['account']='';
-
+		unset($from['hash']);
+		unset($from['account']);
 		$uxto['from'][]=$from;
 
 		$to=$this->to;
 		$to['amount']=$this->setting['basecoin'];
 		$to['account']=$svc['account'];
+		$uxto['to'][]=$to;
 
-		$uxto['from'][]=$to;
 		$uxto['stamp']=time();
-			
-		$data['list_transaction'][]=$uxto;
 
+		$data['list_transaction'][]=$uxto;
 		$data['height']=$n;
 		return $data;
 	}
@@ -133,11 +131,6 @@ class Simulator extends CORE{
 	public function __destruct(){}
 	public static function getInstance(){
 		return CORE::init(get_class());
-	}
-
-	public function tmp_clean_block($n,$pre){
-		for($i=0;$i<$n;$i++) $this->delKey($pre.$i);
-		return true;
 	}
 	
 	//主入口，进行自动路由的地方
@@ -226,7 +219,6 @@ class Simulator extends CORE{
 			}
 			$core->setKey($key_height,$curBlock);
 		}
-		//exit($curBlock);
 		
 		$index=$this->getServer($cfg['nodes']);
 		$result['server']=$cfg['nodes'][$index];		

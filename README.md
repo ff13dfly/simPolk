@@ -24,7 +24,7 @@ simPolk用单一的php文件来模拟服务器，您可以快速的搭建一个�
 
 ## 快速部署simPolk（约10分钟）
 
-* 1.使用以下命令拷贝simPolk到支持php运行的目录。
+1. 使用以下命令拷贝simPolk到支持php运行的目录。
 
 ```shell
 git clone https://github.com/ff13dfly/simPolk
@@ -32,18 +32,18 @@ git clone https://github.com/ff13dfly/simPolk
 
 如您不熟悉php开发，请看这里[XAMPP,最受欢迎的PHP开发环境](https://www.apachefriends.org/index.html)
 
-* 2.配置redis运行环境。
+2. 配置redis运行环境。
 如您未对redis进行配置的话，默认参数即可以正常的运行。
 或者，您可以编辑配置文件，输入正确的redis运行参数。
 
-* 3.现在，您就可以在浏览器里查看模拟链的运行情况啦
+3. 现在，您就可以在浏览器里查看模拟链的运行情况啦
 请在浏览器里输入以下网址：
 
 ```text
 http://localhost/simPolk/ui
 ```
 
-* 4.尽情使用UI提供的功能，尝试simPlok的模拟链吧。
+4. 尽情使用UI提供的功能，尝试simPlok的模拟链吧。
 不用担心，只需点击“Reset Network”，全新的模拟链就建成了。
 
 ## 更多功能

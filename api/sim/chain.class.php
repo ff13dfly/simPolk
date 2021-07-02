@@ -20,9 +20,15 @@ class Chain{
 				break;
 				
 			case 'reset':		//重置模拟的blockchain网络
+
+				$n=$core->getKey($cfg['keys']['height']);
 				foreach($cfg['keys'] as $key){
 					$core->delKey($key);
 				}
+
+				//处理掉所有的block数据
+				$pre=$cfg['prefix']['chain'];
+				$this->clean_block((int)$n,$pre);
 				
 				return array(
 					'success'	=>	TRUE,
@@ -78,6 +84,10 @@ class Chain{
 				
 				break;
 		}
+	}
+	private function clean_block($n,$pre){
+		for($i=0;$i<$n;$i++) $this->db->delKey($pre.$i);
+		return true;
 	}
 
 	private function getCollected($key){
