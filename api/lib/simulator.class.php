@@ -5,8 +5,11 @@ class Simulator extends CORE{
 	private $setting=array();
 	private $db=null;
 
+	private $storage=array(
+
+	);
 	//block head struct
-	private $head=array(
+	private $raw=array(
 		'parent_hash'		=>	'',				//parent hash , used to vertify the blockchain data
 		'version'			=>	'simPolk 0.1',	//datastruct version
 		'height'			=>	0,				//block height		
@@ -14,78 +17,125 @@ class Simulator extends CORE{
 		'diffcult'			=>	0,				//diffcult for server to calc hash
 		'nonce'				=>	0,				//salt of the block
 		'height'			=>	0,				//index of blockchain
-		'merkle_root'		=>	array(),		//merkle tree for transfer
+		'root_transaction'	=>	'',				//transaction merkle root
+		'root_storage'		=>	'',				//storage merkle root
+		'root_contact'		=>	'',				//contact merkle root
+		'merkle_transaction'=>	array(),		//merkle tree for transfer
 		'merkle_storage'	=>	array(),		//merkle tree for storage
 		'merkle_contact'	=>	array(),		//merkle tree for contact
+		'list_transaction'	=>	array(),		//full transaction 
+		'list_storage'		=>	array(),
+		'list_contact'		=>	array(),
 	);
 
 	//transaction data struct
 	private $uxto=array(
-		'from'	=>	array(),
-		'to'	=>	array(),
-		'stamp'	=>	0,
+		'from'		=>	array(),
+		'to'		=>	array(),
+		'version'	=>	2021,
+		'stamp'		=>	0,
 	);
 
 	private $from=array(
-		'hash'			=>	'sha256_hash',
-		'amount'		=>	0,
-		'block_number'	=>	0,
-		'owner'			=>	'account_hash',
+		'hash'			=>	'sha256_hash',			//from hash	['', merkle hash]
+		'amount'		=>	0,						//from amount 
+		'type'			=>	'coinbase',				//from type [coinbase, normal]
+		'account'		=>	'account_hash_64byte',	//account public key
 	);
 
 	private $to=array(
 		'amount'		=>	0,
-		'transfer_to'	=>	'account_hash',
+		'account'		=>	'account_hash_64byte',	//account public key
 	);
 
-	//storage data struct
-	private $storage=array(
+	private function createBlock($n,$skip=true){
+		$nodes=$this->setting['nodes'];
+		$svc=$nodes[rand(0, count($nodes)-1)];
+		$data=$this->getCoinbaseBlock($n,$svc);		//获取带coinbase UXTO的区块数据
 
-	);
+		$this->saveToChain($n,$data);
+		if(!$skip){
+			//$this->mergeData($data);
+			//exit('<hr>have collected data');
+		}
+		//struct all the neccessary cache;
+		$this->structRow($data);
 
-	//标准block的数据结构,供修改输出来用
-	private $struct=array(
-		'polkadot'	=>	array(
-			'hash'		=>	'',
-			'version'	=>	1,
-			'pre'		=>	'',		
-			'next'		=>	'',
-			'index'		=>	0,
-			'time'		=>	0,
-			'root'		=>	'',
-			'fee'		=>	1,
-			'size'		=>	0,
-			'reward'	=>	0,
-			'creator'	=>	'',
-			'in'		=>	array(),
-			'out'		=>	array(),
-			'contact'	=>	array(),
-			'storage'	=>	array(),
-			'mrkl_tree'	=>	array(),
-		),
+		//clean the collected data
+		if(!$skip){
+			$this->cleanCollectedData();
+		}
+		
+		return TRUE;
+	}
+
+	private function mergeData(&$row){
+		$cfg=$this->setting;
+		$ts=$this->getCollected($cfg['keys']['transfer_collected']);
+		echo json_encode($ts);
+	}
+
+	private function cleanCollectedData(){
+		$cfg=$this->setting;
+		$this->delKey($cfg['keys']['transfer_collected']);
+		$this->delKey($cfg['keys']['storage_collected']);
+		$this->delKey($cfg['keys']['contact_collected']);
+		return true;
+	}
+
+	private function structRow($raw){
+
+	}
+
+	private function getCoinbaseBlock($n,$svc){
+		$this->checkAccount($svc['account']);		//检查账户，并建立
+
+		$data=$this->raw;
+		$uxto=$this->uxto;
+
+		//basecoin UXTO data struct
+		$from=$this->from;
+		$from['hash']='';
+		$from['amount']=$this->setting['basecoin'];
+		$from['account']='';
+
+		$uxto['from'][]=$from;
+
+		$to=$this->to;
+		$to['amount']=$this->setting['basecoin'];
+		$to['account']=$svc['account'];
+
+		$uxto['from'][]=$to;
+		$uxto['stamp']=time();
+			
+		$data['list_transaction'][]=$uxto;
+
+		$data['height']=$n;
+		return $data;
+	}
+
+	private function checkAccount($hash){
+		$keys=$this->setting['keys'];
+		$list=$this->db->getHash($keys['accounts'],array($hash));
+		if($list[$hash]==false){
+			$cls=$this->loadClass('account');
+			$cls->task('new',array(),$this,array(),$this->setting);
+
+			//exit('new account add');
+		}
+		return true;
+	}
 	
-		'bitcoin'	=>	array(
-			'hash'		=>	'',
-			'version'	=>	1,
-			'pre'		=>	'',		
-			'next'		=>	'',
-			'index'		=>	0,
-			'time'		=>	0,
-			'root'		=>	'',
-			'fee'		=>	1,
-			'size'		=>	0,
-			'reward'	=>	0,
-			'creator'	=>	'',
-			'in'		=>	array(),
-			'out'		=>	array(),
-			'mrkl_tree'	=>	array(),
-		),
-	);
 	
  	public function __construct(){}
 	public function __destruct(){}
 	public static function getInstance(){
 		return CORE::init(get_class());
+	}
+
+	public function tmp_clean_block($n,$pre){
+		for($i=0;$i<$n;$i++) $this->delKey($pre.$i);
+		return true;
 	}
 	
 	//主入口，进行自动路由的地方
@@ -106,15 +156,18 @@ class Simulator extends CORE{
 		$act=$_GET['act'];
 		
 		//1.对配置进行检测，处理初始化
-		$cur=$this->autoConfig();		//自动处理空缺的区块
-		
-		//2.处理遗留的block生成，检查数据和区块高度
+		$cur=$this->autoConfig();		//autoConfig里会进行跳块处理
+		//2.跳块处理，检查数据和区块高度
+
 		$key_collected=$cfg['keys']['transfer_collected'];
 		$height=$core->getKey($cfg['keys']['height']);
+
+		
 		if($core->existsKey($key_collected)){
 			$data=json_decode($core->getKey($key_collected));
 			//2.1.创建目标区块
-			$this->createBlock($height);
+			$skip=false;
+			$this->createBlock($height,$skip);
 		}
 		
 		//4.加载对应的模块进行处理
@@ -145,7 +198,7 @@ class Simulator extends CORE{
 		$core=$this->db;
 		$result=array();
 		
-		//1.检测是否已经存在开始时间;
+		//1.check if it is the start of a simchain.
 		$key_start=$cfg['keys']['start'];
 		$start=$core->getKey($key_start);
 		if(!$start){
@@ -155,8 +208,8 @@ class Simulator extends CORE{
 
 		$curBlock=ceil((time()-$start)/$cfg['speed']);
 		$result['current_block']=$curBlock;
-		
-		//2.获取当前正在收集的数据
+
+		//2.create the blank block
 		$key_height=$cfg['keys']['height'];
 		if($core->existsKey($key_height)){
 			$height=$core->getKey($key_height);
@@ -164,43 +217,24 @@ class Simulator extends CORE{
 			$height=0;
 		}
 		
+		
 		if($curBlock>$height+1){
 			for($i=$height;$i<$curBlock;$i++){
-				$this->createBlock($i,false);
+				$this->createBlock($i);
 			}
 			$core->setKey($key_height,$curBlock);
 		}
-			
+		//exit($curBlock);
 		
 		$index=$this->getServer($cfg['nodes']);
 		$result['server']=$cfg['nodes'][$index];		
 		return $result;
 	}
-	
-	public function createBlock($n,$blank=true){
-		$nodes=$this->setting['nodes'];
-		$svc=$nodes[rand(0, count($nodes)-1)];
-
-		//1.空白数据处理
-		if(!$blank){
-			$data=$this->getCollectedData($n);
-			//echo json_encode($data);
-			//exit();
-		}else{
-			$data=$this->head;
-			$data['creator']=$svc['account'];
-			$data['reward']=$this->setting['basecoin'];
-			$data['index']=$n;
-		}	
-		
-		$this->saveToChain($n,$data);
-		return TRUE;
-	}
 
 	private function getCollectedData($n){
 		$cfg=$this->setting;
 		$block=$this->head;
-
+	
 		//1.获取transfer的值
 		$fs=$this->getCollected($cfg['keys']['transfer_collected']);
 		$block['merkle_root']=empty($fs['merkle'])?false:$fs['merkle'][count($fs['merkle'])-1];
@@ -314,16 +348,18 @@ class Simulator extends CORE{
 		$list=$this->db->getList($key);
 		$cs=array();
 		$mtree=array();
-		foreach($list as $v){
-			$cs[]=json_decode($v,TRUE);
-			$mtree[]=$this->db->encry($v);
+		if(!empty($list)){
+			foreach($list as $v){
+				$cs[]=json_decode($v,TRUE);
+				$mtree[]=$this->db->encry($v);
+			}
 		}
 		
 		if(!empty($mtree)){
 			$this->db->merkle($mtree);
 		}
 		return array(
-			'data'		=>	$list,
+			'data'		=>	$cs,
 			'merkle'	=>	$mtree,
 		);
 	}

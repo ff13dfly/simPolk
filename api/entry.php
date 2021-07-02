@@ -22,5 +22,8 @@ $a=Simulator::getInstance();				//instance the simulator
 $cfg=include 'config.php';					//get the config from config file.
 $a->setRedisConfig($cfg['redis']);			//set redis config
 
+//$a->tmp_clean_block(2000,$cfg['prefix']['chain']);
+//exit();
+
 $res=$a->autoRun($cfg,$a);					//call the simulator entry method and get the result
 $a->export($res);							//export the result

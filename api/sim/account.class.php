@@ -6,11 +6,12 @@ class Account{
 	
 	//account struct
 	private $struct=array(
-		'type'		=>	'user',
-		'nickname'	=>	'',
-		'uxto'		=>	array(),		//hash stack
-		'storage'	=>	array(),		//hash stack
-		'contact'	=>	array(),		//hash stack
+		'type'			=>	'user',
+		'nickname'		=>	'',
+		'last'			=>	0,
+		'uxto'			=>	array(),		//hash stack
+		'storage'		=>	array(),		//hash stack
+		'contact'		=>	array(),		//hash stack
 	);
 	
 	/* router
@@ -46,6 +47,7 @@ class Account{
 			
 			case 'list':
 				$list=$core->getList($cfg['keys']['account_list']);
+
 				$acs=$core->getHash($cfg['keys']['accounts'],$list);
 				
 				$arr=array();
@@ -82,10 +84,14 @@ class Account{
 		$len=strlen($str);
 		$account='';
 		for($i=0;$i<$n;$i++)$account.=substr($str,rand(0, $len-1),1);
+
+		$data=$this->struct;
+		$data['last']=time();
+
 		return array(
 			'public_key'	=>	$account,
 			'private_key'	=>	'',
-			'data'			=>	$this->struct,
+			'data'			=>	$data,
 		);
 	}
 	

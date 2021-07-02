@@ -10,7 +10,7 @@
 
 		//sim-chain basic setting
 		'name'			=>	'VBC',			//coin name
-		'speed'			=>	30,				//block created speed (block/second)
+		'speed'			=>	15,				//block created speed (block/second)
 		'basecoin'		=>	100,			//reward for creating block
 		'password'		=>	'123456',		//default password for simulate account
 		'cost'			=>	array(

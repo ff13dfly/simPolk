@@ -4,21 +4,6 @@ class Chain{
 	private $cur;
 	private $db;
 	
-	//基础transfer的数据结构
-	private $transfer=array(
-		'from'=>array(
-			'account'	=>	'public hash',
-			'hash'		=>	array('hash_a','hash_b'),
-			'type'		=>	'basecoin',
-			'value'		=>	0,
-			'stamp'		=>	0,
-		),
-		'to'=>array(
-			'account_a'	=>	0,
-			'account_b'	=>	0,
-		),
-	);
-	
 	public function task($act,$param,&$core,$cur,$cfg){
 		$this->env=$cfg;
 		$this->cur=$cur;
@@ -111,10 +96,6 @@ class Chain{
 			'data'		=>	$list,
 			'merkle'	=>	$mtree,
 		);
-	}
-	
-	private function transferTo(){
-		
 	}
 	
 	private function chainView($n){

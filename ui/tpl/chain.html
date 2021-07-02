@@ -107,7 +107,7 @@
 
     $('#block_view').off('click').on('click', function() {
         var num = parseInt($('#block_num').val());
-        if (!num) return false;
+        if (isNaN(num)) return false;
         simPolk.request('chain', 'view', {
             n: num
         }, function(res) {
