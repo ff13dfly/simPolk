@@ -119,12 +119,15 @@ class Simulator extends CORE{
 		$as=array();
 		foreach($raw['list_transaction'] as $k=>$v){
 			$hash=$mtree[$k];
-			echo $hash.':<br>';
+			//echo $hash.':<br>';
+
+			//2.1.remove account uxto
 			foreach($v['from'] as $kk=>$vv){
 				if($kk==0) continue;
 
 			}
-
+			
+			//2.2.add account uxto
 			foreach($v['to'] as $vv){
 				$account=$vv['account'];
 				if(!isset($as[$account])){
@@ -132,13 +135,10 @@ class Simulator extends CORE{
 					$as[$account]=json_decode($list[$account],true);
 				}
 				$as[$account]['uxto'][]=$hash;
-
-
-				//echo json_encode($as).'<br>';
-				//echo json_encode($vv).'<br>';
 			}
-			
 
+			//2.3.set uxto hash 
+			$this->setHash($keys['transaction_entry'],$hash,json_encode($v));
 		}
 
 		//3.save accout data

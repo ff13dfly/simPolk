@@ -30,7 +30,7 @@
 			'accounts'				=>	'sim_accounts',		//account hashmap entry
 			'account_list'			=>	'all_accounts',		//account list
 
-			'chain_entry'			=>	'en_chain',			//block map entry name (for redis hash)
+			'transaction_entry'		=>	'en_chain',			//transaction map entry name (for redis hash)
 			'storage_entry'			=>	'en_storage',		//storage map entry name (for redis hash)
 			'contact_entry'			=>	'en_contact',		//contact map entry name (for redis hash)
 		),
