@@ -11,6 +11,7 @@ class Simulator extends CORE{
 	//block head struct
 	private $raw=array(
 		'parent_hash'		=>	'',				//parent hash , used to vertify the blockchain data
+		'merkle_root'		=>	'',
 		'version'			=>	'simPolk 0.1',	//datastruct version
 		'height'			=>	0,				//block height		
 		'stamp'				=>	0,				//timestamp
@@ -48,18 +49,25 @@ class Simulator extends CORE{
 		'account'		=>	'account_hash_64byte',	//account public key
 	);
 
+	/*	create the block data struct and cache to user
+	@param	$n		integer 	//block number
+	@param	$skip	boolean		//skip the collected rows
+	*/
 	private function createBlock($n,$skip=true){
 		$nodes=$this->setting['nodes'];
 		$svc=$nodes[rand(0, count($nodes)-1)];
 		$data=$this->getCoinbaseBlock($n,$svc);		//获取带coinbase UXTO的区块数据
 
-		$this->saveToChain($n,$data);
+		
 		if(!$skip){
 			//$this->mergeData($data);
 			//exit('<hr>have collected data');
 		}
+
 		//struct all the neccessary cache;
 		$this->structRow($data);
+
+		$this->saveToChain($n,$data);
 
 		//clean the collected data
 		if(!$skip){
@@ -83,8 +91,64 @@ class Simulator extends CORE{
 		return true;
 	}
 
-	private function structRow($raw){
+	private function structRow(&$raw){
+		$cfg=$this->setting;
+		$keys=$cfg['keys'];
+		$pre=$cfg['prefix'];
+		//1.merkle calculation
+		//1.1.transfer merkle
+		$mtree=array();
+		foreach($raw['list_transaction'] as $k=>$v){
+			$mtree[]=$this->encry(json_encode($v));
+		}
 
+		$raw['merkle_transaction']=$mtree;
+		$this->merkle($mtree);
+		$raw['root_transaction']=$mtree[count($mtree)-1];
+
+		//1.2.storage merkle
+		if(!empty($raw['list_storage'])){
+
+		}
+		//1.3.contact merkle
+		if(!empty($raw['list_contact'])){
+
+		}
+
+		//2.account cache
+		$as=array();
+		foreach($raw['list_transaction'] as $k=>$v){
+			$hash=$mtree[$k];
+			echo $hash.':<br>';
+			foreach($v['from'] as $kk=>$vv){
+				if($kk==0) continue;
+
+			}
+
+			foreach($v['to'] as $vv){
+				$account=$vv['account'];
+				if(!isset($as[$account])){
+					$list=$this->getHash($keys['accounts'],array($account));
+					$as[$account]=json_decode($list[$account],true);
+				}
+				$as[$account]['uxto'][]=$hash;
+
+
+				//echo json_encode($as).'<br>';
+				//echo json_encode($vv).'<br>';
+			}
+			
+
+		}
+
+		//3.save accout data
+		foreach($as as $acc=>$v){
+			$this->setHash($keys['accounts'],$acc,json_encode($v));
+		}
+		
+		//echo '<hr>';
+
+		return $raw;
 	}
 
 	private function getCoinbaseBlock($n,$svc){

@@ -36,7 +36,27 @@
             console.log(txt);
             $(con).html(txt);
         },
-    }
+    };
+
+    $(function() {
+        var dt = '<div class="col-lg-12">{type} : {account}</div>';
+        var translate = function() {
+
+        };
+        var con = '#account_list';
+        var ajaxFun = function(page, ck) {
+            simPolk.request('account', 'list', {
+                p: page
+            }, function(res) {
+                ck && ck(res.data);
+            });
+        }
+        var auto = [];
+        var setting = {};
+        var events = {}
+        pager.show(dt, translate, con, ajaxFun, auto, setting, events);
+    });
+
     $('#account_view').off('click').on('click', function() {
         var hash = $('#account_hash').val();
         if (!hash || hash.length != 64) return self.info('Error hash', '#info_view');
@@ -55,22 +75,5 @@
             if (res.success) return location.reload();
         });
 
-    });
-
-    $(function() {
-        var dt = '<div class="col-lg-12">{type} : {account}</div>';
-        var translate = function() {};
-        var con = '#account_list';
-        var ajaxFun = function(page, ck) {
-            simPolk.request('account', 'list', {
-                p: page
-            }, function(res) {
-                ck && ck(res.data);
-            });
-        }
-        var auto = [];
-        var setting = {};
-        var events = {}
-        pager.show(dt, translate, con, ajaxFun, auto, setting, events);
     });
 </script>

@@ -120,8 +120,8 @@
             n: num
         }, function(res) {
             if (!res.success) return false;
-
-            $('#block_info').html(self.domObject(res.data));
+            var ctx = !res.data ? 'No block data.' : self.domObject(res.data);
+            $('#block_info').html(ctx);
         });
     });
 

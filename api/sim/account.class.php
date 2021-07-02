@@ -48,7 +48,7 @@ class Account{
 					'data'		=>	json_decode($list[$account],true) ,
 				);
 				break;
-			
+
 			case 'list':
 				$list=$core->getList($cfg['keys']['account_list']);
 
