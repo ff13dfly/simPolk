@@ -1,5 +1,21 @@
 <div class="row">
-    <div class="col-lg-7  gy-4">
+    <div class="col-lg-8  gy-4">
+        <div class="row">
+            <div class="col-lg-6">
+                <label for="block_num">Block number</label>
+                <input type="text" class="form-control" name="block_num" id="block_num" value="">
+            </div>
+            <div class="col-lg-3 text-end gy-4">
+                <button class="btn btn-lg btn-primary" id="block_view">View Block Data</button>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12 gy-4" id="block_info"></div>
+        </div>
+    </div>
+
+    <div class="col-lg-4  gy-4">
         <div class="row">
             <div class="col-lg-7">
                 <small>Block height</small>
@@ -8,7 +24,7 @@
             </div>
 
             <div class="col-lg-5 text-end  gy-4">
-                <button class="btn btn-lg btn-primary" id="collected_clean">Clean collected</button>
+                <button class="btn btn-lg btn-primary" id="collected_clean">Clean</button>
             </div>
         </div>
 
@@ -48,22 +64,6 @@
 
         </div>
     </div>
-    <div class="col-lg-1  gy-4"></div>
-    <div class="col-lg-4  gy-4">
-        <div class="row">
-            <div class="col-lg-12">
-                <label for="block_num">Block number</label>
-                <input type="text" class="form-control" name="block_num" id="block_num" value="">
-            </div>
-            <div class="col-lg-12 text-end gy-4">
-                <button class="btn btn-lg btn-primary" id="block_view">View Block Data</button>
-            </div>
-        </div>
-
-        <div class="row text-break" id="block_info">
-
-        </div>
-    </div>
 </div>
 
 <script type="text/javascript">
@@ -91,7 +91,23 @@
                 dom += `<div class="col-lg-4 text-break" >${k}</div><div class="col-lg-8 text-break" >${row}</div>`;
             }
             return dom;
-        }
+        },
+        jsonBlock: function(js, con) {
+            Jeditor.init(js, {
+                "container": con,
+                "name": "Block struct",
+                "setting": {
+                    "headerShow": false,
+                    "row": {
+                        "left": 4,
+                        "right": 7,
+                        "note": 1
+                    },
+                    "mode": "edit",
+                },
+                "lock": [],
+            })
+        },
     }
     $(function() {
         simPolk.request('chain', 'current', {}, function(res) {
@@ -120,8 +136,11 @@
             n: num
         }, function(res) {
             if (!res.success) return false;
-            var ctx = !res.data ? 'No block data.' : self.domObject(res.data);
-            $('#block_info').html(ctx);
+            if (!res.data) return $('#block_info').html('No block data.');
+            self.jsonBlock(res.data, '#block_info');
+
+            //var ctx = !res.data ? 'No block data.' : self.domObject(res.data);
+            //$('#block_info').html(ctx);
         });
     });
 

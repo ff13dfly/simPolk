@@ -1,11 +1,23 @@
 <div class="row">
     <div class="col-lg-7">
         <div class="row">
-            <div class="col-lg-7  gy-4">
+            <div class="col-lg-9  gy-4">
+                <label for="account_hash">Account Hash <span class="text-danger" id="info_view"></span></label>
+                <textarea class="form-control" name="account_hash" id="account_hash" cols="30" rows="2"></textarea>
+            </div>
+            <div class="col-lg-3 text-end gy-4">
+                <button class="btn btn-lg btn-primary" id="account_view">Details</button>
+            </div>
+            <div class="col-lg-12 gy-4" id="account_con"></div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="row">
+            <div class="col-lg-8  gy-4">
                 <h3>Create a simulate account.</h3>
             </div>
-            <div class="col-lg-5 text-end  gy-4">
-                <button class="btn btn-lg btn-primary" id="new_account">Create New Account</button>
+            <div class="col-lg-4 text-end  gy-4">
+                <button class="btn btn-lg btn-primary" id="new_account">New Account</button>
             </div>
             <div class="col-lg-12">
                 <hr>
@@ -14,19 +26,7 @@
 
         <div class="row" id="account_list"></div>
     </div>
-    <div class="col-lg-1"></div>
-    <div class="col-lg-4">
-        <div class="row">
-            <div class="col-lg-12  gy-4">
-                <label for="account_hash">Account Hash <span class="text-danger" id="info_view"></span></label>
-                <textarea class="form-control" name="account_hash" id="account_hash" cols="30" rows="3"></textarea>
-            </div>
-            <div class="col-lg-12 text-end gy-4">
-                <button class="btn btn-lg btn-primary" id="account_view">Account Details</button>
-            </div>
-            <div class="col-lg-12 gy-4" id="account_con"></div>
-        </div>
-    </div>
+
 </div>
 
 <script type="text/javascript" charset="utf-8" src="lib/pager.js"></script>
@@ -35,6 +35,21 @@
         info: function(txt, con) {
             console.log(txt);
             $(con).html(txt);
+        },
+        jsonBlock: function(js, con) {
+            Jeditor.init(js, {
+                "container": con,
+                "name": "Account struct",
+                "setting": {
+                    "headerShow": false,
+                    "row": {
+                        "left": 2,
+                        "right": 9,
+                        "note": 1
+                    },
+                    "mode": "edit",
+                },
+            })
         },
     };
 
@@ -65,7 +80,8 @@
             'u': hash,
         }, function(res) {
             //console.log(res)
-            $('#account_con').html(JSON.stringify(res.data));
+            //$('#account_con').html(JSON.stringify(res.data));
+            self.jsonBlock(res.data, '#account_con');
         });
     });
 
