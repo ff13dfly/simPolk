@@ -8,7 +8,9 @@ class Account{
 	private $struct=array(
 		'type'		=>	'user',
 		'nickname'	=>	'',
-		'uxto'		=>	array(),
+		'uxto'		=>	array(),		//hash stack
+		'storage'	=>	array(),		//hash stack
+		'contact'	=>	array(),		//hash stack
 	);
 	
 	/* router
@@ -30,6 +32,15 @@ class Account{
 				return array(
 					'success'	=>	TRUE,
 					'data'		=>	$account,
+				);
+				break;
+
+			case 'view':
+				$account=	$param['u'];
+				$list=$this->db->getHash($cfg['keys']['accounts'],array($account));
+				return array(
+					'success'	=>	TRUE,
+					'data'		=>	json_decode($list[$account],true) ,
 				);
 				break;
 			
@@ -56,33 +67,26 @@ class Account{
 	}
 	
 	private function saveAccout($hash,$data,&$keys){
-		//echo json_encode($keys);
 		//1.建立根hash
 		$this->db->setHash($keys['accounts'],$hash,json_encode($data));
 		
 		//2.建立account的list
 		$this->db->pushList($keys['account_list'],$hash);
-		
-		//$list=$this->db->getList($keys['account_list']);
-		//echo json_encode($list).'<br>';
+
 	}
 	
-	
-	private function newAccount(){
-		return array(
-			'public_key'	=>	$this->getPublicKey(),
-			'private_key'	=>	'',
-			'data'			=>	$this->struct,
-		);
-	}
 
 	/*account create method backup*/
-	public function newAccount2($n=64){
+	public function newAccount($n=64){
 		$str='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 		$len=strlen($str);
 		$account='';
 		for($i=0;$i<$n;$i++)$account.=substr($str,rand(0, $len-1),1);
-		return $account;
+		return array(
+			'public_key'	=>	$account,
+			'private_key'	=>	'',
+			'data'			=>	$this->struct,
+		);
 	}
 	
 	private function getPublicKey(){
