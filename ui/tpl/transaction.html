@@ -3,7 +3,7 @@
         <div class="row">
             <div class="col-lg-10 gy-4">
                 <label for="from_account">Transfer from <span class="text-danger" id="from_error"></span></label>
-                <input type="text" class="form-control" name="from_account" id="from_account" value="" placeholder="Account hash" />
+                <input type="text" class="form-control" name="from_account" id="from_account" value="" placeholder="Account public key" />
             </div>
             <div class="col-lg-2 gy-4 text-center">
                 <label for="add_from">new account</label>
@@ -11,7 +11,7 @@
             </div>
             <div class="col-lg-10 gy-4">
                 <label for="to_account">Transfer to <span class="text-danger" id="to_error"></span></label>
-                <input type="text" class="form-control" name="to_account" id="to_account" value="" placeholder="Account hash" />
+                <input type="text" class="form-control" name="to_account" id="to_account" value="" placeholder="Account public key" />
             </div>
             <div class="col-lg-2 gy-4  text-center">
                 <label for="add_to">new account</label>
@@ -31,12 +31,13 @@
     <div class="col-lg-4">
         <div class="row">
             <div class="col-lg-12 gy-4">
-                <label for="from_account">Account</label>
-                <input type="text" class="form-control" name="account_hash" id="account_hash" value="" placeholder="Account hash" />
+                <label for="from_account">Account <span class="text-danger" id="search_error"></span></label>
+                <textarea class="form-control" name="account_hash" id="account_hash" cols="30" rows="3" placeholder="Input the account publish key to search..."></textarea>
             </div>
             <div class="col-lg-12 text-end gy-4">
                 <button class="btn btn-lg btn-primary" id="account_search">Account UXTO</button>
             </div>
+            <div class="col-lg-12 gy-4" id="search_con"></div>
         </div>
     </div>
 </div>
@@ -56,6 +57,7 @@
             $('#from_error').html('');
             $('#to_error').html('');
             $('#amount_error').html('');
+            $('#search_error').html('');
         },
         cacheInput: function() {
             var data = {
@@ -72,6 +74,9 @@
             $('#trans_amount').val(dt.amount);
             return true;
         },
+        clearCache: function() {
+            localStorage.removeItem('transfer_cache');
+        },
     }
 
     $(function() {
@@ -81,6 +86,8 @@
         if (dif > 600000) return false;
         self.setCache(dt);
     });
+
+    $('.form-control').off('blur').on('blur', self.cacheInput);
 
     $('#add_from').off('click').on('click', function() {
         simPolk.request('account', 'new', {}, function(res) {
@@ -97,8 +104,15 @@
         });
     });
 
-
-    $('.form-control').off('blur').on('blur', self.cacheInput);
+    $('#account_search').off('click').on('click', function() {
+        var hash = $('#account_hash').val();
+        if (!hash || hash.length != 64) return self.info('Account error', '#search_error');
+        simPolk.request('account', 'view', {
+            'u': hash,
+        }, function(res) {
+            $('#search_con').html(JSON.stringify(res.data));
+        });
+    });
 
     $('#transfer_submit').off('click').on('click', function() {
         self.clearError();
@@ -127,7 +141,8 @@
             to: a_to,
             value: val
         }, function(res) {
-            console.log(res)
+            self.clearCache();
+            location.reload();
         });
     });
 </script>
