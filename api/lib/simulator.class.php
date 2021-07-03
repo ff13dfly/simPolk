@@ -49,6 +49,14 @@ class Simulator extends CORE{
 		'account'		=>	'account_hash_64byte',	//account public key
 	);
 
+	public function getTransactionFormat(){
+		return array(
+			'row'	=>	$this->uxto,
+			'from'	=>	$this->from,
+			'to'	=>	$this->to,
+		);
+	}
+
 	/*	create the block data struct and cache to user
 	@param	$n		integer 	//block number
 	@param	$skip	boolean		//skip the collected rows
@@ -275,9 +283,8 @@ class Simulator extends CORE{
 		}else{
 			$height=0;
 		}
-		
-		
-		if($curBlock>$height+1){
+
+		if($curBlock>$height){
 			for($i=$height;$i<$curBlock;$i++){
 				$this->createBlock($i);
 			}

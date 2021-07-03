@@ -65,7 +65,35 @@ class Chain{
 				);
 				break;
 				
-			case 'transfer':				
+			case 'transfer':	
+				$format=$core->getTransactionFormat();
+				$acc_from=$param['from'];
+				$acc_to=$param['to'];
+				$amount=(int)$param['value'];
+
+
+				echo json_encode($format).'<hr>';
+
+				//1.calc the from account uxto
+
+				$atmp=$this->db->getHash($cfg['keys']['accounts'],array($acc_from));
+				$user_from=json_decode($atmp[$acc_from],true);
+
+				//echo json_encode($user_from).'<hr>';
+
+				$nuxto=$this->getUXTO($user_from['uxto'],$acc_from,$amount);
+				if(!$nuxto['avalid']){
+					return array(
+						'success'	=>	false,
+						'message'	=>	'not enough input',
+					);
+				}
+				echo json_encode($nuxto).'<hr>';
+
+
+
+				exit();
+
 				$row=$this->transfer;
 				$row['from']['account']=$param['from'];
 				$row['from']['stamp']=time();
@@ -85,6 +113,38 @@ class Chain{
 				break;
 		}
 	}
+
+	private function calcUXTO(){
+		
+	}
+	
+	//check the uxto list to get the right uxto
+	private function getUXTO($uxto,$account,$amount){
+		$out=array();
+		$left=array();
+		$count=0;
+		$arr=$this->db->getHash($this->env['keys']['transaction_entry'],$uxto);
+		
+		foreach($arr as $hash=>$v){
+			$row=json_decode($v,true);
+			if($count>=$amount){
+				$left[]=array('hash'=>$hash,'data'=>$row);
+			}else{
+				
+				foreach($row['to'] as $kk=>$vv){
+					if($vv['account']!=$account) continue;
+					$count+=$vv['amount'];
+				} 
+				$out[]=array('hash'=>$hash,'data'=>$row);
+			}
+		}
+		return array(
+			'avalid'	=> $count>=$amount?true:false,
+			'out'		=>	$out,
+			'left'		=>	$left,
+		);
+	}
+
 	private function clean_block($n,$pre){
 		for($i=0;$i<$n;$i++) $this->db->delKey($pre.$i);
 		return true;

@@ -49,6 +49,23 @@ class Account{
 				);
 				break;
 
+			case 'uxto':
+				$hash=	$param['hash'];
+
+				$arr=$core->getHash($cfg['keys']['transaction_entry'],array($hash));
+				if(empty($arr)) return array(
+					'success'	=>	false,
+					'message'	=>	'no such hash',
+				);
+
+				$uxto=json_decode($arr[$hash],true);
+
+				return array(
+					'success'	=>	TRUE,
+					'data'		=>	$uxto['to'] ,
+				);
+				break;
+
 			case 'list':
 				$list=$core->getList($cfg['keys']['account_list']);
 
