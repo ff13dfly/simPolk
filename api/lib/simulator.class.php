@@ -85,15 +85,15 @@ class Simulator extends CORE{
 		return TRUE;
 	}
 
-	private function mergeData(&$row){
-		$cfg=$this->setting;
-		$ts=$this->getCollected($cfg['keys']['transfer_collected']);
-		echo json_encode($ts);
-	}
+	// private function mergeData(&$row){
+	// 	$cfg=$this->setting;
+	// 	$ts=$this->getCollected($cfg['keys']['transaction_collected']);
+	// 	echo json_encode($ts);
+	// }
 
 	private function cleanCollectedData(){
 		$cfg=$this->setting;
-		$this->delKey($cfg['keys']['transfer_collected']);
+		$this->delKey($cfg['keys']['transaction_collected']);
 		$this->delKey($cfg['keys']['storage_collected']);
 		$this->delKey($cfg['keys']['contact_collected']);
 		return true;
@@ -226,7 +226,7 @@ class Simulator extends CORE{
 		$cur=$this->autoConfig();		//autoConfig里会进行跳块处理
 		//2.跳块处理，检查数据和区块高度
 
-		$key_collected=$cfg['keys']['transfer_collected'];
+		$key_collected=$cfg['keys']['transaction_collected'];
 		$height=$core->getKey($cfg['keys']['height']);
 
 		
@@ -265,35 +265,42 @@ class Simulator extends CORE{
 		$core=$this->db;
 		$result=array();
 		
-		//1.check if it is the start of a simchain.
-		$key_start=$cfg['keys']['start'];
-		$start=$core->getKey($key_start);
-		if(!$start){
-			$start=time();
-			$core->setKey($key_start,$start);
-		}
-
-		$curBlock=ceil((time()-$start)/$cfg['speed']);
+		$curBlock=$this->addJumpedBlocks();
 		$result['current_block']=$curBlock;
-
-		//2.create the blank block
-		$key_height=$cfg['keys']['height'];
-		if($core->existsKey($key_height)){
-			$height=$core->getKey($key_height);
-		}else{
-			$height=0;
-		}
-
-		if($curBlock>$height){
-			for($i=$height;$i<$curBlock;$i++){
-				$this->createBlock($i);
-			}
-			$core->setKey($key_height,$curBlock);
-		}
 		
 		$index=$this->getServer($cfg['nodes']);
 		$result['server']=$cfg['nodes'][$index];		
 		return $result;
+	}
+
+	private function addJumpedBlocks(){
+		$cfg=$this->setting;
+
+		//1.check if it is the start of a simchain.
+		$key_start=$cfg['keys']['start'];
+		$start=$this->db->getKey($key_start);
+		if(!$start){
+			$start=time();
+			$this->db->setKey($key_start,$start);
+		}
+
+		$curBlock=ceil((time()-$start)/$cfg['speed']);
+
+		$key_height=$cfg['keys']['height'];
+		if($this->db->existsKey($key_height)){
+			$height=$this->db->getKey($key_height);
+		}else{
+			$height=0;
+		}
+
+		//2.create the blank block
+		if($curBlock>$height){
+			for($i=$height;$i<$curBlock;$i++){
+				$this->createBlock($i);
+			}
+			$this->db->setKey($key_height,$curBlock);
+		}
+		return $curBlock;
 	}
 
 	private function getCollectedData($n){

@@ -22,7 +22,7 @@
 		//sim-chain db keys setting
 		'keys'			=>	array(
 			'start'					=>	'sim_start',		//simulator start timestamp, used to calc block number
-			'transfer_collected'	=>	'sim_collected',	//what is collected now.
+			'transaction_collected'	=>	'sim_collected',	//what is collected now.
 			'storage_collected'		=>	'sim_storage',		//storage map entry key
 			'contact_collected'		=>	'sim_contact',		//contact map entry key
 

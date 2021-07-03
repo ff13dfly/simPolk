@@ -44,7 +44,7 @@ class Chain{
 				break;
 
 			case 'clean':		//处理保存，调用definition对key进行定义
-				$core->delKey($cfg['keys']['transfer_collected']);
+				$core->delKey($cfg['keys']['transaction_collected']);
 				$core->delKey($cfg['keys']['storage_collected']);
 				$core->delKey($cfg['keys']['contact_collected']);
 
@@ -57,29 +57,22 @@ class Chain{
 			case 'current':
 				
 				return array(
-					'success'	=>	TRUE,
-					'transfer'	=>	$this->getCollected($cfg['keys']['transfer_collected']),		//collected transfer
-					'storage'	=>	$this->getCollected($cfg['keys']['storage_collected']),			//collected storage
-					'contact'	=>	$this->getCollected($cfg['keys']['contact_collected']),			//collected storage
-					'current'	=>	$cur,
+					'success'		=>	TRUE,
+					'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),		//collected transfer
+					'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),			//collected storage
+					'contact'		=>	$this->getCollected($cfg['keys']['contact_collected']),			//collected storage
+					'current'		=>	$cur,
 				);
 				break;
 				
 			case 'transfer':	
-				$format=$core->getTransactionFormat();
 				$acc_from=$param['from'];
 				$acc_to=$param['to'];
 				$amount=(int)$param['value'];
 
-
-				echo json_encode($format).'<hr>';
-
 				//1.calc the from account uxto
-
 				$atmp=$this->db->getHash($cfg['keys']['accounts'],array($acc_from));
 				$user_from=json_decode($atmp[$acc_from],true);
-
-				//echo json_encode($user_from).'<hr>';
 
 				$nuxto=$this->getUXTO($user_from['uxto'],$acc_from,$amount);
 				if(!$nuxto['avalid']){
@@ -88,19 +81,13 @@ class Chain{
 						'message'	=>	'not enough input',
 					);
 				}
-				echo json_encode($nuxto).'<hr>';
-
-
-
-				exit();
-
-				$row=$this->transfer;
-				$row['from']['account']=$param['from'];
-				$row['from']['stamp']=time();
 				
-				$key=$cfg['keys']['transfer_collected'];
-				
-				$core->pushList($key,json_encode($row));
+				//2.setup the uxto data struct
+				$final=$this->calcUXTO($nuxto['out'],$acc_from,$acc_to,$amount);
+
+				$key=$cfg['keys']['transaction_collected'];
+				$core->pushList($key,json_encode($final));
+
 				return array(
 					'success'	=>TRUE,
 					'count'		=>$core->lenList($key),
@@ -114,8 +101,44 @@ class Chain{
 		}
 	}
 
-	private function calcUXTO(){
+	private function calcUXTO($out,$from,$to,$amount){
+		//echo json_encode($out).'<hr>';
+
+		$format=$this->db->getTransactionFormat();
+		$row=$format['row'];
+		$fmt_from=$format['from'];
+		$fmt_to=$format['to'];
+
+		//1.calc the amount of input
+		$sum=0;
+		foreach($out as $k=>$v){
+			//echo 'uxto['.$k.'] :'.json_encode($v).'<hr>';
+
+			$fmt_from['hash']=$v['hash'];
+			$fmt_from['type']='normal';
+			$fmt_from['account']=$from;
+
+			foreach($v['data']['to'] as $vv){
+				if($vv['account']!=$from) continue;
+
+				$fmt_from['amount']=$vv['amount'];
+				$sum+=(int)$vv['amount'];
+			}
+			$row['from'][]=$fmt_from;	
+		}
+
+		//2.calc the amount of output
+		$fmt_to['amount']=$amount;
+		$fmt_to['account']=$to;
+		$row['to'][]=$fmt_to;
+
+		if($sum!==$amount){
+			$fmt_to['amount']=$sum-$amount;
+			$fmt_to['account']=$from;
+			$row['to'][]=$fmt_to;
+		}
 		
+		return $row;
 	}
 	
 	//check the uxto list to get the right uxto
@@ -152,6 +175,8 @@ class Chain{
 
 	private function getCollected($key){
 		$list=$this->db->getList($key);
+		echo $key.':'.json_encode($list).'<hr>';
+
 		$cs=array();
 		$mtree=array();
 		foreach($list as $v){

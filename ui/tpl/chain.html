@@ -114,8 +114,8 @@
             $('#block_current').html(res.current.current_block);
             $('#server_current').html(res.current.server.url);
 
-            var tdom = self.domList(res.transfer.data);
-            var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transfer.merkle)
+            var tdom = self.domList(res.transaction.data);
+            var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transaction.merkle)
             $('#collected_transfer').html(tdom).append(mtree);
 
             var sdom = self.domList(res.storage.data);
