@@ -10,52 +10,7 @@ class Chain{
 		$this->db=$core;
 			
 		switch ($act) {
-			case 'view':
-				
-				$block= $this->chainView($param['n']);
-				return array(
-					'success'	=>	TRUE,
-					'data'		=>	json_decode($block,true),
-				);
-				break;
-				
-			case 'reset':		//重置模拟的blockchain网络
-
-				$n=$core->getKey($cfg['keys']['height']);
-				foreach($cfg['keys'] as $key){
-					$core->delKey($key);
-				}
-
-				//处理掉所有的block数据
-				$pre=$cfg['prefix']['chain'];
-				$this->clean_block((int)$n,$pre);
-				
-				return array(
-					'success'	=>	TRUE,
-				);
-				
-				break;
-			case 'restruct':	//restruct all data
-
-				break;
-				
-			case 'save':		//处理保存，调用definition对key进行定义
-				
-				break;
-
-			case 'clean':		//处理保存，调用definition对key进行定义
-				$core->delKey($cfg['keys']['transaction_collected']);
-				$core->delKey($cfg['keys']['storage_collected']);
-				$core->delKey($cfg['keys']['contact_collected']);
-
-				return array(
-					'success'	=>	TRUE,
-					'time'		=>	time(),
-				);
-				break;
-
 			case 'current':
-				
 				return array(
 					'success'		=>	TRUE,
 					'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),		//collected transfer
@@ -64,7 +19,7 @@ class Chain{
 					'current'		=>	$cur,
 				);
 				break;
-				
+
 			case 'transfer':	
 				$acc_from=$param['from'];
 				$acc_to=$param['to'];
@@ -85,20 +40,62 @@ class Chain{
 				//2.setup the uxto data struct
 				$final=$this->calcUXTO($nuxto['out'],$acc_from,$acc_to,$amount);
 
+				//2.1.add to collected transaction;
 				$key=$cfg['keys']['transaction_collected'];
 				$core->pushList($key,json_encode($final));
+
+				//2.2.remove input hash list
 
 				return array(
 					'success'	=>TRUE,
 					'count'		=>$core->lenList($key),
 				);
 				
-				break;	
+				break;
+
+			case 'view':
+				$block= $this->chainView($param['n']);
+				return array(
+					'success'	=>	TRUE,
+					'data'		=>	json_decode($block,true),
+				);
+				break;
 				
+			case 'reset':		//重置模拟的blockchain网络
+				$n=$core->getKey($cfg['keys']['height']);
+				foreach($cfg['keys'] as $key){
+					$core->delKey($key);
+				}
+
+				//处理掉所有的block数据
+				$pre=$cfg['prefix']['chain'];
+				$this->clean_block((int)$n,$pre);
+				
+				return array(
+					'success'	=>	TRUE,
+				);
+				break;
+
+			case 'restruct':	//restruct all data
+
+				break;
+
+			case 'clean':		//处理保存，调用definition对key进行定义
+				$core->delKey($cfg['keys']['transaction_collected']);
+				$core->delKey($cfg['keys']['storage_collected']);
+				$core->delKey($cfg['keys']['contact_collected']);
+
+				return array(
+					'success'	=>	TRUE,
+					'time'		=>	time(),
+				);
+				break;
+
 			default:
-				
+				return false;
 				break;
 		}
+		return true;
 	}
 
 	private function calcUXTO($out,$from,$to,$amount){
@@ -175,7 +172,7 @@ class Chain{
 
 	private function getCollected($key){
 		$list=$this->db->getList($key);
-		echo $key.':'.json_encode($list).'<hr>';
+		//echo $key.':'.json_encode($list).'<hr>';
 
 		$cs=array();
 		$mtree=array();

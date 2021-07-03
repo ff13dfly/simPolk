@@ -74,13 +74,12 @@ class Simulator extends CORE{
 
 		//struct all the neccessary cache;
 		$this->structRow($data);
-
 		$this->saveToChain($n,$data);
 
 		//clean the collected data
-		if(!$skip){
-			$this->cleanCollectedData();
-		}
+		// if(!$skip){
+		// 	$this->cleanCollectedData();
+		// }
 		
 		return TRUE;
 	}
