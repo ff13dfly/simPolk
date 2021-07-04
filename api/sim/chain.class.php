@@ -10,6 +10,12 @@ class Chain{
 		$this->db=$core;
 			
 		switch ($act) {
+			case 'config':
+				return array(
+					'success'	=>	TRUE,
+					'data'		=>	$cfg,
+				);
+				break;
 			case 'current':
 				return array(
 					'success'		=>	TRUE,
@@ -60,7 +66,16 @@ class Chain{
 					'data'		=>	json_decode($block,true),
 				);
 				break;
-				
+
+			
+
+			case 'write':
+
+				return array(
+					'success'	=>	TRUE,
+				);
+				break;	
+
 			case 'reset':		//重置模拟的blockchain网络
 				$n=$core->getKey($cfg['keys']['height']);
 				foreach($cfg['keys'] as $key){

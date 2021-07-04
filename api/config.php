@@ -7,7 +7,7 @@
 			'auth'		=>	'authKEY',
 			'timeout'	=>	3600,
 		),
-
+		'config_cache'	=>	'sim_confg',	//config_cache key
 		//sim-chain basic setting
 		'name'			=>	'VBC',			//coin name
 		'speed'			=>	2000,				//block created speed (block/second)
