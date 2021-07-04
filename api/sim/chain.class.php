@@ -67,11 +67,11 @@ class Chain{
 				);
 				break;
 
-			
-
 			case 'write':
-
+				//
+				$height=$this->db->freshCurrentBlock();
 				return array(
+					'block'	=>	$height,
 					'success'	=>	TRUE,
 				);
 				break;	

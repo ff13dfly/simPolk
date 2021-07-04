@@ -17,21 +17,16 @@
 
     <div class="col-lg-4  gy-4">
         <div class="row">
-            <div class="col-lg-7">
+            <div class="col-lg-12">
                 <small>Block height, not created yet</small>
                 <h2 id="block_current" class="text-primary"></h2>
                 <small id="server_current"></small>
             </div>
-
-            <div class="col-lg-5 text-end gy-2">
-                <div class="row">
-                    <div class="col-lg-12">
-                        <button class="btn btn-md btn-danger" id="collected_clean">Clean</button>
-                    </div>
-                    <div class="col-lg-12 gy-4">
-                        <button class="btn btn-md btn-primary" id="block_write">Write</button>
-                    </div>
-                </div>
+            <div class="col-lg-6 gy-4 text-start">
+                <button class="btn btn-md btn-danger" id="collected_clean">Clean Collected</button>
+            </div>
+            <div class="col-lg-6 gy-4 text-end">
+                <button class="btn btn-md btn-primary" id="block_append">Append To Pre Block</button>
             </div>
         </div>
 
@@ -158,10 +153,11 @@
         });
     });
 
-    $('#block_write').off('click').on('click', function() {
+    $('#block_append').off('click').on('click', function() {
         simPolk.request('chain', 'write', {}, function(res) {
-            if (!res.success) return false;
-            location.reload();
+            console.log(res);
+            //if (!res.success) return false;
+            //location.reload();
         });
     });
 </script>

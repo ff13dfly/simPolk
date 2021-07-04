@@ -52,12 +52,41 @@ class Simulator extends CORE{
 		'account'		=>	'account_hash_64byte',	//account public key
 	);
 
+	public function __construct(){}
+	public function __destruct(){}
+	public static function getInstance(){
+		return CORE::init(get_class());
+	}
+
+	/*return the basic datastruct of transaction
+	*/
 	public function getTransactionFormat(){
 		return array(
 			'row'	=>	$this->uxto,
 			'from'	=>	$this->from,
 			'to'	=>	$this->to,
 		);
+	}
+
+	public function freshCurrentBlock(){
+		$cfg=$this->setting;
+
+		//1.获取当前已写块的数据
+		$h=$this->db->getKey($cfg['keys']['height']);
+		$n=$h-1;
+		$key=$cfg['prefix']['chain'].$n;
+		if(!$this->existsKey($key)){
+			return false;
+		}
+		$res=$this->getKey($key);
+		$data=json_decode($res);
+
+		return $data;
+		//2.merge进新的数据
+
+		//3.重新写块
+
+		return $n;
 	}
 
 	/*	create the block data struct and cache to user
@@ -80,6 +109,9 @@ class Simulator extends CORE{
 		return TRUE;
 	}
 
+	/* merget the collected rows to the block
+	
+	*/
 	private function mergeCollected(&$data){
 		$cds=$this->getAllCollected();
 		//1.merge all data
@@ -113,7 +145,9 @@ class Simulator extends CORE{
 		return true;
 	}
 
-	
+	/* calc the block params method
+
+	*/
 	private function structRow(&$raw){
 		$cfg=$this->setting;
 		$keys=$cfg['keys'];
@@ -201,6 +235,8 @@ class Simulator extends CORE{
 		return true;
 	}
 
+	/*Mining simulator
+	*/
 	private function getCoinbaseBlock($n,$svc){
 		$this->checkAccount($svc['account']);		//检查账户，并建立
 
@@ -226,9 +262,12 @@ class Simulator extends CORE{
 		return $data;
 	}
 
+	/* check the account is valid, if not exsist, created it.
+	*/
 	private function checkAccount($hash){
 		$keys=$this->setting['keys'];
 		$list=$this->db->getHash($keys['accounts'],array($hash));
+
 		if($list[$hash]==false){
 			$cls=$this->loadClass('account');
 			$fmt=$cls->getAccountFormat();
@@ -241,11 +280,7 @@ class Simulator extends CORE{
 	}
 	
 	
- 	public function __construct(){}
-	public function __destruct(){}
-	public static function getInstance(){
-		return CORE::init(get_class());
-	}
+
 	
 	//主入口，进行自动路由的地方
 	
