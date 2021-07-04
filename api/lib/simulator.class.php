@@ -11,13 +11,15 @@ class Simulator extends CORE{
 	//block head struct
 	private $raw=array(
 		'parent_hash'		=>	'',				//parent hash , used to vertify the blockchain data
-		'merkle_root'		=>	'',
+		'merkle_root'		=>	'',				//block merkle root or block hash
+		'height'			=>	0,				//index of blockchain
+		'signature'			=>	'',				//creator signature	
 		'version'			=>	'simPolk 0.1',	//datastruct version
 		'height'			=>	0,				//block height		
 		'stamp'				=>	0,				//timestamp
 		'diffcult'			=>	0,				//diffcult for server to calc hash
 		'nonce'				=>	0,				//salt of the block
-		'height'			=>	0,				//index of blockchain
+		
 		'root_transaction'	=>	'',				//transaction merkle root
 		'root_storage'		=>	'',				//storage merkle root
 		'root_contact'		=>	'',				//contact merkle root
@@ -42,6 +44,7 @@ class Simulator extends CORE{
 		'amount'		=>	0,						//from amount 
 		'type'			=>	'coinbase',				//from type [coinbase, normal]
 		'account'		=>	'account_hash_64byte',	//account public key
+		'signature'		=>	'account_signature',	//account encry
 	);
 
 	private $to=array(
@@ -66,38 +69,51 @@ class Simulator extends CORE{
 		$svc=$nodes[rand(0, count($nodes)-1)];
 		$data=$this->getCoinbaseBlock($n,$svc);		//获取带coinbase UXTO的区块数据
 
-		
+		//merge the collected data to the basic data struct
 		if(!$skip){
-			//$this->mergeData($data);
-			//exit('<hr>have collected data');
+			$this->mergeCollected($data);
 		}
 
 		//struct all the neccessary cache;
 		$this->structRow($data);
 		$this->saveToChain($n,$data);
-
-		//clean the collected data
-		// if(!$skip){
-		// 	$this->cleanCollectedData();
-		// }
-		
 		return TRUE;
 	}
 
-	// private function mergeData(&$row){
-	// 	$cfg=$this->setting;
-	// 	$ts=$this->getCollected($cfg['keys']['transaction_collected']);
-	// 	echo json_encode($ts);
-	// }
+	private function mergeCollected(&$data){
+		$cds=$this->getAllCollected();
+		//1.merge all data
 
-	private function cleanCollectedData(){
-		$cfg=$this->setting;
-		$this->delKey($cfg['keys']['transaction_collected']);
-		$this->delKey($cfg['keys']['storage_collected']);
-		$this->delKey($cfg['keys']['contact_collected']);
+		//merge the transaction data
+		$list=$cds['transaction']['data'];
+		if(!empty($list)){
+			foreach($list as $k=>$v){
+				$data['list_transaction'][]=$v;
+			}
+		}
+
+		//merge the storage data
+		$list=$cds['storage']['data'];
+		if(!empty($list)){
+			foreach($list as $k=>$v){
+				$data['list_storage'][]=$v;
+			}
+		}
+
+		//merge the contact data
+		$list=$cds['contact']['data'];
+		if(!empty($list)){
+			foreach($list as $k=>$v){
+				$data['list_contact'][]=$v;
+			}
+		}
+
+		//2.clean the collected data;
+		$this->cleanCollectedData();
 		return true;
 	}
 
+	
 	private function structRow(&$raw){
 		$cfg=$this->setting;
 		$keys=$cfg['keys'];
@@ -116,11 +132,32 @@ class Simulator extends CORE{
 		//1.2.storage merkle
 		if(!empty($raw['list_storage'])){
 
+		}else{
+			$mtree=array(
+				$this->encry($raw['height'].'_storage'),
+			);
+			$this->merkle($mtree);
+			$raw['root_storage']=$mtree[count($mtree)-1];
 		}
 		//1.3.contact merkle
 		if(!empty($raw['list_contact'])){
 
+		}else{
+			$mtree=array(
+				$this->encry($raw['height'].'_contact'),
+			);
+			$this->merkle($mtree);
+			$raw['root_contact']=$mtree[count($mtree)-1];
 		}
+
+		//1.4.merkle root
+		$mtree=array(
+			$raw['root_transaction'],
+			$raw['root_storage'],
+			$raw['root_contact'],
+		);
+		$this->merkle($mtree);
+		$raw['merkle_root']=$mtree[count($mtree)-1];
 
 		//2.account cache
 		$as=array();
@@ -148,14 +185,20 @@ class Simulator extends CORE{
 			$this->setHash($keys['transaction_entry'],$hash,json_encode($v));
 		}
 
-		//3.save accout data
+		//3.get the parent hash
+		$key=$this->cfg['prefix']['chain'].($raw['height']-1);
+		if(!$this->db->existsKey($key))return false;
+
+		$res=$this->db->getKey($key);
+		$pre=json_decode($res);
+		$row['parent_hash']=$res['merkle_root'];
+
+		//4.save accout data
 		foreach($as as $acc=>$v){
 			$this->setHash($keys['accounts'],$acc,json_encode($v));
 		}
-		
-		//echo '<hr>';
 
-		return $raw;
+		return true;
 	}
 
 	private function getCoinbaseBlock($n,$svc){
@@ -294,7 +337,7 @@ class Simulator extends CORE{
 
 		//2.create the blank block
 		if($curBlock>$height){
-			for($i=$height;$i<$curBlock;$i++){
+			for($i=$height;$i<$curBlock-1;$i++){
 				$this->createBlock($i);
 			}
 			$this->db->setKey($key_height,$curBlock);
@@ -302,31 +345,7 @@ class Simulator extends CORE{
 		return $curBlock;
 	}
 
-	private function getCollectedData($n){
-		$cfg=$this->setting;
-		$block=$this->head;
-	
-		//1.获取transfer的值
-		$fs=$this->getCollected($cfg['keys']['transfer_collected']);
-		$block['merkle_root']=empty($fs['merkle'])?false:$fs['merkle'][count($fs['merkle'])-1];
 
-		//2.获取storage的值
-		$ss=$this->getCollected($cfg['keys']['storage_collected']);
-		$block['merkle_storage']=empty($ss['merkle'])?false:$ss['merkle'][count($ss['merkle'])-1];
-
-		//3.获取constact的值
-		$ts=$this->getCollected($cfg['keys']['storage_collected']);
-		$block['merkle_contact']=empty($ts['merkle'])?false:$ts['merkle'][count($ts['merkle'])-1];
-
-		$block['stamp']=time();
-		$block['height']=$n;
-		$block['list']=array(
-			'uxto'		=>	$fs['data'],
-			'storage'	=>	$ss['data'],
-			'contact'	=>	$ts['data'],	
-		);
-		return $block;
-	}
 
 	private function saveToChain($n,$data){
 		$key=$this->setting['prefix']['chain'].$n;
@@ -432,6 +451,23 @@ class Simulator extends CORE{
 		return array(
 			'data'		=>	$cs,
 			'merkle'	=>	$mtree,
+		);
+	}
+
+	private function cleanCollectedData(){
+		$cfg=$this->setting;
+		$this->delKey($cfg['keys']['transaction_collected']);
+		$this->delKey($cfg['keys']['storage_collected']);
+		$this->delKey($cfg['keys']['contact_collected']);
+		return true;
+	}
+
+	private function getAllCollected(){
+		$cfg=$this->setting;
+		return array(
+			'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),
+			'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),
+			'contact'		=>	$this->getCollected($cfg['keys']['storage_collected']),	
 		);
 	}
 
