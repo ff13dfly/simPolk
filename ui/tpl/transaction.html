@@ -77,6 +77,15 @@
         clearCache: function() {
             localStorage.removeItem('transfer_cache');
         },
+        listUXTO: function(list) {
+            var dom = '';
+            for (let k in list) {
+                var row = list[k];
+                //dom += `<div class="col-lg-2">${k}</div><div class="col-lg-10">${row}</div>`;
+                dom += `<div class="col-lg-12">${row}</div>`;
+            }
+            return dom;
+        },
     }
 
     $(function() {
@@ -107,10 +116,15 @@
     $('#account_search').off('click').on('click', function() {
         var hash = $('#account_hash').val();
         if (!hash || hash.length != 64) return self.info('Account error', '#search_error');
+
+        var con = '#search_con';
         simPolk.request('account', 'view', {
             'u': hash,
         }, function(res) {
-            $('#search_con').html(JSON.stringify(res.data));
+            if (!res.success) return $(con).html('No such account');
+            var dom = self.listUXTO(res.data.uxto);
+            console.log(dom);
+            $(con).html(dom);
         });
     });
 
