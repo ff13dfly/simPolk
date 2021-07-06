@@ -9,7 +9,8 @@ class Simulator extends CORE{
 		'parent_hash'		=>	'',				//parent hash , used to vertify the blockchain data
 		'merkle_root'		=>	'',				//block merkle root or block hash
 		'height'			=>	0,				//index of blockchain
-		'signature'			=>	'',				//creator signature	
+		'signature'			=>	'',				//creator signature
+		'creator'			=>	'',				//account who mined this block
 		'version'			=>	'simPolk 0.1',	//datastruct version	
 		'stamp'				=>	0,				//timestamp
 		'diffcult'			=>	0,				//diffcult for server to calc hash
@@ -263,6 +264,7 @@ class Simulator extends CORE{
 		$from=$this->from;
 		$from['amount']=$this->setting['basecoin'];
 		$from['signature']=$svc['sign'];
+		
 		unset($from['hash']);
 		unset($from['account']);
 		$uxto['from'][]=$from;
@@ -277,6 +279,7 @@ class Simulator extends CORE{
 		$data['list_transaction'][]=$uxto;
 		$data['height']=$n;
 		$data['signature']=$svc['sign'];
+		$data['creator']=$svc['account'];
 		$data['stamp']=time()-$delta;
 
 		return $data;

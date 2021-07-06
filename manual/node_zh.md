@@ -1,4 +1,5 @@
 # simPolk的模拟服务器说明
+
 simPolk模拟链的网络，通过单一文件进行模拟，通过猜数字来模拟哪台服务器获得了记账权，实现虚拟币的产生，这是区块链运行的经济基础。
 simPolk的模拟服务器有两个角色：
 
@@ -17,8 +18,8 @@ simPolk的模拟服务器有两个角色：
 
 ```php
 array(
-	'url'		=>	'http://localhost/simPolk/network/s_06.php',
-	'account'	=>	'8ZBtjgKDgMP4MikruFcUqejToht97PTnnVQCDBUZ6GnLBtmxnduyCZaX2JG2yhK7',
-	'sign'		=>	'',
+    'url'      =>  'http://localhost/simPolk/network/s_06.php',
+    'account'  =>  '8ZBtjgKDgMP4MikruFcUqejToht97PTnnVQCDBUZ6GnLBtmxnduyCZaX2JG2yhK7',
+    'sign'     =>  '',
 ),
 ```
