@@ -71,8 +71,10 @@ class Account{
 				$akey=$cfg['keys']['account_list'];
 				
 				$len=$core->lenList($akey);
-				//$list=$core->getList($akey);
-				$list=$core->rangeList($akey,$len-11,$len-1);
+
+				//$list=$core->rangeList($akey,$len-9,$len);
+				$count=6;
+				$list=$core->rangeList($akey,$len-2-$count,$len-1);
 
 				$acs=$core->getHash($cfg['keys']['accounts'],$list);
 				
@@ -85,7 +87,7 @@ class Account{
 				return array(
 					'success'	=>	TRUE,
 					'data'		=>	array_reverse($arr),
-					
+					'len'		=>	$len,
 				);
 				break;
 			

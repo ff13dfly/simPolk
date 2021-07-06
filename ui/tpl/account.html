@@ -79,10 +79,11 @@
                 p: page
             }, function(res) {
                 if (!res.success) return $(con).html('暂无数据');
+                console.log(res.len);
                 var dom = '';
                 for (var k in res.data) {
                     var row = res.data[k];
-                    console.log(row);
+                    //console.log(row);
                     dom += `<div class="col-lg-4"><span class="account_hash">${row.account}</span></div>`;
                 }
                 $(con).html(dom);
