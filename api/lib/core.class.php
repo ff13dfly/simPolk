@@ -116,6 +116,12 @@ class CORE {
 		$this->cRedis->hincrby($main,$key,1);
 		return $this->cRedis->hget($main,$key);
 	}
+
+	public function delHash($main,$key){
+		if(!$this->cRedis)$this->redisLink();
+		if(DEBUG)$this->redisCount();
+		return $this->cRedis->hdel($main,$key);
+	}
 	
 	/*list部分的操作*/
 	public function existsList($key){

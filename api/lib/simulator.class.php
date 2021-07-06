@@ -203,9 +203,20 @@ class Simulator extends CORE{
 			$hash=$mtree[$k];
 
 			//2.1.remove account uxto
-			foreach($v['from'] as $kk=>$vv){
-				if($kk==0) continue;
-				//这里需要删除掉已经使用了的币
+			if($k!=0){
+				foreach($v['from'] as $kk=>$vv){
+					$input_hash=$vv['hash'];
+					$from_account=$vv['account'];
+
+					//get the account data and remove the input from uxto;
+					if(!isset($as[$from_account])){
+						$as[$from_account]=$this->checkAccount($from_account);
+					}
+					array_shift($as[$from_account]['uxto']);
+
+					//remove the input hash data;
+					$this->delHash($keys['transaction_entry'],$input_hash);
+				}
 			}
 			
 			//2.2.add account uxto

@@ -10,6 +10,8 @@
 
         server: 'http://localhost/simPolk/api/entry.php',
     };
+    var tasks = [];
+    var enableTasks = false;
 
     var self = {
         load: function(page, target) {
@@ -57,6 +59,29 @@
         },
         error: function(txt) {
             console.log(txt);
+        },
+
+        setTask: function(fun) {
+            tasks.push(fun);
+            return true;
+        },
+        cleanTask: function() {
+            for (var k in tasks) {
+                delete taks[k];
+            }
+            tasks = [];
+            return true;
+        },
+        runTask: function() {
+            if (!enableTasks) return false;
+            for (var k in tasks) tasks[k]();
+            return true;
+        },
+        disableTask: function() {
+            enableTasks = false;
+        },
+        enableTask: function() {
+            enableTasks = true;
         },
     };
 

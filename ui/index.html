@@ -70,6 +70,8 @@
     var curTab = '';
     $('.navbar-nav .nav-item a').on('click', function() {
         if (curTab == $(this).attr('href')) return false;
+        simPolk.disableTask();
+
         curTab = $(this).attr('href');
 
         $('.nav-link').removeClass('active');
@@ -86,7 +88,6 @@
         } else {
             $('.nav-link.active').trigger('click');
         }
-
     });
 </script>
 
