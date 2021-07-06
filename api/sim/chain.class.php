@@ -107,6 +107,13 @@ class Chain{
 				);
 				break;
 
+			case 'set':		//设置运行参数
+				return array(
+					'success'	=>	TRUE,
+					'time'		=>	time(),
+				);
+				break;
+
 			default:
 				return false;
 				break;

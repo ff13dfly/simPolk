@@ -10,10 +10,10 @@
 		'config_cache'	=>	'sim_confg',	//config_cache key
 		//sim-chain basic setting
 		'name'			=>	'VBC',			//coin name
-		'speed'			=>	2000,			//block created speed (block/second)
+		'speed'			=>	10,				//block created speed (block/second)
 		'basecoin'		=>	211,			//reward for creating block
 		'password'		=>	'123456',		//default password for simulate account
-		'pendding'		=>	false,			//pendding the chain status
+		'pendding'		=>	true,			//pendding the chain status
 		'cost'			=>	array(
 			'transfer'	=>	array(1,20),	//transfer cost range
 			'storage'	=>	10,				//storage set cost
@@ -28,14 +28,15 @@
 		//sim-chain db keys setting
 		'keys'			=>	array(
 			'start'					=>	'sim_start',		//simulator start timestamp, used to calc block number
-			'transaction_collected'	=>	'sim_collected',	//what is collected now.
-			'storage_collected'		=>	'sim_storage',		//storage map entry key
-			'contact_collected'		=>	'sim_contact',		//contact map entry key
-
 			'height'				=>	'block_height',		//now height
+			'setting'				=>	'sim_setting',		//setting 
+
 			'accounts'				=>	'sim_accounts',		//account hashmap entry
 			'account_list'			=>	'all_accounts',		//account list
 
+			'transaction_collected'	=>	'sim_collected',	//what is collected now.
+			'storage_collected'		=>	'sim_storage',		//storage map entry key
+			'contact_collected'		=>	'sim_contact',		//contact map entry key
 			'transaction_entry'		=>	'en_chain',			//transaction map entry name (for redis hash)
 			'storage_entry'			=>	'en_storage',		//storage map entry name (for redis hash)
 			'contact_entry'			=>	'en_contact',		//contact map entry name (for redis hash)

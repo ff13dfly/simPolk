@@ -53,6 +53,12 @@ class Simulator extends CORE{
 		return CORE::init(get_class());
 	}
 
+	public function getConfig($cfg){
+		$key=$cfg['keys']['setting'];
+		if(!$this->existsKey($key)) return $cfg;
+		$ncfg=json_decode($this->getKey($key),true);
+		return $ncfg;
+	}
 	/*return the basic datastruct of transaction
 	*/
 	public function getTransactionFormat(){
@@ -88,10 +94,10 @@ class Simulator extends CORE{
 	@param	$n		integer 	//block number
 	@param	$skip	boolean		//skip the collected rows
 	*/
-	private function createBlock($n,$skip=true){
+	private function createBlock($n,$delta,$skip=true){
 		$nodes=$this->setting['nodes'];
 		$svc=$nodes[rand(0, count($nodes)-1)];
-		$data=$this->getCoinbaseBlock($n,$svc);		//获取带coinbase UXTO的区块数据
+		$data=$this->getCoinbaseBlock($n,$delta,$svc);		//获取带coinbase UXTO的区块数据
 
 		//merge the collected data to the basic data struct
 		if(!$skip){
@@ -164,31 +170,31 @@ class Simulator extends CORE{
 		if(!empty($raw['list_storage'])){
 
 		}else{
-			$mtree=array(
+			$stree=array(
 				$this->encry($raw['height'].'_storage'),
 			);
-			$this->merkle($mtree);
-			$raw['root_storage']=$mtree[count($mtree)-1];
+			$this->merkle($stree);
+			$raw['root_storage']=$stree[count($stree)-1];
 		}
 		//1.3.contact merkle
 		if(!empty($raw['list_contact'])){
 
 		}else{
-			$mtree=array(
+			$ctree=array(
 				$this->encry($raw['height'].'_contact'),
 			);
-			$this->merkle($mtree);
-			$raw['root_contact']=$mtree[count($mtree)-1];
+			$this->merkle($ctree);
+			$raw['root_contact']=$ctree[count($ctree)-1];
 		}
 
 		//1.4.merkle root
-		$mtree=array(
+		$atree=array(
 			$raw['root_transaction'],
 			$raw['root_storage'],
 			$raw['root_contact'],
 		);
-		$this->merkle($mtree);
-		$raw['merkle_root']=$mtree[count($mtree)-1];
+		$this->merkle($atree);
+		$raw['merkle_root']=$atree[count($atree)-1];
 
 		//2.account cache
 		$as=array();
@@ -218,11 +224,14 @@ class Simulator extends CORE{
 		//3.get the parent hash
 		if($raw['height']!=0){
 			$key=$this->setting['prefix']['chain'].($raw['height']-1);
-			if(!$this->existsKey($key))return false;
+			if(!$this->existsKey($key)) return false;
 
-			$res=$this->getKey($key);
-			$row['parent_hash']=$res['merkle_root'];
+			$res=json_decode($this->getKey($key),true);
+			//echo json_encode($res);
+			$raw['parent_hash']=$res['merkle_root'];
 		}
+
+		//exit('new block');
 		//4.save accout data
 		foreach($as as $acc=>$v){
 			$this->setHash($keys['accounts'],$acc,json_encode($v));
@@ -233,7 +242,7 @@ class Simulator extends CORE{
 
 	/*simulator mining 
 	*/
-	private function getCoinbaseBlock($n,$svc){
+	private function getCoinbaseBlock($n,$delta,$svc){
 		$this->checkAccount($svc['account'],$svc['sign']);		//检查账户，并建立
 
 		$data=$this->raw;
@@ -252,12 +261,12 @@ class Simulator extends CORE{
 		$to['account']=$svc['account'];
 		$uxto['to'][]=$to;
 
-		$uxto['stamp']=time();
+		$uxto['stamp']=time()-$delta;
 
 		$data['list_transaction'][]=$uxto;
 		$data['height']=$n;
 		$data['signature']=$svc['sign'];
-		$data['stamp']=time();
+		$data['stamp']=time()-$delta;
 
 		return $data;
 	}
@@ -353,6 +362,8 @@ class Simulator extends CORE{
 		$curBlock=ceil((time()-$start)/$cfg['speed']);
 		$curBlock=$curBlock==0?1:$curBlock;					//auto start the chain by create 0 block
 
+		if($cfg['pendding']) return $curBlock;				//skip data writing ,when simchain pendding.
+
 		$key_height=$cfg['keys']['height'];
 		if($this->existsKey($key_height)){
 			$height=$this->getKey($key_height);
@@ -360,15 +371,13 @@ class Simulator extends CORE{
 			$height=0;
 		}
 
-		$key=$this->setting['prefix']['chain'].'0';
-		if($curBlock==1 && !$this->existsKey($key)){
-			$this->createBlock(0);
-		}
-	
 		//3.create the blank block
-		if($curBlock>$height+1){
+		if($curBlock>$height+1 || $curBlock==1){
+			$pre=$this->setting['prefix']['chain'];
 			for($i=$height;$i<$curBlock;$i++){
-				$this->createBlock($i,$i!=($curBlock-1));
+				$bkey=$pre.$i;
+				$delta=($curBlock-$i-1)*$cfg['speed'];		//自动补块的stamp处理
+				if(!$this->existsKey($bkey))$this->createBlock($i,$delta,$i!=($curBlock-1));
 			}
 			$this->setKey($key_height,$curBlock-1);
 		}

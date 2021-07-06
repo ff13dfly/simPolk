@@ -22,5 +22,7 @@ $a=Simulator::getInstance();				//instance the simulator
 $cfg=include 'config.php';					//get the config from config file.
 $a->setRedisConfig($cfg['redis']);			//set redis config
 
-$res=$a->autoRun($cfg,$a);					//call the simulator entry method and get the result
+$ncfg=$a->getConfig($cfg);
+
+$res=$a->autoRun($ncfg,$a);					//call the simulator entry method and get the result
 $a->export($res);							//export the result
