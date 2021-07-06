@@ -3,11 +3,7 @@ define('LENGTH_MAX', 256);		//simple string max length
 class Simulator extends CORE{	
 	private $callback=0;
 	private $setting=array();
-	private $db=null;
 
-	private $storage=array(
-
-	);
 	//block head struct
 	private $raw=array(
 		'parent_hash'		=>	'',				//parent hash , used to vertify the blockchain data
@@ -71,7 +67,7 @@ class Simulator extends CORE{
 		$cfg=$this->setting;
 
 		//1.获取当前已写块的数据
-		$h=$this->db->getKey($cfg['keys']['height']);
+		$h=$this->getKey($cfg['keys']['height']);
 		$n=$h-1;
 		$key=$cfg['prefix']['chain'].$n;
 		if(!$this->existsKey($key)){
@@ -93,8 +89,6 @@ class Simulator extends CORE{
 	@param	$skip	boolean		//skip the collected rows
 	*/
 	private function createBlock($n,$skip=true){
-		//echo '96,ready to create block:'.$n;
-
 		$nodes=$this->setting['nodes'];
 		$svc=$nodes[rand(0, count($nodes)-1)];
 		$data=$this->getCoinbaseBlock($n,$svc);		//获取带coinbase UXTO的区块数据
@@ -224,9 +218,9 @@ class Simulator extends CORE{
 		//3.get the parent hash
 		if($raw['height']!=0){
 			$key=$this->setting['prefix']['chain'].($raw['height']-1);
-			if(!$this->db->existsKey($key))return false;
+			if(!$this->existsKey($key))return false;
 
-			$res=$this->db->getKey($key);
+			$res=$this->getKey($key);
 			$row['parent_hash']=$res['merkle_root'];
 		}
 		//4.save accout data
@@ -272,7 +266,7 @@ class Simulator extends CORE{
 	*/
 	private function checkAccount($hash,$sign=''){
 		$keys=$this->setting['keys'];
-		$list=$this->db->getHash($keys['accounts'],array($hash));
+		$list=$this->getHash($keys['accounts'],array($hash));
 
 		if($list[$hash]==false){
 			$cls=$this->loadClass('account');
@@ -284,7 +278,7 @@ class Simulator extends CORE{
 			$this->pushList($keys['account_list'],$hash);
 		}
 
-		$list=$this->db->getHash($keys['accounts'],array($hash));
+		$list=$this->getHash($keys['accounts'],array($hash));
 		return json_decode($list[$hash],true);
 	}
 	
@@ -300,7 +294,6 @@ class Simulator extends CORE{
 	
 	public function autoRun($cfg,&$core){
 		$this->setting=$cfg;
-		$this->db=$core;
 		
 		$this->callback=$_GET['callback'];
 		if(!isset($_GET['mod']) || !isset($_GET['act'])) return $this->error('error request');
@@ -336,7 +329,6 @@ class Simulator extends CORE{
 	
 	public function autoConfig(){
 		$cfg=$this->setting;
-		$core=$this->db;
 		$result=array();
 		
 		$curBlock=$this->autoFillData();
@@ -352,31 +344,33 @@ class Simulator extends CORE{
 
 		//1.check if it is the start of a simchain.
 		$key_start=$cfg['keys']['start'];
-		$start=$this->db->getKey($key_start);
+		$start=$this->getKey($key_start);
 		if(!$start){
 			$start=time();
-			$this->db->setKey($key_start,$start);
+			$this->setKey($key_start,$start);
 		}
 
 		$curBlock=ceil((time()-$start)/$cfg['speed']);
 		$curBlock=$curBlock==0?1:$curBlock;					//auto start the chain by create 0 block
 
 		$key_height=$cfg['keys']['height'];
-		if($this->db->existsKey($key_height)){
-			$height=$this->db->getKey($key_height);
+		if($this->existsKey($key_height)){
+			$height=$this->getKey($key_height);
 		}else{
 			$height=0;
 		}
 
-		//echo '[371] height(created):'.$height.',current block(collecting):'.$curBlock.'<hr>';
-		//exit();
-
-		//2.create the blank block
-		if($curBlock>$height){
+		$key=$this->setting['prefix']['chain'].'0';
+		if($curBlock==1 && !$this->existsKey($key)){
+			$this->createBlock(0);
+		}
+	
+		//3.create the blank block
+		if($curBlock>$height+1){
 			for($i=$height;$i<$curBlock;$i++){
 				$this->createBlock($i,$i!=($curBlock-1));
 			}
-			$this->db->setKey($key_height,$curBlock-1);
+			$this->setKey($key_height,$curBlock-1);
 		}
 		return $curBlock;
 	}
@@ -385,7 +379,7 @@ class Simulator extends CORE{
 
 	private function saveToChain($n,$data){
 		$key=$this->setting['prefix']['chain'].$n;
-		$this->db->setKey($key,json_encode($data));
+		$this->setKey($key,json_encode($data));
 	}
 	
 	//获取写块服务器数据
@@ -471,18 +465,18 @@ class Simulator extends CORE{
 	}
 
 	private function getCollected($key){
-		$list=$this->db->getList($key);
+		$list=$this->getList($key);
 		$cs=array();
 		$mtree=array();
 		if(!empty($list)){
 			foreach($list as $v){
 				$cs[]=json_decode($v,TRUE);
-				$mtree[]=$this->db->encry($v);
+				$mtree[]=$this->encry($v);
 			}
 		}
 		
 		if(!empty($mtree)){
-			$this->db->merkle($mtree);
+			$this->merkle($mtree);
 		}
 		return array(
 			'data'		=>	$cs,

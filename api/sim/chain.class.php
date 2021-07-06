@@ -16,6 +16,7 @@ class Chain{
 					'data'		=>	$cfg,
 				);
 				break;
+
 			case 'current':
 				return array(
 					'success'		=>	TRUE,
@@ -84,7 +85,7 @@ class Chain{
 
 				//处理掉所有的block数据
 				$pre=$cfg['prefix']['chain'];
-				$this->clean_block((int)$n,$pre);
+				$this->clean_block((int)$n+1,$pre);
 				
 				return array(
 					'success'	=>	TRUE,
