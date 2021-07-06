@@ -340,8 +340,9 @@ class Simulator extends CORE{
 		$cfg=$this->setting;
 		$result=array();
 		
-		$curBlock=$this->autoFillData();
-		$result['current_block']=$curBlock;
+		$status=$this->autoFillData();
+		$result['current_block']=$status['current'];
+		$result['block_height']=$status['height'];
 		
 		$index=$this->getServer($cfg['nodes']);
 		$result['server']=$cfg['nodes'][$index];		
@@ -362,7 +363,7 @@ class Simulator extends CORE{
 		$curBlock=ceil((time()-$start)/$cfg['speed']);
 		$curBlock=$curBlock==0?1:$curBlock;					//auto start the chain by create 0 block
 
-		if($cfg['pendding']) return $curBlock;				//skip data writing ,when simchain pendding.
+		
 
 		$key_height=$cfg['keys']['height'];
 		if($this->existsKey($key_height)){
@@ -371,6 +372,10 @@ class Simulator extends CORE{
 			$height=0;
 		}
 
+		if($cfg['pendding']) return array(
+			'current'	=>	$curBlock,
+			'height'	=>	$height,
+		);				//skip data writing ,when simchain pendding.
 		//3.create the blank block
 		if($curBlock>$height+1 || $curBlock==1){
 			$pre=$this->setting['prefix']['chain'];
@@ -381,7 +386,10 @@ class Simulator extends CORE{
 			}
 			$this->setKey($key_height,$curBlock-1);
 		}
-		return $curBlock;
+		return array(
+			'current'	=>	$curBlock,
+			'height'	=>	$height,
+		);
 	}
 
 

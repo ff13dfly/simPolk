@@ -9,7 +9,15 @@
                 <button class="btn btn-md btn-primary" id="block_view">View Block Data</button>
             </div>
         </div>
+        <div class="row" id="opt_menu" style="display: none;">
+            <div class="col-lg-6 gy-4 text-start">
 
+            </div>
+            <div class="col-lg-6 gy-4 text-end">
+                <button class="btn btn-md btn-secondary" id="btn_pre">Pre Block</button>
+                <button class="btn btn-md btn-secondary" id="btn_next">Next Block</button>
+            </div>
+        </div>
         <div class="row">
             <div class="col-lg-12 gy-4" id="block_info"></div>
         </div>
@@ -19,8 +27,12 @@
         <div class="row">
             <div class="col-lg-12">
                 <small>Block height, not created yet</small>
-                <h2 id="block_current" class="text-primary"></h2>
+                <span id="block_current"></span>
+
                 <small id="server_current"></small>
+            </div>
+            <div class="col-lg-12">
+                <hr>
             </div>
             <div class="col-lg-6 gy-4 text-start">
                 <button class="btn btn-md btn-danger" id="collected_clean">Clean Collected</button>
@@ -110,24 +122,36 @@
                 "lock": [],
             })
         },
+        showStatus: function() {
+            simPolk.request('chain', 'current', {}, function(res) {
+                var info = `<div class="row">
+                <div class="col-lg-4 gy-4"><h1 class="text-primary text-center">${res.current.current_block}</h1></div>
+                <div class="col-lg-8 gy-4" id="pendding_info" style="display:none;"><span class="">Pendding on ${res.current.block_height}</span></div></div>`;
+                $('#block_current').html(info);
+
+                if (res.pendding) $('#pendding_info').show();
+                else $('#pendding_info').hide();
+
+                var tdom = self.domList(res.transaction.data);
+                var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transaction.merkle)
+                $('#collected_transfer').html(tdom).append(mtree);
+
+                var sdom = self.domList(res.storage.data);
+                var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
+                $('#collected_storage').html(sdom).append(stree);
+
+                var cdom = self.domList(res.contact.data);
+                var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
+                $('#collected_contact').html(cdom).append(ctree);
+            });
+        }
     }
+
     $(function() {
-        simPolk.request('chain', 'current', {}, function(res) {
-            $('#block_current').html(res.current.current_block);
-            $('#server_current').html(res.current.server.url);
-
-            var tdom = self.domList(res.transaction.data);
-            var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transaction.merkle)
-            $('#collected_transfer').html(tdom).append(mtree);
-
-            var sdom = self.domList(res.storage.data);
-            var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
-            $('#collected_storage').html(sdom).append(stree);
-
-            var cdom = self.domList(res.contact.data);
-            var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
-            $('#collected_contact').html(cdom).append(ctree);
-        });
+        self.showStatus();
+        setInterval(() => {
+            self.showStatus();
+        }, 1000);
     });
 
 
@@ -140,9 +164,35 @@
             if (!res.success) return false;
             if (!res.data) return $('#block_info').html('No block data.');
             self.jsonBlock(res.data, '#block_info');
+            $('#opt_menu').show();
+        });
+    });
 
-            //var ctx = !res.data ? 'No block data.' : self.domObject(res.data);
-            //$('#block_info').html(ctx);
+    $('#btn_pre').off('click').on('click', function() {
+        var num = parseInt($('#block_num').val());
+        if (isNaN(num) || num < 1) return false;
+        $('#block_num').val(num - 1);
+
+        simPolk.request('chain', 'view', {
+            n: num - 1
+        }, function(res) {
+            if (!res.success) return false;
+            if (!res.data) return $('#block_info').html('No block data.');
+            self.jsonBlock(res.data, '#block_info');
+        });
+    });
+
+    $('#btn_next').off('click').on('click', function() {
+        var num = parseInt($('#block_num').val());
+        if (isNaN(num)) return false;
+        $('#block_num').val(num + 1);
+
+        simPolk.request('chain', 'view', {
+            n: num + 1
+        }, function(res) {
+            if (!res.success) return false;
+            if (!res.data) return $('#block_info').html('No block data.');
+            self.jsonBlock(res.data, '#block_info');
         });
     });
 
