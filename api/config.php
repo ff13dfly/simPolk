@@ -5,18 +5,24 @@
 			'host'		=>	'localhost',
 			'port'		=>	6379,
 			'auth'		=>	'authKEY',
-			'timeout'	=>	3600,
+			'timeout'	=>	36000,
 		),
 		'config_cache'	=>	'sim_confg',	//config_cache key
 		//sim-chain basic setting
 		'name'			=>	'VBC',			//coin name
-		'speed'			=>	2000,				//block created speed (block/second)
-		'basecoin'		=>	100,			//reward for creating block
+		'speed'			=>	2000,			//block created speed (block/second)
+		'basecoin'		=>	123,			//reward for creating block
 		'password'		=>	'123456',		//default password for simulate account
+		'pendding'		=>	false,			//pendding the chain status
 		'cost'			=>	array(
 			'transfer'	=>	array(1,20),	//transfer cost range
 			'storage'	=>	10,				//storage set cost
 			'contact'	=>	10,				//contact run cost
+		),
+
+		'switcher'		=>	array(
+			'enable_password'	=>	false,
+			'enable_'			=>	false,
 		),
 		
 		//sim-chain db keys setting
@@ -52,52 +58,52 @@
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_01.php',
 				'account'	=>	'5r9E41L7tb8PstabiPKsJm56q8XeMqoA43Zmxbn9NwTmvKh75468McNpv2ZYTH8i',
-				'sign'		=>	'',
+				'sign'		=>	'FAKE4E8PbNZQIH7Vk8DnFzMyOxNIxdIV',
 			),
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_02.php',
 				'account'	=>	'GiPLyuNqog6FYypM1saRXfsJh2PDVRSH6G7gg4oYMF894SE3kAC7dhutUVFHG42T',
-				'sign'		=>	'',
+				'sign'		=>	'FAKEwOEVG702r55HxCP4tFz9IUCHNDsb',
 			),
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_03.php',
 				'account'	=>	'hmAaXc3K4mLTf8LdhnrmrWE92smnj4nzpf9NNaxZSkhV6gPi2SzC5Ye3VFYQBPME',
-				'sign'		=>	'',
+				'sign'		=>	'FAKEuBIvFupQ3nKPik2ItO8vpI8DcuWM',
 			),
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_04.php',
 				'account'	=>	'tYRDbF6M2HUtmJ4bcPc1Sr7LyykN6WtBwAus5bWmhmdEhEYH5hXjsJ4HteQNKFLN',
-				'sign'		=>	'',
+				'sign'		=>	'FAKEefM25JMOTnQgUirdisQSAOqiu4Qx',
 			),
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_05.php',
 				'account'	=>	'VBtXmdeYKZD96KfwrAg8PCPBN8XhLw77Nznn3mWhp1QKEer5ezYcuEJ3MyA3Pm7Y',
-				'sign'		=>	'',
+				'sign'		=>	'FAKE6Xq467RXB4EM4eJHAZ9ixRm7J8GA',
 			),
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_06.php',
 				'account'	=>	'8ZBtjgKDgMP4MikruFcUqejToht97PTnnVQCDBUZ6GnLBtmxnduyCZaX2JG2yhK7',
-				'sign'		=>	'',
+				'sign'		=>	'FAKENs32HsHJNQRzAK5JDI1UspyfLbmv',
 			),
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_07.php',
 				'account'	=>	'CNJViGivLzcZiXDC6YSDKYYYvjSuZCqpEd8CCB9AK7ue6pcpY9YAeRgpouLPAWtJ',
-				'sign'		=>	'',
+				'sign'		=>	'FAKEVTMMP3UI6WmQCfzAwrD0dGgEWcyI',
 			),
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_08.php',
 				'account'	=>	'tC3dfEdQMT3pGXvuzchn6fpLBzaf8TBD2N5HN7yyo1fqzRzCkJopso7Uf3DWGQ5m',
-				'sign'		=>	'',
+				'sign'		=>	'FAKEAuq7HBaABPXhaKznTm1itGxzwNXR',
 			),
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_09.php',
 				'account'	=>	'RnHHuSfeJE3HvduemawHWAJijZUAzx5RpUzwrQX7BYBGrjkNVHcppyaoWKn9TLz9',
-				'sign'		=>	'',
+				'sign'		=>	'FAKEZS4acXO8AjV4dfiPcQpWBCNawt14',
 			),
 			array(
 				'url'		=>	'http://localhost/simPolk/network/s_10.php',
 				'account'	=>	'4ijWvnXuCmzZy1ACUVJsjc7RQ5qXmqNbtJPcfrZtWE8ukfRMW5HyStHP88Tga3Yv',
-				'sign'		=>	'',
+				'sign'		=>	'FAKE5N9FcyieEBpNYrT1V02M0v67sRR0',
 			),
 		),
 		

@@ -203,9 +203,9 @@ class CORE {
 		$debug['redis']+=1;
 	}
 	
-	/*public function char($len=30,$pre=''){
+	public function char($len=30,$pre=''){
 		$str='abcdefghijkmnpqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
 		for($i=0;$i<$len;$i++) $pre.=substr($str,rand(0, strlen($str)-1),1);
 		return $pre;
-	}*/
+	}
 }

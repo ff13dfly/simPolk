@@ -14,8 +14,7 @@ class Simulator extends CORE{
 		'merkle_root'		=>	'',				//block merkle root or block hash
 		'height'			=>	0,				//index of blockchain
 		'signature'			=>	'',				//creator signature	
-		'version'			=>	'simPolk 0.1',	//datastruct version
-		'height'			=>	0,				//block height		
+		'version'			=>	'simPolk 0.1',	//datastruct version	
 		'stamp'				=>	0,				//timestamp
 		'diffcult'			=>	0,				//diffcult for server to calc hash
 		'nonce'				=>	0,				//salt of the block
@@ -94,6 +93,8 @@ class Simulator extends CORE{
 	@param	$skip	boolean		//skip the collected rows
 	*/
 	private function createBlock($n,$skip=true){
+		//echo '96,ready to create block:'.$n;
+
 		$nodes=$this->setting['nodes'];
 		$svc=$nodes[rand(0, count($nodes)-1)];
 		$data=$this->getCoinbaseBlock($n,$svc);		//获取带coinbase UXTO的区块数据
@@ -149,9 +150,11 @@ class Simulator extends CORE{
 
 	*/
 	private function structRow(&$raw){
+		//echo '<br>158:structing data...';
+
 		$cfg=$this->setting;
 		$keys=$cfg['keys'];
-		$pre=$cfg['prefix'];
+		
 		//1.merkle calculation
 		//1.1.transfer merkle
 		$mtree=array();
@@ -195,22 +198,21 @@ class Simulator extends CORE{
 
 		//2.account cache
 		$as=array();
+		//echo '206:'.json_encode($raw['list_transaction']).'<hr>';
 		foreach($raw['list_transaction'] as $k=>$v){
 			$hash=$mtree[$k];
-			//echo $hash.':<br>';
 
 			//2.1.remove account uxto
 			foreach($v['from'] as $kk=>$vv){
 				if($kk==0) continue;
-
+				//这里需要删除掉已经使用了的币
 			}
 			
 			//2.2.add account uxto
 			foreach($v['to'] as $vv){
 				$account=$vv['account'];
 				if(!isset($as[$account])){
-					$list=$this->getHash($keys['accounts'],array($account));
-					$as[$account]=json_decode($list[$account],true);
+					$as[$account]=$this->checkAccount($account);
 				}
 				$as[$account]['uxto'][]=$hash;
 			}
@@ -220,25 +222,25 @@ class Simulator extends CORE{
 		}
 
 		//3.get the parent hash
-		$key=$this->cfg['prefix']['chain'].($raw['height']-1);
-		if(!$this->db->existsKey($key))return false;
+		if($raw['height']!=0){
+			$key=$this->setting['prefix']['chain'].($raw['height']-1);
+			if(!$this->db->existsKey($key))return false;
 
-		$res=$this->db->getKey($key);
-		$pre=json_decode($res);
-		$row['parent_hash']=$res['merkle_root'];
-
+			$res=$this->db->getKey($key);
+			$row['parent_hash']=$res['merkle_root'];
+		}
 		//4.save accout data
 		foreach($as as $acc=>$v){
 			$this->setHash($keys['accounts'],$acc,json_encode($v));
 		}
-
+		
 		return true;
 	}
 
-	/*Mining simulator
+	/*simulator mining 
 	*/
 	private function getCoinbaseBlock($n,$svc){
-		$this->checkAccount($svc['account']);		//检查账户，并建立
+		$this->checkAccount($svc['account'],$svc['sign']);		//检查账户，并建立
 
 		$data=$this->raw;
 		$uxto=$this->uxto;
@@ -246,6 +248,7 @@ class Simulator extends CORE{
 		//basecoin UXTO data struct
 		$from=$this->from;
 		$from['amount']=$this->setting['basecoin'];
+		$from['signature']=$svc['sign'];
 		unset($from['hash']);
 		unset($from['account']);
 		$uxto['from'][]=$from;
@@ -259,12 +262,15 @@ class Simulator extends CORE{
 
 		$data['list_transaction'][]=$uxto;
 		$data['height']=$n;
+		$data['signature']=$svc['sign'];
+		$data['stamp']=time();
+
 		return $data;
 	}
 
 	/* check the account is valid, if not exsist, created it.
 	*/
-	private function checkAccount($hash){
+	private function checkAccount($hash,$sign=''){
 		$keys=$this->setting['keys'];
 		$list=$this->db->getHash($keys['accounts'],array($hash));
 
@@ -272,11 +278,14 @@ class Simulator extends CORE{
 			$cls=$this->loadClass('account');
 			$fmt=$cls->getAccountFormat();
 			$fmt['last']=time();
+			$fmt['sign']=empty($sign)?$this->char(31,'U'):$sign;
 
 			$this->setHash($keys['accounts'],$hash,json_encode($fmt));
 			$this->pushList($keys['account_list'],$hash);
 		}
-		return true;
+
+		$list=$this->db->getHash($keys['accounts'],array($hash));
+		return json_decode($list[$hash],true);
 	}
 	
 	
@@ -299,22 +308,10 @@ class Simulator extends CORE{
 		$cls=$_GET['mod'];
 		$act=$_GET['act'];
 		
-		//1.对配置进行检测，处理初始化
+		//1.对配置进行检测，处理初始化,跳块处理，检查数据和区块高度
 		$cur=$this->autoConfig();		//autoConfig里会进行跳块处理
-		//2.跳块处理，检查数据和区块高度
-
-		$key_collected=$cfg['keys']['transaction_collected'];
-		$height=$core->getKey($cfg['keys']['height']);
-
 		
-		if($core->existsKey($key_collected)){
-			$data=json_decode($core->getKey($key_collected));
-			//2.1.创建目标区块
-			$skip=false;
-			$this->createBlock($height,$skip);
-		}
-		
-		//4.加载对应的模块进行处理
+		//2.加载对应的模块进行处理
 		$a=$this->loadClass($cls);
 		if(empty($a)) return $this->error('Failed to load class');
 
@@ -342,7 +339,7 @@ class Simulator extends CORE{
 		$core=$this->db;
 		$result=array();
 		
-		$curBlock=$this->addJumpedBlocks();
+		$curBlock=$this->autoFillData();
 		$result['current_block']=$curBlock;
 		
 		$index=$this->getServer($cfg['nodes']);
@@ -350,7 +347,7 @@ class Simulator extends CORE{
 		return $result;
 	}
 
-	private function addJumpedBlocks(){
+	private function autoFillData(){
 		$cfg=$this->setting;
 
 		//1.check if it is the start of a simchain.
@@ -362,6 +359,7 @@ class Simulator extends CORE{
 		}
 
 		$curBlock=ceil((time()-$start)/$cfg['speed']);
+		$curBlock=$curBlock==0?1:$curBlock;					//auto start the chain by create 0 block
 
 		$key_height=$cfg['keys']['height'];
 		if($this->db->existsKey($key_height)){
@@ -370,12 +368,15 @@ class Simulator extends CORE{
 			$height=0;
 		}
 
+		//echo '[371] height(created):'.$height.',current block(collecting):'.$curBlock.'<hr>';
+		//exit();
+
 		//2.create the blank block
 		if($curBlock>$height){
-			for($i=$height;$i<$curBlock-1;$i++){
-				$this->createBlock($i);
+			for($i=$height;$i<$curBlock;$i++){
+				$this->createBlock($i,$i!=($curBlock-1));
 			}
-			$this->db->setKey($key_height,$curBlock);
+			$this->db->setKey($key_height,$curBlock-1);
 		}
 		return $curBlock;
 	}

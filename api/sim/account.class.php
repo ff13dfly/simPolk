@@ -9,6 +9,7 @@ class Account{
 		'type'			=>	'user',
 		'nickname'		=>	'',
 		'last'			=>	0,
+		'sign'			=>	'',
 		'uxto'			=>	array(),		//hash stack
 		'storage'		=>	array(),		//hash stack
 		'contact'		=>	array(),		//hash stack
