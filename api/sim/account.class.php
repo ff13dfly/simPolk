@@ -68,7 +68,11 @@ class Account{
 				break;
 
 			case 'list':
-				$list=$core->getList($cfg['keys']['account_list']);
+				$akey=$cfg['keys']['account_list'];
+				
+				$len=$core->lenList($akey);
+				//$list=$core->getList($akey);
+				$list=$core->rangeList($akey,$len-11,$len-1);
 
 				$acs=$core->getHash($cfg['keys']['accounts'],$list);
 				
@@ -80,7 +84,8 @@ class Account{
 				
 				return array(
 					'success'	=>	TRUE,
-					'data'		=>	$arr,
+					'data'		=>	array_reverse($arr),
+					
 				);
 				break;
 			
@@ -101,19 +106,22 @@ class Account{
 
 	/*account create method backup*/
 	private function newAccount($n=64){
+		$data=$this->struct;
+		$data['last']=time();
+		$data['sign']=$this->db->char(28,'SFXX');
+
+		return array(
+			'public_key'	=>	$this->randAccount($n),
+			'data'			=>	$data,
+		);
+	}
+
+	private function randAccount($n){
 		$str='123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
 		$len=strlen($str);
 		$account='';
 		for($i=0;$i<$n;$i++)$account.=substr($str,rand(0, $len-1),1);
-
-		$data=$this->struct;
-		$data['last']=time();
-
-		return array(
-			'public_key'	=>	$account,
-			'private_key'	=>	'',
-			'data'			=>	$data,
-		);
+		return $account;
 	}
 	
 	private function getPublicKey(){

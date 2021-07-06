@@ -154,6 +154,13 @@ class CORE {
 		if(DEBUG)$this->redisCount();
 		return $this->cRedis->lrange($key,0,-1);
 	}
+
+	public function rangeList($key,$start,$end){
+		if(!$this->cRedis)$this->redisLink();
+		if(DEBUG)$this->redisCount();
+		return $this->cRedis->lrange($key,$start,$end);
+	}
+
 	
 	public function indexList($key,$index){
 		if(!$this->cRedis)$this->redisLink();

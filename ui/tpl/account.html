@@ -1,5 +1,6 @@
 <div class="row">
     <div class="col-lg-8">
+
         <div class="row">
             <div class="col-lg-8  gy-4">
                 <label for="account_hash">Account Hash <span class="text-danger" id="info_view"></span></label>
@@ -11,33 +12,45 @@
             <div class="col-lg-12 gy-4" id="account_con"></div>
         </div>
     </div>
-    <div class="col-lg-4">
+    <div class="col-lg-4 gy-4">
         <div class="row">
-            <div class="col-lg-12  gy-4">
-                <label for="uxto_hash">UXTO hash</label>
-                <input type="text" class="form-control" name="uxto_hash" id="uxto_hash" value="">
-            </div>
-            <div class="col-lg-12 text-end gy-4">
-                <button class="btn btn-lg btn-primary" id="uxto_search">Search UXTO</button>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-lg-6  gy-4">
-                <p>Create a simulate account.</p>
+            <div class="col-lg-6 text-end gy-4">
+                Create a common account
             </div>
             <div class="col-lg-6 text-end gy-4">
-                <button class="btn btn-lg btn-primary" id="new_account">New Account</button>
+                <button class="btn btn-md btn-primary" id="new_account">New Account</button>
             </div>
-            <div class="col-lg-12">
+            <div class="col-lg-12 ">
                 <hr>
             </div>
+            <div class="col-lg-12">
+                <div class="row" id="account_list"></div>
+            </div>
         </div>
-
-        <div class="row" id="account_list"></div>
+        <div class="row ">
+            <div class="col-lg-12 ">
+                <hr>
+            </div>
+            <div class="col-lg-8 ">
+                <label for="uxto_hash">UXTO Input Hash</label>
+                <input type="text" class="form-control" name="uxto_hash" id="uxto_hash" value="">
+            </div>
+            <div class="col-lg-4 text-end gy-4">
+                <button class="btn btn-md btn-primary" id="uxto_search">Search</button>
+            </div>
+            <div class="col-lg-12 gy-4" id="uxto_con"></div>
+        </div>
     </div>
 
 </div>
-
+<style>
+    .account_hash {
+        display: inline-block;
+        /* height: 60px; */
+        overflow: hidden;
+        line-break: anywhere;
+    }
+</style>
 <script type="text/javascript" charset="utf-8" src="lib/pager.js"></script>
 <script type="text/javascript">
     var self = {
@@ -60,35 +73,51 @@
                 },
             })
         },
-    };
-
-    $(function() {
-        var dt = '<div class="col-lg-12">{type} : {account}</div>';
-        var translate = function() {
-
-        };
-        var con = '#account_list';
-        var ajaxFun = function(page, ck) {
+        showUserList: function(page) {
+            var con = '#account_list';
             simPolk.request('account', 'list', {
                 p: page
             }, function(res) {
-                ck && ck(res.data);
+                if (!res.success) return $(con).html('暂无数据');
+                var dom = '';
+                for (var k in res.data) {
+                    var row = res.data[k];
+                    console.log(row);
+                    dom += `<div class="col-lg-4"><span class="account_hash">${row.account}</span></div>`;
+                }
+                $(con).html(dom);
             });
-        }
-        var auto = [];
-        var setting = {};
-        var events = {}
-        pager.show(dt, translate, con, ajaxFun, auto, setting, events);
+        },
+    };
+
+    $(function() {
+        self.showUserList(1);
     });
+
+    // $(function() {
+    //     var dt = '<div class="col-lg-3">{type}</div>';
+    //     var translate = function() {
+
+    //     };
+    //     var con = '#account_list';
+    //     var ajaxFun = function(page, ck) {
+
+    //     }
+    //     var auto = [];
+    //     var setting = {};
+    //     var events = {}
+    //     pager.show(dt, translate, con, ajaxFun, auto, setting, events);
+    // });
+
     $('#uxto_search').off('click').on('click', function() {
         var hash = $('#uxto_hash').val();
         //if (!hash || hash.length != 64) return self.info('Error hash', '#info_view');
-
+        var con = '#uxto_con';
         simPolk.request('account', 'uxto', {
             'hash': hash,
         }, function(res) {
-            console.log(res);
-            //self.jsonBlock(res.data, '#account_con');
+            if (!res.success) return $(con).html('No such UXTO');
+            $(con).html(JSON.stringify(res.data));
         });
     });
 
