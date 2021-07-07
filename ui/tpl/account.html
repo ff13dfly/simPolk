@@ -10,6 +10,9 @@
                 <button class="btn btn-lg btn-primary" id="account_view" style="margin-top: 1.5em;">Details</button>
             </div>
             <div class="col-lg-12 gy-4" id="account_con"></div>
+            <div class="col-lg-12">
+
+            </div>
         </div>
     </div>
     <div class="col-lg-4 gy-4">
@@ -34,9 +37,10 @@
             <div class="col-lg-6 text-end gy-4">
                 <button class="btn btn-md btn-primary" id="new_account">New Account</button>
             </div>
-
             <div class="col-lg-12 gy-4">
-                <div class="row" id="account_list"></div>
+                <ul class="list-group mb-3" id="account_list">
+
+                </ul>
             </div>
         </div>
 
@@ -83,8 +87,14 @@
                 var dom = '';
                 for (var k in res.data) {
                     var row = res.data[k];
-                    //console.log(row);
-                    dom += `<div class="col-lg-4"><span class="account_hash">${row.account}</span></div>`;
+                    console.log(row);
+                    dom += `<li class="list-group-item d-flex justify-content-between lh-sm row">
+                        <div class="col-lg-9 text-start">${row.type}:${row.nickname},login:${row.last}</div>
+                        <div class="col-lg-3 text-end"><small>VBC 12</small></div>
+                        <div class="col-lg-12 gy-2">
+                            <input type="text" class="form-control" disabled="disabled" value="${row.account}">
+                        </div>
+                    </li>`;
                 }
                 $(con).html(dom);
             });
