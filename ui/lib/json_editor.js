@@ -1,8 +1,8 @@
 ;
 (function($) {
     const appName = "Jeditor";
-    let cache, backup;
-    const agent = []; //其他需要在dom加载之后运行的程序的队列
+    let cache, backup, config;
+    let agent = []; //其他需要在dom加载之后运行的程序的队列
     const hash = function(n, pre) { return (!pre ? 'c' : pre) + Math.random().toString(32).substr(n != undefined ? n : 6) };
 
     const icons = {
@@ -17,7 +17,7 @@
         'more': 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADAAAAAwCAMAAABg3Am1AAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAADNQTFRFz8/PDw8PX19fZ2dn7+/vLy8vn5+fT09Pj4+PCAgIBwcHDAwMv7+/r6+vf39/AAAA////L6wz6AAAABF0Uk5T/////////////////////wAlrZliAAAAyUlEQVR42uzV2w7CIAwG4L/ATk6p7/+0WjIymbq26p1ruCJ8CRRocXUGPgIpEKtBIVWQOjZFlxbA5lgBqWcBNcBwdjTAkp/vQDZEA9xZcgP3ln6WpRB8YGQeXeC+7/waBB2EFcjrHjYpifEByMQg73sBl3c5r6BOneuP602Aev1PN4e2FIED/AHIGRUgZwMo9bYAqaoGQCIEyHoygLIuMkdqazt26/upjKYXQOkIT70DWg/Z9prde8DEPMFzcZhn/KRPH0CJmwADAOixiYoFwbqIAAAAAElFTkSuQmCC',
     }
 
-    const config = {
+    const defaultConfig = {
         clsInput: hash(),
         clsTitle: hash(),
         clsBody: hash(),
@@ -80,7 +80,16 @@
     }
 
     const self = {
+        clean: function() {
+            agent = [];
+            lang = {};
+            note = {};
+            format = {};
+            hide = [];
+            lock = [];
+        },
         init: function(obj, cfg, skip) {
+            self.clean();
             cache = obj;
             if (!skip) {
                 backup = {
@@ -237,6 +246,7 @@
             return typeof tmp;
         },
         setting: function(cfg) {
+            config = self.clone(defaultConfig);
             if (cfg.name) config.name = cfg.name;
             if (cfg.lang) lang = self.clone(cfg.lang);
             if (cfg.note) note = self.clone(cfg.note);
@@ -736,7 +746,8 @@
             const checked = v ? '"checked"' : '';
             agent.push(function() {
                 if (v == true) {
-                    $("#" + id).trigger('click');
+                    console.log('count');
+                    $("#" + id).off('click').trigger('click');
                 }
 
                 $("#" + id).off('click').on('click', function() {
