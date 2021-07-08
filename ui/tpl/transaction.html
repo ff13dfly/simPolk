@@ -38,6 +38,12 @@
                 <button class="btn btn-lg btn-primary" id="account_search">Account UXTO</button>
             </div>
             <div class="col-lg-12 gy-4" id="search_con"></div>
+            <div class="col-lg-12">
+                <hr>
+            </div>
+        </div>
+        <div class="row" id="collected_transaction">
+
         </div>
     </div>
 </div>
@@ -86,6 +92,30 @@
             }
             return dom;
         },
+        showCollected: function() {
+            console.log('here');
+            simPolk.request('chain', 'current', {}, function(res) {
+                console.log(res);
+                var con = '#collected_transaction';
+                var dom = self.listCollected(res.transaction.data);
+                $(con).html(dom);
+            });
+        },
+        listCollected: function(list) {
+
+            if (!list) return 'No record';
+            var dom = `<div class="col-lg-12">Collected Transation</div>`;
+            for (var k in list) {
+                var row = JSON.parse(list[k]);
+                dom += `<div class="col-lg-12 gy-4">Row ${k}</div><div class="col-lg-6">
+                        <textarea class="form-control" disabled="disabled" cols="30" rows="3">${JSON.stringify(row.from)}</textarea>
+                    </div>
+                    <div class="col-lg-6">
+                        <textarea class="form-control" disabled="disabled" cols="30" rows="3">${JSON.stringify(row.to)}</textarea>
+                    </div>`;
+            }
+            return dom
+        },
     }
 
     $(function() {
@@ -94,17 +124,19 @@
         var dif = new Date().getTime() - dt.stamp;
         if (dif > 600000) return false;
         self.setCache(dt);
+
+        self.showCollected();
     });
 
     $('.form-control').off('blur').on('blur', self.cacheInput);
 
-    $('#add_from').off('click').on('click', function() {
-        simPolk.request('account', 'new', {}, function(res) {
-            if (!res.success) return false;
-            console.log(res);
-            $('#from_account').val(res.data.public_key);
-        });
-    });
+    // $('#add_from').off('click').on('click', function() {
+    //     simPolk.request('account', 'new', {}, function(res) {
+    //         if (!res.success) return false;
+    //         console.log(res);
+    //         $('#from_account').val(res.data.public_key);
+    //     });
+    // });
 
     $('#add_to').off('click').on('click', function() {
         simPolk.request('account', 'new', {}, function(res) {

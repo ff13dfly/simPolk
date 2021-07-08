@@ -51,7 +51,7 @@
                 url: furl,
                 async: true,
                 success: function(res) {
-                    if (!res.success) return self.error('server failed:' + cfg.mod + '->' + cfg.act + ',messsage:' + res.message);
+                    if (!res.success) self.error('server failed:' + cfg.mod + '->' + cfg.act + ',messsage:' + res.message);
                     if (ck) ck(res);
                     //ck && ck(res);
                 }

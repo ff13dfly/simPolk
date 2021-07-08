@@ -87,7 +87,7 @@
                 var dom = '';
                 for (var k in res.data) {
                     var row = res.data[k];
-                    console.log(row);
+                    //console.log(row);
                     dom += `<li class="list-group-item d-flex justify-content-between lh-sm row">
                         <div class="col-lg-9 text-start">${row.type}:${row.nickname},login:${row.last}</div>
                         <div class="col-lg-3 text-end"><small>VBC 12</small></div>
@@ -141,7 +141,7 @@
 
     $('#new_account').off('click').on('click', function() {
         simPolk.request('account', 'new', {}, function(res) {
-            console.log(res)
+            //console.log(res)
             if (res.success) return location.reload();
         });
 
