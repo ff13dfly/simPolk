@@ -57,7 +57,6 @@
 		'white_list'	=>	array(				//request server control
 		
 		),
-		'key_cur_block'	=>	'currentblock',		//the current block number
 		
 		'nodes'		=>	array(
 			array(

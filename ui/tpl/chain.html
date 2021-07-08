@@ -110,6 +110,14 @@
             Jeditor.init(js, {
                 "container": con,
                 "name": "Block struct",
+                "format": {
+                    "stamp": {
+                        "type": "time",
+                        "default": {
+                            "format": "stamp"
+                        }
+                    }
+                },
                 "setting": {
                     "headerShow": false,
                     "row": {
@@ -119,6 +127,7 @@
                     },
                     "mode": "edit",
                 },
+
                 "lock": [],
             })
         },

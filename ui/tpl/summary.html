@@ -62,6 +62,9 @@
                         'type': 'bool',
                     },
                 },
+                lock: [
+                    ['keys'],
+                ],
                 onChange: function(res) {
                     simPolk.request('chain', 'setup', {
                         s: JSON.stringify(res)
