@@ -20,7 +20,7 @@ class Chain{
 			case 'current':
 				return array(
 					'success'		=>	TRUE,
-					'pendding'		=>	$cfg['pendding'],
+					'pending'		=>	$cfg['pending'],
 					'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),		//collected transfer
 					'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),			//collected storage
 					'contact'		=>	$this->getCollected($cfg['keys']['contact_collected']),			//collected storage

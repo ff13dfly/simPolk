@@ -74,7 +74,8 @@ class Account{
 
 				//$list=$core->rangeList($akey,$len-9,$len);
 				$count=6;
-				$list=$core->rangeList($akey,$len-2-$count,$len-1);
+				//$list=$core->rangeList($akey,$len-2-$count,$len-1);
+				$list=$core->rangeList($akey,0,-1);
 
 				$acs=$core->getHash($cfg['keys']['accounts'],$list);
 				

@@ -104,7 +104,7 @@
         listCollected: function(list) {
 
             if (!list) return 'No record';
-            var dom = `<div class="col-lg-12">Collected Transation</div>`;
+            var dom = `<div class="col-lg-12"><h2>Collected Transation</h2></div>`;
             for (var k in list) {
                 var row = JSON.parse(list[k]);
                 dom += `<div class="col-lg-12 gy-4">Row ${k}</div><div class="col-lg-6">

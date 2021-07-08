@@ -158,35 +158,19 @@ class Simulator extends CORE{
 		
 		//1.merkle calculation
 		//1.1.transfer merkle
-		$mtree=array();
-		foreach($raw['list_transaction'] as $k=>$v){
-			$mtree[]=$this->encry(json_encode($v));
-		}
-
+		$mtree=$this->createTree($raw['list_transaction']);
 		$raw['merkle_transaction']=$mtree;
-		$this->merkle($mtree);
 		$raw['root_transaction']=$mtree[count($mtree)-1];
 
 		//1.2.storage merkle
-		if(!empty($raw['list_storage'])){
+		$slist=empty($raw['list_storage'])?array($this->encry($raw['height'].'_storage')):$raw['list_storage'];
+		$stree=$this->createTree($slist);
+		$raw['root_storage']=$stree[count($stree)-1];
 
-		}else{
-			$stree=array(
-				$this->encry($raw['height'].'_storage'),
-			);
-			$this->merkle($stree);
-			$raw['root_storage']=$stree[count($stree)-1];
-		}
 		//1.3.contact merkle
-		if(!empty($raw['list_contact'])){
-
-		}else{
-			$ctree=array(
-				$this->encry($raw['height'].'_contact'),
-			);
-			$this->merkle($ctree);
-			$raw['root_contact']=$ctree[count($ctree)-1];
-		}
+		$clist=empty($raw['list_contact'])?array($this->encry($raw['height'].'_contact')):$raw['list_contact'];
+		$ctree=$this->createTree($clist);
+		$raw['root_contact']=$ctree[count($ctree)-1];
 
 		//1.4.merkle root
 		$atree=array(
@@ -199,11 +183,46 @@ class Simulator extends CORE{
 
 		//2.account cache
 		$as=array();
-		//echo '206:'.json_encode($raw['list_transaction']).'<hr>';
-		foreach($raw['list_transaction'] as $k=>$v){
+		$this->structAccount($raw['list_transaction'],$mtree,$as);
+
+		//3.storage cache;
+		$this->structStorage($raw['list_storage'],$stree,$as);
+
+		//4.contact cache;
+
+
+		//5.get the parent hash
+		if($raw['height']!=0){
+			$key=$this->setting['prefix']['chain'].($raw['height']-1);
+			if(!$this->existsKey($key)) return false;
+
+			$res=json_decode($this->getKey($key),true);
+			$raw['parent_hash']=$res['merkle_root'];
+		}
+
+		//6.save accout data
+		foreach($as as $acc=>$v){
+			$this->setHash($keys['accounts'],$acc,json_encode($v));
+		}
+		
+		return true;
+	}
+
+	private function createTree($list){
+		$mtree=array();
+		foreach($list as $k=>$v){
+			$mtree[]=$this->encry(json_encode($v));
+		}
+		$this->merkle($mtree);
+		return $mtree;
+	}
+
+	private function structAccount($list,&$mtree,&$as){
+		$ekey=$this->setting['keys']['transaction_entry'];
+		foreach($list as $k=>$v){
 			$hash=$mtree[$k];
 
-			//2.1.remove account uxto
+			//1.remove account uxto
 			if($k!=0){
 				foreach($v['from'] as $kk=>$vv){
 					$input_hash=$vv['hash'];
@@ -216,11 +235,11 @@ class Simulator extends CORE{
 					array_shift($as[$from_account]['uxto']);
 
 					//remove the input hash data;
-					$this->delHash($keys['transaction_entry'],$input_hash);
+					$this->delHash($ekey,$input_hash);
 				}
 			}
 			
-			//2.2.add account uxto
+			//2.add account uxto
 			foreach($v['to'] as $vv){
 				$account=$vv['account'];
 				if(!isset($as[$account])){
@@ -229,27 +248,17 @@ class Simulator extends CORE{
 				$as[$account]['uxto'][]=$hash;
 			}
 
-			//2.3.set uxto hash 
-			$this->setHash($keys['transaction_entry'],$hash,json_encode($v));
+			//3.set uxto hash 
+			$this->setHash($ekey,$hash,json_encode($v));
 		}
+	}
 
-		//3.get the parent hash
-		if($raw['height']!=0){
-			$key=$this->setting['prefix']['chain'].($raw['height']-1);
-			if(!$this->existsKey($key)) return false;
+	private function structStorage($list,&$mtree,&$as){
 
-			$res=json_decode($this->getKey($key),true);
-			//echo json_encode($res);
-			$raw['parent_hash']=$res['merkle_root'];
-		}
+	}
 
-		//exit('new block');
-		//4.save accout data
-		foreach($as as $acc=>$v){
-			$this->setHash($keys['accounts'],$acc,json_encode($v));
-		}
-		
-		return true;
+	private function structContact(&$accounts){
+
 	}
 
 	/*simulator mining 
@@ -386,10 +395,10 @@ class Simulator extends CORE{
 			$height=0;
 		}
 
-		if($cfg['pendding']) return array(
+		if($cfg['pending']) return array(
 			'current'	=>	$curBlock,
 			'height'	=>	$height,
-		);				//skip data writing ,when simchain pendding.
+		);				//skip data writing ,when simchain pending.
 		//3.create the blank block
 		if($curBlock>$height+1 || $curBlock==1){
 			$pre=$this->setting['prefix']['chain'];

@@ -129,20 +129,20 @@
                 <div class="col-lg-8 gy-4" id="pendding_info" style="display:none;"><span class="">Pendding on ${res.current.block_height}</span></div></div>`;
                 $('#block_current').html(info);
 
-                if (res.pendding) $('#pendding_info').show();
+                if (res.pending) $('#pendding_info').show();
                 else $('#pendding_info').hide();
 
-                var tdom = self.domList(res.transaction.data);
-                var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transaction.merkle)
-                $('#collected_transfer').html(tdom).append(mtree);
+                // var tdom = self.domList(res.transaction.data);
+                // var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transaction.merkle)
+                // $('#collected_transfer').html(tdom).append(mtree);
 
-                var sdom = self.domList(res.storage.data);
-                var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
-                $('#collected_storage').html(sdom).append(stree);
+                // var sdom = self.domList(res.storage.data);
+                // var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
+                // $('#collected_storage').html(sdom).append(stree);
 
-                var cdom = self.domList(res.contact.data);
-                var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
-                $('#collected_contact').html(cdom).append(ctree);
+                // var cdom = self.domList(res.contact.data);
+                // var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
+                // $('#collected_contact').html(cdom).append(ctree);
             });
         }
     }

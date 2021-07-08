@@ -13,7 +13,7 @@
 		'speed'			=>	10,				//block created speed (block/second)
 		'basecoin'		=>	211,			//reward for creating block
 		'password'		=>	'123456',		//default password for simulate account
-		'pendding'		=>	true,			//pendding the chain status
+		'pending'		=>	true,			//pendding the chain status
 		'cost'			=>	array(
 			'transfer'	=>	array(1,20),	//transfer cost range
 			'storage'	=>	10,				//storage set cost
