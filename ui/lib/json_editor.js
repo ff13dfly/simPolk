@@ -746,7 +746,6 @@
             const checked = v ? '"checked"' : '';
             agent.push(function() {
                 if (v == true) {
-                    console.log('count');
                     $("#" + id).off('click').trigger('click');
                 }
 
