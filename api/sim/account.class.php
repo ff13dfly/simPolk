@@ -89,6 +89,7 @@ class Account{
 					'success'	=>	TRUE,
 					'data'		=>	array_reverse($arr),
 					'len'		=>	$len,
+					'currency'	=>	$cfg['name'],
 				);
 				break;
 			

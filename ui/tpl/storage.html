@@ -91,16 +91,18 @@
             }
             return dom
         },
+        autofill: function() {
+            if (!localStorage.getItem('storage_cache')) return false;
+            var dt = JSON.parse(localStorage.getItem('storage_cache'));
+            var dif = new Date().getTime() - dt.stamp;
+            if (dif > 600000) return false;
+            self.setCache(dt);
+        },
     }
 
     $(function() {
-        if (!localStorage.getItem('storage_cache')) return false;
-        var dt = JSON.parse(localStorage.getItem('storage_cache'));
-        var dif = new Date().getTime() - dt.stamp;
-        if (dif > 600000) return false;
-        self.setCache(dt);
+        self.autofill();
         self.showCollected();
-
     });
 
 

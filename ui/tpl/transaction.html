@@ -3,7 +3,7 @@
         <div class="row">
             <div class="col-lg-10 gy-4">
                 <label for="from_account">Transfer from <span class="text-danger" id="from_error"></span></label>
-                <input type="text" class="form-control" name="from_account" id="from_account" value="" placeholder="Account public key" />
+                <textarea class="form-control" name="from_account" id="from_account" cols="30" rows="2" placeholder="Account public key"></textarea>
             </div>
             <div class="col-lg-2 gy-4 text-center">
                 <!-- <label for="add_from">new account</label>
@@ -24,7 +24,6 @@
             <div class="col-lg-10 text-end gy-4">
                 <button class="btn btn-lg btn-primary" id="transfer_submit">Sent Coin To Account</button>
             </div>
-
         </div>
     </div>
     <div class="col-lg-1"></div>
@@ -93,7 +92,7 @@
             return dom;
         },
         showCollected: function() {
-            console.log('here');
+            //console.log('here');
             simPolk.request('chain', 'current', {}, function(res) {
                 console.log(res);
                 var con = '#collected_transaction';
@@ -107,7 +106,8 @@
             var dom = `<div class="col-lg-12"><h2>Collected Transation</h2></div>`;
             for (var k in list) {
                 var row = JSON.parse(list[k]);
-                dom += `<div class="col-lg-12 gy-4">Row ${k}</div><div class="col-lg-6">
+                //console.log(row);
+                dom += `<div class="col-lg-12 gy-4">Row ${k} ${row.purpose}</div><div class="col-lg-6">
                         <textarea class="form-control" disabled="disabled" cols="30" rows="3">${JSON.stringify(row.from)}</textarea>
                     </div>
                     <div class="col-lg-6">
@@ -116,15 +116,17 @@
             }
             return dom
         },
+        autoFill: function() {
+            if (!localStorage.getItem('transfer_cache')) return false;
+            var dt = JSON.parse(localStorage.getItem('transfer_cache'));
+            var dif = new Date().getTime() - dt.stamp;
+            if (dif > 600000) return false;
+            self.setCache(dt);
+        },
     }
 
     $(function() {
-        if (!localStorage.getItem('transfer_cache')) return false;
-        var dt = JSON.parse(localStorage.getItem('transfer_cache'));
-        var dif = new Date().getTime() - dt.stamp;
-        if (dif > 600000) return false;
-        self.setCache(dt);
-
+        self.autoFill();
         self.showCollected();
     });
 

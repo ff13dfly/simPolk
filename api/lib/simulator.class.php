@@ -196,6 +196,7 @@ class Simulator extends CORE{
 		$status=$this->autoFillData();
 		$result['current_block']=$status['current'];
 		$result['block_height']=$status['height'];
+		$result['chain_start']=$status['start'];
 		
 		$index=$this->getServer($cfg['nodes']);
 		$result['server']=$cfg['nodes'][$index];		
@@ -219,11 +220,14 @@ class Simulator extends CORE{
 		$key_height=$cfg['keys']['height'];
 		$height=$this->existsKey($key_height)?$this->getKey($key_height):0;
 
-		//skip data writing ,when simchain pending.
-		if($cfg['pending']) return array(  
+		$result=array(  
 			'current'	=>	$curBlock,
 			'height'	=>	$height,
-		);		
+			'start'		=>	$start,
+		);
+
+		//skip data writing ,when simchain pending.
+		if($cfg['pending']) return $result;
 
 		//3.create the blank block
 		if($curBlock>$height+1 || $curBlock==1){
@@ -235,7 +239,7 @@ class Simulator extends CORE{
 			}
 			$this->setKey($key_height,$curBlock-1);
 		}
-		return array('current'	=>	$curBlock,'height'	=>	$height);
+		return $result;
 	}
 
 	/*******************************************************/

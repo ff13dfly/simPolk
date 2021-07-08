@@ -132,10 +132,17 @@
             })
         },
         showStatus: function() {
+            //console.log('ready to get collected transaction');
             simPolk.request('chain', 'current', {}, function(res) {
+                var dd = self.transformTime(res.current.chain_start);
+                $('#server_current').html('Simchain start from : ' + dd);
                 var info = `<div class="row">
-                <div class="col-lg-4 gy-4"><h1 class="text-primary text-center">${res.current.current_block}</h1></div>
-                <div class="col-lg-8 gy-4" id="pendding_info" style="display:none;"><span class="">Pendding on ${res.current.block_height}</span></div></div>`;
+                <div class="col-lg-4 gy-4">
+                    <h1 class="text-primary text-center">${res.current.current_block}</h1>
+                    </div>
+                <div class="col-lg-8 gy-4" id="pendding_info" style="display:none;">
+                    <span class="">Pendding on ${res.current.block_height}</span></div>
+                    </div>`;
                 $('#block_current').html(info);
 
                 if (res.pending) $('#pendding_info').show();
@@ -153,17 +160,29 @@
                 var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
                 $('#collected_contact').html(cdom).append(ctree);
             });
-        }
+        },
+        transformTime(timestamp) {
+            var addZero = self.addZero;
+            if (timestamp) {
+                var time = new Date(timestamp * 1000);
+                var y = time.getFullYear();
+                var M = time.getMonth() + 1;
+                var d = time.getDate();
+                var h = time.getHours();
+                var m = time.getMinutes();
+                var s = time.getSeconds();
+                return y + '-' + addZero(M) + '-' + addZero(d) + ' ' + addZero(h) + ':' + addZero(m) + ':' + addZero(s);
+            } else {
+                return '';
+            }
+        },
+        addZero: function(m) {
+            return m < 10 ? '0' + m : m;
+        },
     }
 
     $(function() {
         self.showStatus();
-        // simPolk.setTask(self.showStatus);
-        // simPolk.enableTask();
-
-        // setInterval(() => {
-        //     simPolk.runTask();
-        // }, 1000);
     });
 
 
