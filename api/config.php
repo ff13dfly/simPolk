@@ -1,23 +1,27 @@
 <?php
 	return array(
+		'pending'		=>	false,			//pendding the chain status
+
+		
+		//'config_cache'	=>	'sim_confg',	//config_cache key
+		//sim-chain basic setting
+		'name'			=>	'VBC',			//coin name
+		'speed'			=>	10,				//block created speed (block/second)
+		'basecoin'		=>	211,			//reward for creating block
+		'password'		=>	'123456',		//default password for simulate account
+		
+		'cost'			=>	array(
+			'transfer'	=>	array(1,20),	//transfer cost range
+			'storage'	=>	10,				//storage set cost
+			'contact'	=>	10,				//contact run cost
+		),
+
 		//sim-chain db setting
 		'redis'			=>	array(			//redis setting
 			'host'		=>	'localhost',
 			'port'		=>	6379,
 			'auth'		=>	'authKEY',
 			'timeout'	=>	36000,
-		),
-		'config_cache'	=>	'sim_confg',	//config_cache key
-		//sim-chain basic setting
-		'name'			=>	'VBC',			//coin name
-		'speed'			=>	10,				//block created speed (block/second)
-		'basecoin'		=>	211,			//reward for creating block
-		'password'		=>	'123456',		//default password for simulate account
-		'pending'		=>	true,			//pendding the chain status
-		'cost'			=>	array(
-			'transfer'	=>	array(1,20),	//transfer cost range
-			'storage'	=>	10,				//storage set cost
-			'contact'	=>	10,				//contact run cost
 		),
 
 		'switcher'		=>	array(

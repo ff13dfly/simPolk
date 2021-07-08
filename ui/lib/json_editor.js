@@ -176,7 +176,7 @@
                         cache[kk] = val;
                         self.init(cache, backup.config, true);
                     } else {
-                        const chain = path.split('_');
+                        const chain = path.split(config.connector);
                         if (chain.length == 1) {
                             cache[kk] = val;
                             self.init(cache, backup.config, true);
@@ -272,7 +272,7 @@
         auto: function(cfg, sel) {
             //1.输入框部分，blur就进行数据保存
             $("." + config.clsInput).off('blur').on('blur', function() {
-                const chain = $(this).attr('id').split('_');
+                const chain = $(this).attr('id').split(config.connector);
                 const val = $(this).val();
                 self.save(val, chain);
             });
@@ -293,7 +293,7 @@
             //3.添加数组条目的操作
             $("." + config.clsArrayAdd).off('click').on('click', function() {
                 //$(this).parent().parent().parent().trigger('click');
-                const chain = $(this).attr('id').split('_');
+                const chain = $(this).attr('id').split(config.connector);
                 const list = self.getArray(chain);
                 list.push(list.length == 0 ? 'new row' : self.clone(list[0]));
                 self.save(list, chain);
@@ -309,7 +309,7 @@
                     $(sel).find('.active').removeClass('active')
                     $(this).addClass('active');
 
-                    const chain = $(this).attr('path').split('_');
+                    const chain = $(this).attr('path').split(config.connector);
                     if (chain.length == 1 || self.getType(chain) == 'object') {
                         $("." + config.clsAddContainer).show();
                     } else {
@@ -533,7 +533,7 @@
         },
         getIDbyChain: function(k, chain) {
             let str = '';
-            for (let i = 0; i < chain.length; i++) str += chain[i] + '_';
+            for (let i = 0; i < chain.length; i++) str += chain[i] + config.connector;
             return self.removeSpace(str + k, config.connector);
         },
 
@@ -616,7 +616,7 @@
                 const obj = { year: year, month: month, day: day, hour: hour, minute: minute, second: second, timezone: zz };
                 const value = self.saveTimeByFormat(obj, fmt);
 
-                const chain = $('#' + id).attr('id').split('_');
+                const chain = $('#' + id).attr('id').split(config.connector);
                 self.save(value, chain);
             };
 
@@ -739,18 +739,14 @@
                     $("#" + id).trigger('click');
                 }
 
-                $("#" + id).off('blur').on('click', function() {
-                    const val = $(this).is(':checked');
-                    const chain = $(this).attr('id').split('_');
+                $("#" + id).off('click').on('click', function() {
+                    const val = $('#' + id).is(':checked');
+                    const chain = $(this).attr('id').split(config.connector);
 
-                    if (val) $(this).attr("checked", "checked");
-                    else $(this).removeAttr('checked');
-                    const dd = !val;
+                    if (!val) $('#' + id).attr("checked", "checked");
+                    else $('#' + id).removeAttr('checked');
 
-                    console.log('clicked,value:' + val + ',changed:' + dd);
-
-                    $(this).val(!dd);
-                    self.save(dd, chain);
+                    self.save(val, chain);
                 });
             });
             return `<div class="${config.clsBool}">
@@ -774,7 +770,7 @@
 
             agent.push(function() {
                 $("#" + id).off('blur').off('change').on('change', function(res) {
-                    const chain = $(this).attr('id').split('_');
+                    const chain = $(this).attr('id').split(config.connector);
                     const fa = res.target.files[0];
                     if (fa.size > max) return $("#" + info_con).html('File max size:' + max);
                     self.getBase64FromFile(fa, function(base64) {
@@ -844,12 +840,12 @@
         getFile: function(id, v, disable, cfg) {
             const cls = config.clsInput,
                 dis = disable ? 'disabled="disabled"' : '';
-            const info_con = hash() + '_' + id;
+            const info_con = hash() + config.connector + id;
             const form = '<input class="' + cls + ' form-control ' + config.clsFile + '" id="' + id + '" type="file" value="' + v + '" ' + dis + ' accept="*/*"/>';
             const size = v == '' ? '&nbsp;' : self.formatSize(v.length);
             agent.push(function() {
                 $("#" + id).off('blur').off('change').on('change', function(res) {
-                    const chain = $(this).attr('id').split('_');
+                    const chain = $(this).attr('id').split(config.connector);
                     const fa = res.target.files[0];
                     if (fa.size > cfg.maxSize) return $("#" + info_con).html('max size:' + self.formatSize(cfg.max));
                     const result = { chain: chain, value: fa };
@@ -869,7 +865,7 @@
             agent.push(function() {
                 $("#" + id).off('blur').on('blur', function(res) {
                     $(this).css({ 'background': '#FFFFFF' });
-                    const chain = $(this).attr('id').split('_');
+                    const chain = $(this).attr('id').split(config.connector);
                     const val = $(this).val();
                     const rule = !cfg.rule ? /^(\w-*\.*)+@(\w-?)+(\.\w{2,})+$/ : cfg.rule;
                     if (rule.test(val)) {
@@ -886,7 +882,7 @@
             agent.push(function() {
                 $("#" + id).off('blur').on('blur', function(res) {
                     $(this).css({ 'background': '#FFFFFF' });
-                    const chain = $(this).attr('id').split('_');
+                    const chain = $(this).attr('id').split(config.connector);
                     const val = $(this).val();
                     const rule = !cfg.rule ? /^(((13[0-9]{1})|(15[0-9]{1})|(18[0-9]{1}))+\d{8})$/ : cfg.rule;
                     if (rule.test(val)) {
@@ -930,7 +926,7 @@
 
             agent.push(function() {
                 $("#" + id).off('change').on('change', function() {
-                    const chain = $(this).attr('id').split('_'),
+                    const chain = $(this).attr('id').split(config.connector),
                         val = $(this).val();
                     self.save(val, chain);
                     const result = { value: val, chain: chain }

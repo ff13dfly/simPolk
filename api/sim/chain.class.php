@@ -13,9 +13,17 @@ class Chain{
 			case 'config':
 				return array(
 					'success'	=>	TRUE,
-					'data'		=>	$cfg,
+					'data'		=>	$core->getConfig($cfg),
 				);
 				break;
+
+			case 'setup':
+				$ncfg=json_decode($param['s'],true);
+				$core->setConfig($ncfg);
+				return array(
+					'success'	=>	TRUE,
+				);
+					break;	
 
 			case 'current':
 				return array(

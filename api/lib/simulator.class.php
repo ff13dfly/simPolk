@@ -62,6 +62,13 @@ class Simulator extends CORE{
 		$ncfg=json_decode($this->getKey($key),true);
 		return $ncfg;
 	}
+
+	public function setConfig($cfg){
+		$key=$cfg['keys']['setting'];
+		$this->setKey($key,json_encode($cfg));
+		return true;
+	}
+	
 	/*return the basic datastruct of transaction
 	*/
 	public function getTransactionFormat(){

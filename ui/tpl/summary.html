@@ -44,9 +44,10 @@
 </div>
 
 <script type="text/javascript">
+    var editor = null;
     var self = {
         jsonBlock: function(js, con) {
-            Jeditor.init(js, {
+            editor = Jeditor.init(js, {
                 "container": con,
                 "name": "Simchain setting",
                 "setting": {
@@ -56,12 +57,18 @@
                         "note": 2
                     },
                 },
-                // "events": {
-                //     onChange: function(res) {
-                //         console.log(res);
-                //     },
-                // },
-                //"lock": [],
+                format: {
+                    'pending': {
+                        'type': 'bool',
+                    },
+                },
+                onChange: function(res) {
+                    simPolk.request('chain', 'setup', {
+                        s: JSON.stringify(res)
+                    }, function(res) {
+                        if (!res.success) return false;
+                    });
+                },
             })
         },
     };
@@ -83,7 +90,7 @@
 
     $('#reset_network').on('click', function() {
         simPolk.request('chain', 'reset', {}, function(res) {
-            console.log(res)
+            if (res.success) location.reload();
         });
     });
 </script>
