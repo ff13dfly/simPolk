@@ -26,13 +26,12 @@ class Storage{
 
 			case 'set':
 				$account=$param['u'];
+				$uxto=$core->checkUXTO($account,$cfg['cost']['storage']);
 
-				$atmp=$this->db->getHash($cfg['keys']['accounts'],array($account));
-				$user_from=json_decode($atmp[$account],true);
+				//echo json_encode($uxto).'<hr>';
+				//exit();
 
-				$nuxto=$this->getUXTO($user_from['uxto'],$account,$cfg['cost']['storage']);
-
-				if(!$nuxto['avalid']){
+				if(!$uxto['avalid']){
 					return array(
 						'success'	=>	false,
 						'message'	=>	'not enough input',
@@ -43,7 +42,7 @@ class Storage{
 					'key'		=>	$param['k'],
 					'value'		=>	$param['v'],
 					'owner'		=>	$account,
-					'signature'	=>	$user_from['sign'],
+					'signature'	=>	$uxto['user']['sign'],
 					'stamp'		=>	time(),
 				);
 
@@ -61,31 +60,6 @@ class Storage{
 		}
 	}
 	
-	private function getUXTO($uxto,$account,$amount){
-		$out=array();
-		$left=array();
-		$count=0;
-		$arr=$this->db->getHash($this->env['keys']['transaction_entry'],$uxto);
-		
-		foreach($arr as $hash=>$v){
-			$row=json_decode($v,true);
-			if($count>=$amount){
-				$left[]=array('hash'=>$hash,'data'=>$row);
-			}else{
-				
-				foreach($row['to'] as $kk=>$vv){
-					if($vv['account']!=$account) continue;
-					$count+=$vv['amount'];
-				} 
-				$out[]=array('hash'=>$hash,'data'=>$row);
-			}
-		}
-		return array(
-			'avalid'	=> $count>=$amount?true:false,
-			'out'		=>	$out,
-			'left'		=>	$left,
-		);
-	}
 	
 	private function setStorage(){
 		

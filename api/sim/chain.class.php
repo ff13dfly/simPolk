@@ -34,11 +34,8 @@ class Chain{
 				$amount=(int)$param['value'];
 
 				//1.calc the from account uxto
-				$atmp=$this->db->getHash($cfg['keys']['accounts'],array($acc_from));
-				$user_from=json_decode($atmp[$acc_from],true);
-
-				$nuxto=$this->getUXTO($user_from['uxto'],$acc_from,$amount);
-				if(!$nuxto['avalid']){
+				$uxto=$core->checkUXTO($acc_from,$amount);
+				if($uxto==false || !$uxto['avalid']){
 					return array(
 						'success'	=>	false,
 						'message'	=>	'not enough input',
@@ -46,7 +43,8 @@ class Chain{
 				}
 				
 				//2.setup the uxto data struct
-				$final=$core->calcUXTO($nuxto['out'],$acc_from,$acc_to,$amount);
+				$final=$core->calcUXTO($uxto['out'],$acc_from,$acc_to,$amount);
+				$final['stamp']=time();
 
 				//2.1.add to collected transaction;
 				$key=$cfg['keys']['transaction_collected'];
@@ -122,73 +120,6 @@ class Chain{
 		return true;
 	}
 
-	// private function calcUXTO($out,$from,$to,$amount){
-	// 	//echo json_encode($out).'<hr>';
-
-	// 	$format=$this->db->getTransactionFormat();
-	// 	$row=$format['row'];
-	// 	$fmt_from=$format['from'];
-	// 	$fmt_to=$format['to'];
-
-	// 	//1.calc the amount of input
-	// 	$sum=0;
-	// 	foreach($out as $k=>$v){
-	// 		//echo 'uxto['.$k.'] :'.json_encode($v).'<hr>';
-
-	// 		$fmt_from['hash']=$v['hash'];
-	// 		$fmt_from['type']='normal';
-	// 		$fmt_from['account']=$from;
-
-	// 		foreach($v['data']['to'] as $vv){
-	// 			if($vv['account']!=$from) continue;
-
-	// 			$fmt_from['amount']=$vv['amount'];
-	// 			$sum+=(int)$vv['amount'];
-	// 		}
-	// 		$row['from'][]=$fmt_from;	
-	// 	}
-
-	// 	//2.calc the amount of output
-	// 	$fmt_to['amount']=$amount;
-	// 	$fmt_to['account']=$to;
-	// 	$row['to'][]=$fmt_to;
-
-	// 	if($sum!==$amount){
-	// 		$fmt_to['amount']=$sum-$amount;
-	// 		$fmt_to['account']=$from;
-	// 		$row['to'][]=$fmt_to;
-	// 	}
-		
-	// 	return $row;
-	// }
-	
-	//check the uxto list to get the right uxto
-	private function getUXTO($uxto,$account,$amount){
-		$out=array();
-		$left=array();
-		$count=0;
-		$arr=$this->db->getHash($this->env['keys']['transaction_entry'],$uxto);
-		
-		foreach($arr as $hash=>$v){
-			$row=json_decode($v,true);
-			if($count>=$amount){
-				$left[]=array('hash'=>$hash,'data'=>$row);
-			}else{
-				
-				foreach($row['to'] as $kk=>$vv){
-					if($vv['account']!=$account) continue;
-					$count+=$vv['amount'];
-				} 
-				$out[]=array('hash'=>$hash,'data'=>$row);
-			}
-		}
-		return array(
-			'avalid'	=> $count>=$amount?true:false,
-			'out'		=>	$out,
-			'left'		=>	$left,
-		);
-	}
-
 	private function clean_block($n,$pre){
 		for($i=0;$i<$n;$i++) $this->db->delKey($pre.$i);
 		return true;
@@ -196,7 +127,6 @@ class Chain{
 
 	private function getCollected($key){
 		$list=$this->db->getList($key);
-		//echo $key.':'.json_encode($list).'<hr>';
 
 		$cs=array();
 		$mtree=array();

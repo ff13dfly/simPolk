@@ -145,13 +145,11 @@ class Simulator extends CORE{
 		}
 
 		//2.clean the collected data;
-		//$this->cleanCollectedData();
+		$this->cleanCollectedData();
 		return true;
 	}
 
-	private function calcUXTO($out,$from,$to,$amount){
-		//echo json_encode($out).'<hr>';
-
+	public function calcUXTO($out,$from,$to,$amount){
 		$format=$this->getTransactionFormat();
 		$row=$format['row'];
 		$fmt_from=$format['from'];
@@ -189,8 +187,9 @@ class Simulator extends CORE{
 		return $row;
 	}
 
-	private function checkUXTO($account,$amount){
+	public function checkUXTO($account,$amount){
 		$atmp=$this->getHash($this->setting['keys']['accounts'],array($account));
+		if(empty($atmp)) return false;
 		$user_from=json_decode($atmp[$account],true);
 		$uxto=$user_from['uxto'];
 
@@ -204,7 +203,6 @@ class Simulator extends CORE{
 			if($count>=$amount){
 				$left[]=array('hash'=>$hash,'data'=>$row);
 			}else{
-				
 				foreach($row['to'] as $kk=>$vv){
 					if($vv['account']!=$account) continue;
 					$count+=$vv['amount'];
@@ -216,6 +214,7 @@ class Simulator extends CORE{
 			'avalid'	=> $count>=$amount?true:false,
 			'out'		=>	$out,
 			'left'		=>	$left,
+			'user'		=>	$user_from,
 		);
 	}
 
@@ -264,6 +263,7 @@ class Simulator extends CORE{
 		//1.2.storage merkle
 		$slist=empty($raw['list_storage'])?array($this->encry($raw['height'].'_storage')):$raw['list_storage'];
 		$stree=$this->createTree($slist);
+		$raw['merkle_storage']=$stree;
 		$raw['root_storage']=$stree[count($stree)-1];
 
 		//1.3.contact merkle
