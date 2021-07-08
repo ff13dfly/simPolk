@@ -40,10 +40,11 @@ class Storage{
 				}
 
 				$row=array(
-					'key'	=>	$param['k'],
-					'value'	=>	$param['v'],
-					'owner'	=>	$account,
-					'stamp'	=>	time(),
+					'key'		=>	$param['k'],
+					'value'		=>	$param['v'],
+					'owner'		=>	$account,
+					'signature'	=>	$user_from['sign'],
+					'stamp'		=>	time(),
 				);
 
 

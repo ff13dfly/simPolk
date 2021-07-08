@@ -46,7 +46,7 @@ class Chain{
 				}
 				
 				//2.setup the uxto data struct
-				$final=$this->calcUXTO($nuxto['out'],$acc_from,$acc_to,$amount);
+				$final=$core->calcUXTO($nuxto['out'],$acc_from,$acc_to,$amount);
 
 				//2.1.add to collected transaction;
 				$key=$cfg['keys']['transaction_collected'];
@@ -122,45 +122,45 @@ class Chain{
 		return true;
 	}
 
-	private function calcUXTO($out,$from,$to,$amount){
-		//echo json_encode($out).'<hr>';
+	// private function calcUXTO($out,$from,$to,$amount){
+	// 	//echo json_encode($out).'<hr>';
 
-		$format=$this->db->getTransactionFormat();
-		$row=$format['row'];
-		$fmt_from=$format['from'];
-		$fmt_to=$format['to'];
+	// 	$format=$this->db->getTransactionFormat();
+	// 	$row=$format['row'];
+	// 	$fmt_from=$format['from'];
+	// 	$fmt_to=$format['to'];
 
-		//1.calc the amount of input
-		$sum=0;
-		foreach($out as $k=>$v){
-			//echo 'uxto['.$k.'] :'.json_encode($v).'<hr>';
+	// 	//1.calc the amount of input
+	// 	$sum=0;
+	// 	foreach($out as $k=>$v){
+	// 		//echo 'uxto['.$k.'] :'.json_encode($v).'<hr>';
 
-			$fmt_from['hash']=$v['hash'];
-			$fmt_from['type']='normal';
-			$fmt_from['account']=$from;
+	// 		$fmt_from['hash']=$v['hash'];
+	// 		$fmt_from['type']='normal';
+	// 		$fmt_from['account']=$from;
 
-			foreach($v['data']['to'] as $vv){
-				if($vv['account']!=$from) continue;
+	// 		foreach($v['data']['to'] as $vv){
+	// 			if($vv['account']!=$from) continue;
 
-				$fmt_from['amount']=$vv['amount'];
-				$sum+=(int)$vv['amount'];
-			}
-			$row['from'][]=$fmt_from;	
-		}
+	// 			$fmt_from['amount']=$vv['amount'];
+	// 			$sum+=(int)$vv['amount'];
+	// 		}
+	// 		$row['from'][]=$fmt_from;	
+	// 	}
 
-		//2.calc the amount of output
-		$fmt_to['amount']=$amount;
-		$fmt_to['account']=$to;
-		$row['to'][]=$fmt_to;
+	// 	//2.calc the amount of output
+	// 	$fmt_to['amount']=$amount;
+	// 	$fmt_to['account']=$to;
+	// 	$row['to'][]=$fmt_to;
 
-		if($sum!==$amount){
-			$fmt_to['amount']=$sum-$amount;
-			$fmt_to['account']=$from;
-			$row['to'][]=$fmt_to;
-		}
+	// 	if($sum!==$amount){
+	// 		$fmt_to['amount']=$sum-$amount;
+	// 		$fmt_to['account']=$from;
+	// 		$row['to'][]=$fmt_to;
+	// 	}
 		
-		return $row;
-	}
+	// 	return $row;
+	// }
 	
 	//check the uxto list to get the right uxto
 	private function getUXTO($uxto,$account,$amount){

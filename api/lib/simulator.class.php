@@ -31,6 +31,7 @@ class Simulator extends CORE{
 	private $uxto=array(
 		'from'		=>	array(),
 		'to'		=>	array(),
+		'purpose'	=>	'transaction',		//[transaction,storage,contact]
 		'version'	=>	2021,
 		'stamp'		=>	0,
 	);
@@ -38,7 +39,7 @@ class Simulator extends CORE{
 	private $from=array(
 		'hash'			=>	'sha256_hash',			//from hash	['', merkle hash]
 		'amount'		=>	0,						//from amount 
-		'type'			=>	'coinbase',				//from type [coinbase, normal]
+		'type'			=>	'coinbase',				//from type [ coinbase, normal ]
 		'account'		=>	'account_hash_64byte',	//account public key
 		'signature'		=>	'account_signature',	//account encry
 	);
@@ -101,9 +102,9 @@ class Simulator extends CORE{
 		$data=$this->getCoinbaseBlock($n,$delta,$svc);		//获取带coinbase UXTO的区块数据
 
 		//merge the collected data to the basic data struct
-		if(!$skip){
+		//if(!$skip){
 			$this->mergeCollected($data);
-		}
+		//}
 
 		//struct all the neccessary cache;
 		$this->structRow($data);
@@ -116,6 +117,7 @@ class Simulator extends CORE{
 	*/
 	private function mergeCollected(&$data){
 		$cds=$this->getAllCollected();
+
 		//1.merge all data
 
 		//merge the transaction data
@@ -143,8 +145,97 @@ class Simulator extends CORE{
 		}
 
 		//2.clean the collected data;
-		$this->cleanCollectedData();
+		//$this->cleanCollectedData();
 		return true;
+	}
+
+	private function calcUXTO($out,$from,$to,$amount){
+		//echo json_encode($out).'<hr>';
+
+		$format=$this->getTransactionFormat();
+		$row=$format['row'];
+		$fmt_from=$format['from'];
+		$fmt_to=$format['to'];
+
+		//1.calc the amount of input
+		$sum=0;
+		foreach($out as $k=>$v){
+			//echo 'uxto['.$k.'] :'.json_encode($v).'<hr>';
+
+			$fmt_from['hash']=$v['hash'];
+			$fmt_from['type']='normal';
+			$fmt_from['account']=$from;
+
+			foreach($v['data']['to'] as $vv){
+				if($vv['account']!=$from) continue;
+
+				$fmt_from['amount']=$vv['amount'];
+				$sum+=(int)$vv['amount'];
+			}
+			$row['from'][]=$fmt_from;	
+		}
+
+		//2.calc the amount of output
+		$fmt_to['amount']=$amount;
+		$fmt_to['account']=$to;
+		$row['to'][]=$fmt_to;
+
+		if($sum!==$amount){
+			$fmt_to['amount']=$sum-$amount;
+			$fmt_to['account']=$from;
+			$row['to'][]=$fmt_to;
+		}
+		
+		return $row;
+	}
+
+	private function checkUXTO($account,$amount){
+		$atmp=$this->getHash($this->setting['keys']['accounts'],array($account));
+		$user_from=json_decode($atmp[$account],true);
+		$uxto=$user_from['uxto'];
+
+		$out=array();
+		$left=array();
+		$count=0;
+		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$uxto);
+		
+		foreach($arr as $hash=>$v){
+			$row=json_decode($v,true);
+			if($count>=$amount){
+				$left[]=array('hash'=>$hash,'data'=>$row);
+			}else{
+				
+				foreach($row['to'] as $kk=>$vv){
+					if($vv['account']!=$account) continue;
+					$count+=$vv['amount'];
+				} 
+				$out[]=array('hash'=>$hash,'data'=>$row);
+			}
+		}
+		return array(
+			'avalid'	=> $count>=$amount?true:false,
+			'out'		=>	$out,
+			'left'		=>	$left,
+		);
+	}
+
+	private function createUxtoFromStorage($list,$miner){
+		//echo json_encode($list).'<hr>';
+		//echo $miner;
+		$arr=array();
+
+		$amount=$this->setting['cost']['storage'];
+		foreach($list as $k=>$v){
+			$owner=$v['owner'];
+			$uxto=$this->checkUXTO($owner,$amount);
+
+			$final=$this->calcUXTO($uxto['out'],$owner,$miner,$amount);
+			$final['purpose']='storage';
+			$arr[]=$final;
+			//$final['type']='storage';
+			//echo json_encode($final).'<hr>';
+		}
+		return $arr;
 	}
 
 	/* calc the block params method
@@ -155,6 +246,14 @@ class Simulator extends CORE{
 
 		$cfg=$this->setting;
 		$keys=$cfg['keys'];
+
+		//1.create uxto through storage;
+		$sts=$this->createUxtoFromStorage($raw['list_storage'],$raw['creator']);
+		if(!empty($sts)){
+			foreach($sts as $v) $raw['list_transaction'][]=$v;
+		}
+		//echo json_encode($sts);
+		//exit();
 		
 		//1.merkle calculation
 		//1.1.transfer merkle
@@ -183,29 +282,30 @@ class Simulator extends CORE{
 
 		//2.account cache
 		$as=array();
+		$this->structStorage($raw['list_storage'],$stree,$as);		//计算storage，进行uxto处理
+		$this->structContact($raw['list_contact'],$ctree,$as);
 		$this->structAccount($raw['list_transaction'],$mtree,$as);
 
-		//3.storage cache;
-		$this->structStorage($raw['list_storage'],$stree,$as);
+		$raw['parent_hash']=$this->getParentHash($raw['height']);  //5.get the parent hash
+		$this->saveAccountStatus($as);  //6.save accout data
 
-		//4.contact cache;
-
-
-		//5.get the parent hash
-		if($raw['height']!=0){
-			$key=$this->setting['prefix']['chain'].($raw['height']-1);
-			if(!$this->existsKey($key)) return false;
-
-			$res=json_decode($this->getKey($key),true);
-			$raw['parent_hash']=$res['merkle_root'];
-		}
-
-		//6.save accout data
-		foreach($as as $acc=>$v){
-			$this->setHash($keys['accounts'],$acc,json_encode($v));
-		}
-		
 		return true;
+	}
+
+	private function getParentHash($n){
+		if($n==0) return '';
+		$key=$this->setting['prefix']['chain'].($n-1);
+		if(!$this->existsKey($key)) return false;
+
+		$res=json_decode($this->getKey($key),true);
+		return $res['merkle_root'];
+	}
+
+	private function saveAccountStatus(&$as){
+		$key=$this->setting['keys']['accounts'];
+		foreach($as as $acc=>$v){
+			$this->setHash($key,$acc,json_encode($v));
+		}
 	}
 
 	private function createTree($list){
@@ -254,7 +354,20 @@ class Simulator extends CORE{
 	}
 
 	private function structStorage($list,&$mtree,&$as){
+		$ekey=$this->setting['keys']['storage_entry'];
+		foreach($list as $k=>$v){
+			$hash=$mtree[$k];
+			$account=$v['owner'];
+			if(!isset($as[$account])){
+				$as[$account]=$this->checkAccount($account);
+			}
+			$as[$account]['storage'][]=$hash;
 
+			//echo json_encode($v).'<hr>';
+			//exit();
+
+			$this->setHash($ekey,$hash,json_encode($v));
+		}
 	}
 
 	private function structContact(&$accounts){
@@ -537,7 +650,7 @@ class Simulator extends CORE{
 		return array(
 			'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),
 			'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),
-			'contact'		=>	$this->getCollected($cfg['keys']['storage_collected']),	
+			'contact'		=>	$this->getCollected($cfg['keys']['contact_collected']),	
 		);
 	}
 
