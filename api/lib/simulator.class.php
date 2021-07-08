@@ -22,9 +22,9 @@ class Simulator extends CORE{
 		'merkle_transaction'=>	array(),		//merkle tree for transfer
 		'merkle_storage'	=>	array(),		//merkle tree for storage
 		'merkle_contact'	=>	array(),		//merkle tree for contact
-		'list_transaction'	=>	array(),		//full transaction 
-		'list_storage'		=>	array(),
-		'list_contact'		=>	array(),
+		'list_transaction'	=>	array(),		//all transaction list 
+		'list_storage'		=>	array(),		//all storage list 	
+		'list_contact'		=>	array(),		//all contact list 
 	);
 
 	//transaction data struct
@@ -55,6 +55,7 @@ class Simulator extends CORE{
 		return CORE::init(get_class());
 	}
 
+
 	public function getConfig($cfg){
 		$key=$cfg['keys']['setting'];
 		if(!$this->existsKey($key)) return $cfg;
@@ -71,6 +72,20 @@ class Simulator extends CORE{
 		);
 	}
 
+	//自动加载class的方法
+	private function loadClass($cls){
+		spl_autoload_register(function($class_name) {
+			$target='sim'.DS.$class_name.'.class.php';
+			if(!file_exists($target)) return false;
+		    require_once $target;
+		});
+		if(!class_exists($cls)) return false;
+		return new $cls();
+	}
+
+	/*******************************************************/
+	/***************uncategoried****************************/
+	/*******************************************************/
 	public function freshCurrentBlock(){
 		$cfg=$this->setting;
 
@@ -90,6 +105,189 @@ class Simulator extends CORE{
 		//3.重新写块
 
 		return $n;
+	}
+
+	/*******************************************************/
+	/***************control logic***************************/
+	/*******************************************************/
+
+	/*curl方式跨域post数据的方法
+	 * @param	$url	string		//请求的url地址
+	 * @param	$data	array		//post的值，kv形式的
+	 * @param	$toJSON	boolean		//是否强制转换结果为JSON串
+	 * 
+	 * */
+	private function curlPost($url,$data,$toJSON=true){
+		//echo $url;
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+			
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		//避免https 的ssl验证
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
+		curl_setopt($ch, CURLOPT_SSLVERSION, 		false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 	false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
+			
+		$res = curl_exec($ch);
+		if($res === false) $err=curl_error($ch);
+		curl_close($ch);
+
+		if(isset($err)) return $err;
+		return $toJSON?json_decode($res,TRUE):$res;
+	}
+
+	/* get all params to be an array	
+	 * 
+	 * */
+	private function getParam(){
+		$result=array();
+		foreach($_GET as $k=>$v){
+			if($k=='mod' || $k=='act' || $k=='callback') continue;
+			$result[$k]=$v;
+		}
+		return $result;
+	}
+
+	//主入口，进行自动路由的地方
+	
+	//执行逻辑
+	//1.获取缓存的数据（collected的交易等其他信息）;
+	//2.更新height到当前(按照时间戳进行计算)，供下次访问的时候，建立区块;
+	//3.把当前配置交给对应的方法进行处理;
+	
+	public function autoRun($cfg,&$core){
+		$this->setting=$cfg;
+		
+		$this->callback=$_GET['callback'];
+		if(!isset($_GET['mod']) || !isset($_GET['act'])) return $this->error('error request');
+		
+		$cls=$_GET['mod'];
+		$act=$_GET['act'];
+		
+		//1.对配置进行检测，处理初始化,跳块处理，检查数据和区块高度
+		$cur=$this->autoConfig();		//autoConfig里会进行跳块处理
+		
+		//2.加载对应的模块进行处理
+		$a=$this->loadClass($cls);
+		if(empty($a)) return $this->error('Failed to load class');
+
+		return $a->task($act,$this->getParam(),$core,$cur,$cfg);
+	}
+
+	//自动写块，处理已经收集信息的方法
+	//返回后继方法需要操作的基础配置信息
+	//请求写到块和写入操作，是两次不同的请求上完成的
+	
+	private function autoConfig(){
+		$cfg=$this->setting;
+		$result=array();
+		
+		$status=$this->autoFillData();
+		$result['current_block']=$status['current'];
+		$result['block_height']=$status['height'];
+		
+		$index=$this->getServer($cfg['nodes']);
+		$result['server']=$cfg['nodes'][$index];		
+		return $result;
+	}
+
+	private function autoFillData(){
+		$cfg=$this->setting;
+
+		//1.check if it is the start of a simchain.
+		$key_start=$cfg['keys']['start'];
+		$start=$this->getKey($key_start);
+		if(!$start){
+			$start=time();
+			$this->setKey($key_start,$start);
+		}
+
+		$curBlock=ceil((time()-$start)/$cfg['speed']);
+		$curBlock=$curBlock==0?1:$curBlock;					//auto start the chain by create 0 block
+
+		$key_height=$cfg['keys']['height'];
+		$height=$this->existsKey($key_height)?$this->getKey($key_height):0;
+
+		//skip data writing ,when simchain pending.
+		if($cfg['pending']) return array(  
+			'current'	=>	$curBlock,
+			'height'	=>	$height,
+		);		
+
+		//3.create the blank block
+		if($curBlock>$height+1 || $curBlock==1){
+			$pre=$this->setting['prefix']['chain'];
+			for($i=$height;$i<$curBlock;$i++){
+				$bkey=$pre.$i;
+				$delta=($curBlock-$i-1)*$cfg['speed'];		//自动补块的stamp处理
+				if(!$this->existsKey($bkey))$this->createBlock($i,$delta,$i!=($curBlock-1));
+			}
+			$this->setKey($key_height,$curBlock-1);
+		}
+		return array('current'	=>	$curBlock,'height'	=>	$height);
+	}
+
+	/*******************************************************/
+	/***************account functions***********************/
+	/*******************************************************/
+
+	/* check the account is valid, if not exsist, created it.
+	*/
+	private function checkAccount($hash,$sign=''){
+		$keys=$this->setting['keys'];
+		$list=$this->getHash($keys['accounts'],array($hash));
+
+		if($list[$hash]==false){
+			$cls=$this->loadClass('account');
+			$fmt=$cls->getAccountFormat();
+			$fmt['last']=time();
+			$fmt['sign']=empty($sign)?$this->char(31,'U'):$sign;
+
+			$this->setHash($keys['accounts'],$hash,json_encode($fmt));
+			$this->pushList($keys['account_list'],$hash);
+		}
+
+		$list=$this->getHash($keys['accounts'],array($hash));
+		return json_decode($list[$hash],true);
+	}
+	
+
+	private function saveAccountStatus(&$as){
+		$key=$this->setting['keys']['accounts'];
+		foreach($as as $acc=>$v){
+			$this->setHash($key,$acc,json_encode($v));
+		}
+	}
+
+	/*******************************************************/
+	/***************block data struct***********************/
+	/*******************************************************/
+
+	private function createTree($list){
+		$mtree=array();
+		foreach($list as $k=>$v){
+			$mtree[]=$this->encry(json_encode($v));
+		}
+		$this->merkle($mtree);
+		return $mtree;
+	}
+	
+	private function getParentHash($n){
+		if($n==0) return '';
+		$key=$this->setting['prefix']['chain'].($n-1);
+		if(!$this->existsKey($key)) return false;
+
+		$res=json_decode($this->getKey($key),true);
+		return $res['merkle_root'];
+	}
+
+	private function saveToChain($n,$data){
+		$key=$this->setting['prefix']['chain'].$n;
+		$this->setKey($key,json_encode($data));
 	}
 
 	/*	create the block data struct and cache to user
@@ -112,6 +310,80 @@ class Simulator extends CORE{
 		return TRUE;
 	}
 
+		//获取写块服务器数据
+	private function getServer($servers){
+		$count=count($servers);
+		$ball=rand(1, $count);		//random ball
+			
+		$result=array();
+			
+		//1.遍历所有的的服务器
+		foreach($servers as $svc){
+			$result[]=$this->pingServer($svc['url'],$count);
+		}
+			
+		//2.过滤数据处理正确的服务器
+		$ok=array();
+		foreach($result as $k => $rep){
+			if($rep['code']==$ball) $ok[]=$k;
+		}
+			
+		if(empty($ok)) return $this->getServer($servers);
+			
+		return $ok[rand(0, count($ok)-1)];
+	}
+		
+	//测试服务器的响应
+	private function pingServer($url,$max){
+		$data=array(
+			'stamp'	=>	time(),
+			'max'	=>	$max,
+		);
+			
+		$res=$this->curlPost($url,$data);
+		return $res;
+	}
+
+	/*******************************************************/
+	/***************collected data functions****************/
+	/*******************************************************/
+
+	private function cleanCollectedData(){
+		$cfg=$this->setting;
+		$this->delKey($cfg['keys']['transaction_collected']);
+		$this->delKey($cfg['keys']['storage_collected']);
+		$this->delKey($cfg['keys']['contact_collected']);
+		return true;
+	}
+
+	private function getAllCollected(){
+		$cfg=$this->setting;
+		return array(
+			'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),
+			'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),
+			'contact'		=>	$this->getCollected($cfg['keys']['contact_collected']),	
+		);
+	}
+
+	private function getCollected($key){
+		$list=$this->getList($key);
+		$cs=array();
+		//$mtree=array();
+		if(!empty($list)){
+			foreach($list as $v){
+				$cs[]=json_decode($v,TRUE);
+				//$mtree[]=$this->encry($v);
+			}
+		}
+		
+		// if(!empty($mtree)){
+		// 	$this->merkle($mtree);
+		// }
+		return array(
+			'data'		=>	$cs,
+			//'merkle'	=>	$mtree,
+		);
+	}
 	/* merget the collected rows to the block
 	
 	*/
@@ -149,100 +421,11 @@ class Simulator extends CORE{
 		return true;
 	}
 
-	public function calcUXTO($out,$from,$to,$amount){
-		$format=$this->getTransactionFormat();
-		$row=$format['row'];
-		$fmt_from=$format['from'];
-		$fmt_to=$format['to'];
-
-		//1.calc the amount of input
-		$sum=0;
-		foreach($out as $k=>$v){
-			//echo 'uxto['.$k.'] :'.json_encode($v).'<hr>';
-
-			$fmt_from['hash']=$v['hash'];
-			$fmt_from['type']='normal';
-			$fmt_from['account']=$from;
-
-			foreach($v['data']['to'] as $vv){
-				if($vv['account']!=$from) continue;
-
-				$fmt_from['amount']=$vv['amount'];
-				$sum+=(int)$vv['amount'];
-			}
-			$row['from'][]=$fmt_from;	
-		}
-
-		//2.calc the amount of output
-		$fmt_to['amount']=$amount;
-		$fmt_to['account']=$to;
-		$row['to'][]=$fmt_to;
-
-		if($sum!==$amount){
-			$fmt_to['amount']=$sum-$amount;
-			$fmt_to['account']=$from;
-			$row['to'][]=$fmt_to;
-		}
-		
-		return $row;
-	}
-
-	public function checkUXTO($account,$amount){
-		$atmp=$this->getHash($this->setting['keys']['accounts'],array($account));
-		if(empty($atmp)) return false;
-		$user_from=json_decode($atmp[$account],true);
-		$uxto=$user_from['uxto'];
-
-		$out=array();
-		$left=array();
-		$count=0;
-		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$uxto);
-		
-		foreach($arr as $hash=>$v){
-			$row=json_decode($v,true);
-			if($count>=$amount){
-				$left[]=array('hash'=>$hash,'data'=>$row);
-			}else{
-				foreach($row['to'] as $kk=>$vv){
-					if($vv['account']!=$account) continue;
-					$count+=$vv['amount'];
-				} 
-				$out[]=array('hash'=>$hash,'data'=>$row);
-			}
-		}
-		return array(
-			'avalid'	=> $count>=$amount?true:false,
-			'out'		=>	$out,
-			'left'		=>	$left,
-			'user'		=>	$user_from,
-		);
-	}
-
-	private function createUxtoFromStorage($list,$miner){
-		//echo json_encode($list).'<hr>';
-		//echo $miner;
-		$arr=array();
-
-		$amount=$this->setting['cost']['storage'];
-		foreach($list as $k=>$v){
-			$owner=$v['owner'];
-			$uxto=$this->checkUXTO($owner,$amount);
-
-			$final=$this->calcUXTO($uxto['out'],$owner,$miner,$amount);
-			$final['purpose']='storage';
-			$arr[]=$final;
-			//$final['type']='storage';
-			//echo json_encode($final).'<hr>';
-		}
-		return $arr;
-	}
 
 	/* calc the block params method
 
 	*/
 	private function structRow(&$raw){
-		//echo '<br>158:structing data...';
-
 		$cfg=$this->setting;
 		$keys=$cfg['keys'];
 
@@ -251,8 +434,6 @@ class Simulator extends CORE{
 		if(!empty($sts)){
 			foreach($sts as $v) $raw['list_transaction'][]=$v;
 		}
-		//echo json_encode($sts);
-		//exit();
 		
 		//1.merkle calculation
 		//1.1.transfer merkle
@@ -290,31 +471,6 @@ class Simulator extends CORE{
 		$this->saveAccountStatus($as);  //6.save accout data
 
 		return true;
-	}
-
-	private function getParentHash($n){
-		if($n==0) return '';
-		$key=$this->setting['prefix']['chain'].($n-1);
-		if(!$this->existsKey($key)) return false;
-
-		$res=json_decode($this->getKey($key),true);
-		return $res['merkle_root'];
-	}
-
-	private function saveAccountStatus(&$as){
-		$key=$this->setting['keys']['accounts'];
-		foreach($as as $acc=>$v){
-			$this->setHash($key,$acc,json_encode($v));
-		}
-	}
-
-	private function createTree($list){
-		$mtree=array();
-		foreach($list as $k=>$v){
-			$mtree[]=$this->encry(json_encode($v));
-		}
-		$this->merkle($mtree);
-		return $mtree;
 	}
 
 	private function structAccount($list,&$mtree,&$as){
@@ -374,6 +530,30 @@ class Simulator extends CORE{
 
 	}
 
+	
+
+	/*******************************************************/
+	/***************uxto cale functions*********************/
+	/*******************************************************/
+	private function createUxtoFromStorage($list,$miner){
+		//echo json_encode($list).'<hr>';
+		//echo $miner;
+		$arr=array();
+
+		$amount=$this->setting['cost']['storage'];
+		foreach($list as $k=>$v){
+			$owner=$v['owner'];
+			$uxto=$this->checkUXTO($owner,$amount);
+
+			$final=$this->calcUXTO($uxto['out'],$owner,$miner,$amount);
+			$final['purpose']='storage';
+			$arr[]=$final;
+			//$final['type']='storage';
+			//echo json_encode($final).'<hr>';
+		}
+		return $arr;
+	}
+
 	/*simulator mining 
 	*/
 	private function getCoinbaseBlock($n,$delta,$svc){
@@ -407,253 +587,74 @@ class Simulator extends CORE{
 		return $data;
 	}
 
-	/* check the account is valid, if not exsist, created it.
-	*/
-	private function checkAccount($hash,$sign=''){
-		$keys=$this->setting['keys'];
-		$list=$this->getHash($keys['accounts'],array($hash));
+	public function checkUXTO($account,$amount){
+		$atmp=$this->getHash($this->setting['keys']['accounts'],array($account));
+		if(empty($atmp)) return false;
+		$user_from=json_decode($atmp[$account],true);
+		$uxto=$user_from['uxto'];
 
-		if($list[$hash]==false){
-			$cls=$this->loadClass('account');
-			$fmt=$cls->getAccountFormat();
-			$fmt['last']=time();
-			$fmt['sign']=empty($sign)?$this->char(31,'U'):$sign;
-
-			$this->setHash($keys['accounts'],$hash,json_encode($fmt));
-			$this->pushList($keys['account_list'],$hash);
-		}
-
-		$list=$this->getHash($keys['accounts'],array($hash));
-		return json_decode($list[$hash],true);
-	}
-	
-	
-
-	
-	//主入口，进行自动路由的地方
-	
-	//执行逻辑
-	//1.获取缓存的数据（collected的交易等其他信息）;
-	//2.更新height到当前(按照时间戳进行计算)，供下次访问的时候，建立区块;
-	//3.把当前配置交给对应的方法进行处理;
-	
-	public function autoRun($cfg,&$core){
-		$this->setting=$cfg;
+		$out=array();
+		$left=array();
+		$count=0;
+		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$uxto);
 		
-		$this->callback=$_GET['callback'];
-		if(!isset($_GET['mod']) || !isset($_GET['act'])) return $this->error('error request');
-		
-		$cls=$_GET['mod'];
-		$act=$_GET['act'];
-		
-		//1.对配置进行检测，处理初始化,跳块处理，检查数据和区块高度
-		$cur=$this->autoConfig();		//autoConfig里会进行跳块处理
-		
-		//2.加载对应的模块进行处理
-		$a=$this->loadClass($cls);
-		if(empty($a)) return $this->error('Failed to load class');
-
-		return $a->task($act,$this->getParam(),$core,$cur,$cfg);
-	}
-
-
-	//自动加载class的方法
-	private function loadClass($cls){
-		spl_autoload_register(function($class_name) {
-			$target='sim'.DS.$class_name.'.class.php';
-			if(!file_exists($target)) return false;
-		    require_once $target;
-		});
-		if(!class_exists($cls)) return false;
-		return new $cls();
-	}
-	
-	//自动写块，处理已经收集信息的方法
-	//返回后继方法需要操作的基础配置信息
-	//请求写到块和写入操作，是两次不同的请求上完成的
-	
-	public function autoConfig(){
-		$cfg=$this->setting;
-		$result=array();
-		
-		$status=$this->autoFillData();
-		$result['current_block']=$status['current'];
-		$result['block_height']=$status['height'];
-		
-		$index=$this->getServer($cfg['nodes']);
-		$result['server']=$cfg['nodes'][$index];		
-		return $result;
-	}
-
-	private function autoFillData(){
-		$cfg=$this->setting;
-
-		//1.check if it is the start of a simchain.
-		$key_start=$cfg['keys']['start'];
-		$start=$this->getKey($key_start);
-		if(!$start){
-			$start=time();
-			$this->setKey($key_start,$start);
-		}
-
-		$curBlock=ceil((time()-$start)/$cfg['speed']);
-		$curBlock=$curBlock==0?1:$curBlock;					//auto start the chain by create 0 block
-
-		
-
-		$key_height=$cfg['keys']['height'];
-		if($this->existsKey($key_height)){
-			$height=$this->getKey($key_height);
-		}else{
-			$height=0;
-		}
-
-		if($cfg['pending']) return array(
-			'current'	=>	$curBlock,
-			'height'	=>	$height,
-		);				//skip data writing ,when simchain pending.
-		//3.create the blank block
-		if($curBlock>$height+1 || $curBlock==1){
-			$pre=$this->setting['prefix']['chain'];
-			for($i=$height;$i<$curBlock;$i++){
-				$bkey=$pre.$i;
-				$delta=($curBlock-$i-1)*$cfg['speed'];		//自动补块的stamp处理
-				if(!$this->existsKey($bkey))$this->createBlock($i,$delta,$i!=($curBlock-1));
-			}
-			$this->setKey($key_height,$curBlock-1);
-		}
-		return array(
-			'current'	=>	$curBlock,
-			'height'	=>	$height,
-		);
-	}
-
-
-
-	private function saveToChain($n,$data){
-		$key=$this->setting['prefix']['chain'].$n;
-		$this->setKey($key,json_encode($data));
-	}
-	
-	//获取写块服务器数据
-	private function getServer($servers){
-		$count=count($servers);
-		$ball=rand(1, $count);		//random ball
-		
-		$result=array();
-		
-		//1.遍历所有的的服务器
-		foreach($servers as $svc){
-			$result[]=$this->pingServer($svc['url'],$count);
-		}
-		
-		//2.过滤数据处理正确的服务器
-		$ok=array();
-		foreach($result as $k => $rep){
-			if($rep['code']==$ball) $ok[]=$k;
-		}
-		
-		if(empty($ok)) return $this->getServer($servers);
-		
-		return $ok[rand(0, count($ok)-1)];
-	}
-	
-	//测试服务器的响应
-	private function pingServer($url,$max){
-		$data=array(
-			'stamp'	=>	time(),
-			'max'	=>	$max,
-		);
-		
-		$res=$this->curlPost($url,$data);
-		return $res;
-	}
-	
-	/*curl方式跨域post数据的方法
-	 * @param	$url	string		//请求的url地址
-	 * @param	$data	array		//post的值，kv形式的
-	 * @param	$toJSON	boolean		//是否强制转换结果为JSON串
-	 * 
-	 * */
-	private function curlPost($url,$data,$toJSON=true){
-		//echo $url;
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-			
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-		//避免https 的ssl验证
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
-		curl_setopt($ch, CURLOPT_SSLVERSION, 		false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 	false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
-			
-		$res = curl_exec($ch);
-		if($res === false) $err=curl_error($ch);
-		curl_close($ch);
-
-		if(isset($err)) return $err;
-		return $toJSON?json_decode($res,TRUE):$res;
-	}
-	
-	/* get all params to be an array
-	 * 
-	 * */
-	private function getParam(){
-		$result=array();
-		foreach($_GET as $k=>$v){
-			if($k=='mod' || $k=='act' || $k=='callback') continue;
-			$result[$k]=$v;
-		}
-		return $result;
-	}
-
-	private function getEncryHash($data){
-		if(is_array($data)){
-			return hash('sha256', hash('sha256', json_encode($data), true), true);
-		}
-		return hash('sha256', hash('sha256',$data,true),true);
-	}
-
-	private function getCollected($key){
-		$list=$this->getList($key);
-		$cs=array();
-		$mtree=array();
-		if(!empty($list)){
-			foreach($list as $v){
-				$cs[]=json_decode($v,TRUE);
-				$mtree[]=$this->encry($v);
+		foreach($arr as $hash=>$v){
+			$row=json_decode($v,true);
+			if($count>=$amount){
+				$left[]=array('hash'=>$hash,'data'=>$row);
+			}else{
+				foreach($row['to'] as $kk=>$vv){
+					if($vv['account']!=$account) continue;
+					$count+=$vv['amount'];
+				} 
+				$out[]=array('hash'=>$hash,'data'=>$row);
 			}
 		}
-		
-		if(!empty($mtree)){
-			$this->merkle($mtree);
+		return array(
+			'avalid'	=> $count>=$amount?true:false,
+			'out'		=>	$out,
+			'left'		=>	$left,
+			'user'		=>	$user_from,
+		);
+	}
+
+	public function calcUXTO($out,$from,$to,$amount){
+		$format=$this->getTransactionFormat();
+		$row=$format['row'];
+		$fmt_from=$format['from'];
+		$fmt_to=$format['to'];
+
+		//1.calc the amount of input
+		$sum=0;
+		foreach($out as $k=>$v){
+			//echo 'uxto['.$k.'] :'.json_encode($v).'<hr>';
+
+			$fmt_from['hash']=$v['hash'];
+			$fmt_from['type']='normal';
+			$fmt_from['account']=$from;
+
+			foreach($v['data']['to'] as $vv){
+				if($vv['account']!=$from) continue;
+
+				$fmt_from['amount']=$vv['amount'];
+				$sum+=(int)$vv['amount'];
+			}
+			$row['from'][]=$fmt_from;	
 		}
-		return array(
-			'data'		=>	$cs,
-			'merkle'	=>	$mtree,
-		);
-	}
 
-	private function cleanCollectedData(){
-		$cfg=$this->setting;
-		$this->delKey($cfg['keys']['transaction_collected']);
-		$this->delKey($cfg['keys']['storage_collected']);
-		$this->delKey($cfg['keys']['contact_collected']);
-		return true;
-	}
+		//2.calc the amount of output
+		$fmt_to['amount']=$amount;
+		$fmt_to['account']=$to;
+		$row['to'][]=$fmt_to;
 
-	private function getAllCollected(){
-		$cfg=$this->setting;
-		return array(
-			'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),
-			'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),
-			'contact'		=>	$this->getCollected($cfg['keys']['contact_collected']),	
-		);
+		if($sum!==$amount){
+			$fmt_to['amount']=$sum-$amount;
+			$fmt_to['account']=$from;
+			$row['to'][]=$fmt_to;
+		}
+		
+		return $row;
 	}
-
 	/*******************************************************/
 	/***************ajax export functions*******************/
 	/*******************************************************/
@@ -684,5 +685,14 @@ class Simulator extends CORE{
 			'message'=>$msg,
 		);
 		$this->export($rst);
+	}
+	/*******************************************************/
+	/***************other functions*************************/
+	/*******************************************************/
+	private function getEncryHash($data){
+		if(is_array($data)){
+			return hash('sha256', hash('sha256', json_encode($data), true), true);
+		}
+		return hash('sha256', hash('sha256',$data,true),true);
 	}
 }
