@@ -3,19 +3,49 @@
 </div>
 <script type="text/javascript" charset="utf-8" src="lib/pager.js"></script>
 <script type="text/javascript">
-    var dt = '<div class="col-lg-12 gy-4">{url} : {account}</div>';
-    var translate = function() {};
-    var con = '#node_list';
-    var ajaxFun = function(page, ck) {
-        simPolk.request('node', 'list', {
-            p: page
-        }, function(res) {
-            console.log(res)
-            ck && ck(res.node);
-        });
+    var self = {
+        nodeList: function() {
+            var con = '#node_list';
+            simPolk.request('node', 'list', {
+                p: 1
+            }, function(res) {
+                //console.log(res)
+                //ck && ck(res.node);
+
+                var dom = '';
+                for (var k in res.node) {
+                    var row = res.node[k];
+                    dom += `<div class="col-lg-6 gy-4">
+                            <div class="row list-group-item">
+                                <div class="col-lg-12"><small>${row.account}</small></div>
+                                <div class="col-lg-12"><h2>${row.url}<h2></div>
+                            </div>
+                        </div>`;
+                }
+                $(con).html(dom);
+            });
+        },
+        transformTime(timestamp) {
+            var addZero = self.addZero;
+            if (timestamp) {
+                var time = new Date(timestamp * 1000);
+                var y = time.getFullYear();
+                var M = time.getMonth() + 1;
+                var d = time.getDate();
+                var h = time.getHours();
+                var m = time.getMinutes();
+                var s = time.getSeconds();
+                return y + '-' + addZero(M) + '-' + addZero(d) + ' ' + addZero(h) + ':' + addZero(m) + ':' + addZero(s);
+            } else {
+                return '';
+            }
+        },
+        addZero: function(m) {
+            return m < 10 ? '0' + m : m;
+        },
     }
-    var auto = [];
-    var setting = {};
-    var events = {}
-    pager.show(dt, translate, con, ajaxFun, auto, setting, events);
+
+    $(function() {
+        self.nodeList();
+    });
 </script>
