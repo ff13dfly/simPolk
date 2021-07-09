@@ -69,20 +69,20 @@ class Account{
 
 			case 'list':
 				$akey=$cfg['keys']['account_list'];
-				
 				$len=$core->lenList($akey);
 
-				//$list=$core->rangeList($akey,$len-9,$len);
 				$count=6;
 				//$list=$core->rangeList($akey,$len-2-$count,$len-1);
 				$list=$core->rangeList($akey,0,-1);
-
 				$acs=$core->getHash($cfg['keys']['accounts'],$list);
 				
 				$arr=array();
 				foreach($acs  as $hash => $data){
 					//echo json_encode($account).'<br>';
-					$arr[]=array_merge(array('account'=>$hash),json_decode($data,TRUE));
+					$user=json_decode($data,TRUE);
+					$user['total']=$core->calcAccountUXTO($user['uxto'],$hash);
+					$arr[]=array_merge(array('account'=>$hash),$user);
+
 				}
 				
 				return array(

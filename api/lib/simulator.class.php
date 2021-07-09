@@ -311,9 +311,9 @@ class Simulator extends CORE{
 		$data=$this->getCoinbaseBlock($n,$delta,$svc);		//获取带coinbase UXTO的区块数据
 
 		//merge the collected data to the basic data struct
-		//if(!$skip){
+		if(!$skip){
 			$this->mergeCollected($data);
-		//}
+		}
 
 		//struct all the neccessary cache;
 		$this->structRow($data);
@@ -594,6 +594,8 @@ class Simulator extends CORE{
 		$data['signature']=$svc['sign'];
 		$data['creator']=$svc['account'];
 		$data['stamp']=time()-$delta;
+		$data['nonce']=rand(1,20000);
+		$data['diffcult']=rand(1,100);
 
 		return $data;
 	}
@@ -622,11 +624,25 @@ class Simulator extends CORE{
 			}
 		}
 		return array(
-			'avalid'	=> $count>=$amount?true:false,
+			'avalid'	=>	$count>=$amount?true:false,
 			'out'		=>	$out,
 			'left'		=>	$left,
 			'user'		=>	$user_from,
+			'amount'	=>	$count,
 		);
+	}
+
+	public function calcAccountUXTO($uxto,$account){
+		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$uxto);
+		$count=0;
+		foreach($arr as $k =>$v){
+			$row=json_decode($v,true); 
+			foreach($row['to'] as $kk=>$vv){
+				if($vv['account']!=$account) continue;
+				$count+=$vv['amount'];
+			}
+		}
+		return $count;
 	}
 
 	public function calcUXTO($out,$from,$to,$amount){

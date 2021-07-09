@@ -31,6 +31,7 @@ class Chain{
 				return array(
 					'success'		=>	TRUE,
 					'pending'		=>	$cfg['pending'],
+					'speed'			=>	$cfg['speed'],
 					'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),		//collected transfer
 					'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),			//collected storage
 					'contact'		=>	$this->getCollected($cfg['keys']['contact_collected']),			//collected storage
@@ -48,7 +49,7 @@ class Chain{
 				if($uxto==false || !$uxto['avalid']){
 					return array(
 						'success'	=>	false,
-						'message'	=>	'not enough input',
+						'message'	=>	'not enough input , max : '.$uxto['amount'],
 					);
 				}
 				

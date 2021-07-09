@@ -134,7 +134,9 @@
             //console.log('ready to get collected transaction');
             simPolk.request('chain', 'current', {}, function(res) {
                 var dd = self.transformTime(res.current.chain_start);
-                $('#server_current').html('Simchain start from : ' + dd);
+                var status = `Simchain start from : ${dd}<br> Speed : ${res.speed} second / block`;
+                $('#server_current').html(status);
+
                 var info = `<div class="row">
                 <div class="col-lg-4 gy-4">
                     <h1 class="text-primary text-center">${res.current.current_block}</h1>

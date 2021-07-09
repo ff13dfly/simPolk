@@ -21,7 +21,10 @@
                 <label for="trans_amount">Amount <span class="text-danger" id="amount_error"></span></label>
                 <input type="text" class="form-control" name="trans_amount" id="trans_amount" value="" placeholder="Transfer amount, must be integer" />
             </div>
-            <div class="col-lg-10 text-end gy-4">
+            <div class="col-lg-6 gy-4 text-danger" id="transaction_info">
+
+            </div>
+            <div class="col-lg-4 text-end gy-4">
                 <button class="btn btn-lg btn-primary" id="transfer_submit">Sent Coin To Account</button>
             </div>
         </div>
@@ -132,13 +135,6 @@
 
     $('.form-control').off('blur').on('blur', self.cacheInput);
 
-    // $('#add_from').off('click').on('click', function() {
-    //     simPolk.request('account', 'new', {}, function(res) {
-    //         if (!res.success) return false;
-    //         console.log(res);
-    //         $('#from_account').val(res.data.public_key);
-    //     });
-    // });
 
     $('#add_to').off('click').on('click', function() {
         simPolk.request('account', 'new', {}, function(res) {
@@ -182,11 +178,14 @@
             self.info('amount error', '#amount_error');
         }
         if (!pass) return false;
+
         simPolk.request('chain', 'transfer', {
             from: a_from,
             to: a_to,
             value: val
         }, function(res) {
+            console.log(res);
+            if (!res.success) return self.info(res.message, '#transaction_info');
             self.clearCache();
             location.reload();
         });
