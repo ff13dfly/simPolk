@@ -11,9 +11,11 @@ class Chain{
 			
 		switch ($act) {
 			case 'config':
+				$data=$core->getConfig($cfg);
+				//unset($data['redis']);
 				return array(
 					'success'	=>	TRUE,
-					'data'		=>	$core->getConfig($cfg),
+					'data'		=>	$data,
 				);
 				break;
 

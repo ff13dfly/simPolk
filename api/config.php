@@ -6,7 +6,7 @@
 		//'config_cache'	=>	'sim_confg',	//config_cache key
 		//sim-chain basic setting
 		'name'			=>	'VBC',			//coin name
-		'speed'			=>	10,				//block created speed (block/second)
+		'speed'			=>	100000,				//block created speed (block/second)
 		'basecoin'		=>	211,			//reward for creating block
 		'password'		=>	'123456',		//default password for simulate account
 		

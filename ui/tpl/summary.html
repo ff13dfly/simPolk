@@ -57,13 +57,17 @@
                         "note": 2
                     },
                 },
-                format: {
+                "format": {
                     'pending': {
                         'type': 'bool',
                     },
                 },
-                lock: [
+                "lock": [
                     ['keys'],
+                    ['prefix']
+                ],
+                "hide": [
+                    ['redis'],
                 ],
                 onChange: function(res) {
                     simPolk.request('chain', 'setup', {
