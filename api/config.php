@@ -5,9 +5,9 @@
 		
 		//'config_cache'	=>	'sim_confg',	//config_cache key
 		//sim-chain basic setting
-		'name'			=>	'TXB',			//coin name
-		'speed'			=>	20,				//block created speed (block/second)
-		'basecoin'		=>	200,			//reward for creating block
+		'name'			=>	'STG',			//coin name
+		'speed'			=>	30,				//block created speed (block/second)
+		'basecoin'		=>	3000,			//reward for creating block
 		'password'		=>	'123456',		//default password for simulate account
 		
 		'cost'			=>	array(

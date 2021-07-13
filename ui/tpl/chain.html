@@ -162,18 +162,37 @@
                 $('#collected_transfer').html(rst.dom);
                 if (rst.auto) rst.auto();
 
-                var sdom = self.domList(res.storage.data);
-                var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
-                $('#collected_storage').html(sdom).append(stree);
+                var rst = self.domStorage(res.storage.data, res.storage.merkle);
+                $('#collected_storage').html(rst.dom);
+                if (rst.auto) rst.auto();
 
                 var cdom = self.domList(res.contact.data);
                 var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
                 $('#collected_contact').html(cdom).append(ctree);
             });
         },
+        domStorage: function(list, merkle) {
+            var dom = '';
+            for (var k in list) {
+                var row = list[k];
+                dom = dom + `<div class="col-lg-6 col-sm-6">
+                    <input class="form-control" type="text" disabled="disabled" value="${row.key}"></div>
+                <div class="col-lg-6 col-sm-6">
+                    <input class="form-control" type="text" disabled="disabled" value="${row.value}"></div>
+                <div class="col-lg-12 col-sm-12 gy-2">
+                    <textarea cols="50" disabled="disabled">${row.owner}</textarea></div>
+                <div class="col-lg-12 col-sm-12">${self.transformTime(row.stamp)}</div>`;
+            }
+            var auto = function() {
+
+            };
+
+            return {
+                dom: dom,
+                auto: auto
+            };
+        },
         domTransaction: function(list, merkle) {
-            var tdom = self.domList(list);
-            var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(merkle);
             var dom = '';
             for (var k in list) {
                 var row = list[k];

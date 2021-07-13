@@ -272,7 +272,6 @@ class Simulator extends CORE{
 		if($n==0) return '';
 		$key=$this->setting['prefix']['chain'].($n-1);
 		if(!$this->existsKey($key)) return false;
-
 		$res=json_decode($this->getKey($key),true);
 		return $res['merkle_root'];
 	}
@@ -280,6 +279,7 @@ class Simulator extends CORE{
 	private function saveToChain($n,$data){
 		$key=$this->setting['prefix']['chain'].$n;
 		$this->setKey($key,json_encode($data));
+		return true;
 	}
 
 	/*	create the block data struct and cache to user
@@ -289,7 +289,7 @@ class Simulator extends CORE{
 	private function createBlock($n,$delta,$skip=true){
 		$nodes=$this->setting['nodes'];
 		$svc=$nodes[rand(0, count($nodes)-1)];
-		$data=$this->getCoinbaseBlock($n,$delta,$svc);		//获取带coinbase UXTO的区块数据
+		$data=$this->getCoinbaseBlock($n,$delta,$svc);
 
 		//merge the collected data to the basic data struct
 		if(!$skip){
@@ -302,10 +302,12 @@ class Simulator extends CORE{
 		return TRUE;
 	}
 
+	/* add collected data write to current block
+	*/
 	public function freshCurrentBlock(){
 		$cfg=$this->setting;
 
-		//1.获取当前已写块的数据
+		//1.get current block data
 		$n=$this->getKey($cfg['keys']['height']);
 		$key=$cfg['prefix']['chain'].$n;
 		if(!$this->existsKey($key)){
@@ -430,6 +432,7 @@ class Simulator extends CORE{
 		}
 
 		//2.clean the collected data;
+
 		$this->cleanCollectedData();
 		return true;
 	}
@@ -444,6 +447,9 @@ class Simulator extends CORE{
 
 		//1.create uxto through storage;
 		$sts=$this->createUxtoFromStorage($raw['list_storage'],$raw['creator']);
+		//echo json_encode($raw['creator']).'<hr>';
+		//echo json_encode($sts);exit();
+
 		if(!empty($sts)){
 			foreach($sts as $v) $raw['list_transaction'][]=$v;
 		}
@@ -488,8 +494,13 @@ class Simulator extends CORE{
 
 	private function structAccount($list,&$mtree,&$as){
 		$ekey=$this->setting['keys']['transaction_entry'];
+		//echo json_encode($list).'<hr>';exit();
+		//echo json_encode($mtree).'<hr>';exit();
+
 		foreach($list as $k=>$v){
 			$hash=$mtree[$k];
+
+			//echo $hash.'<br>';
 
 			//1.remove account uxto
 			if($k!=0){
@@ -520,6 +531,8 @@ class Simulator extends CORE{
 			//3.set uxto hash 
 			$this->setHash($ekey,$hash,json_encode($v));
 		}
+
+		//exit();
 	}
 
 	private function structStorage($list,&$mtree,&$as){
@@ -531,15 +544,11 @@ class Simulator extends CORE{
 				$as[$account]=$this->checkAccount($account);
 			}
 			$as[$account]['storage'][]=$hash;
-
-			//echo json_encode($v).'<hr>';
-			//exit();
-
 			$this->setHash($ekey,$hash,json_encode($v));
 		}
 	}
 
-	private function structContact(&$accounts){
+	private function structContact($list,&$mtree,&$as){
 
 	}
 
@@ -549,10 +558,7 @@ class Simulator extends CORE{
 	/***************uxto cale functions*********************/
 	/*******************************************************/
 	private function createUxtoFromStorage($list,$miner){
-		//echo json_encode($list).'<hr>';
-		//echo $miner;
 		$arr=array();
-
 		$amount=$this->setting['cost']['storage'];
 		foreach($list as $k=>$v){
 			$owner=$v['owner'];
@@ -561,8 +567,6 @@ class Simulator extends CORE{
 			$final=$this->calcUXTO($uxto['out'],$owner,$miner,$amount);
 			$final['purpose']='storage';
 			$arr[]=$final;
-			//$final['type']='storage';
-			//echo json_encode($final).'<hr>';
 		}
 		return $arr;
 	}
@@ -602,11 +606,43 @@ class Simulator extends CORE{
 		return $data;
 	}
 
+	private function skipCollectedUxto($uxto){
+		$arr=array();
+		$rows=array();
+		$cols=$this->getAllCollected();
+		$this->getUsedInput($cols['transaction']['data'],$rows);
+		foreach($uxto as $v){
+			if(in_array($v,$rows)) continue;
+			$arr[]=$v;
+		}
+		
+		return $arr;
+	}
+
+	private function getUsedInput(&$list,&$rows){
+		foreach($list as $k=>$v){
+			foreach($v['from'] as $kk=>$vv){
+				$rows[]=$vv['hash'];
+			}
+		}
+		return true;
+	}
+
 	public function checkUXTO($account,$amount){
 		$atmp=$this->getHash($this->setting['keys']['accounts'],array($account));
 		if(empty($atmp)) return false;
 		$user_from=json_decode($atmp[$account],true);
-		$uxto=$user_from['uxto'];
+
+		//echo json_encode($user_from['uxto']).'<hr>';
+		$uxto=$this->skipCollectedUxto($user_from['uxto']);
+
+		//echo json_encode($uxto).'<hr>';exit();
+		if(empty($uxto)){
+			return array(
+				'avalid'	=>	false,
+				'amount'	=>	'-1',
+			);
+		}
 
 		$out=array();
 		$left=array();
@@ -635,14 +671,17 @@ class Simulator extends CORE{
 	}
 
 	public function calcAccountUXTO($uxto,$account){
+		//echo json_encode($uxto).'<br>';
 		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$uxto);
 		$count=0;
 		foreach($arr as $k =>$v){
-			$row=json_decode($v,true); 
+			$row=json_decode($v,true);
+			//echo 'row:'.$v.'<br>';
 			foreach($row['to'] as $kk=>$vv){
 				if($vv['account']!=$account) continue;
 				$count+=$vv['amount'];
 			}
+			//echo '<hr>';
 		}
 		return $count;
 	}
