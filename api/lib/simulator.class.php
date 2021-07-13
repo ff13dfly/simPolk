@@ -672,10 +672,12 @@ class Simulator extends CORE{
 
 	public function calcAccountUXTO($uxto,$account){
 		//echo json_encode($uxto).'<br>';
+		//echo $account."<br>";
 		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$uxto);
 		$count=0;
 		foreach($arr as $k =>$v){
 			$row=json_decode($v,true);
+			if(empty($row)) continue;
 			//echo 'row:'.$v.'<br>';
 			foreach($row['to'] as $kk=>$vv){
 				if($vv['account']!=$account) continue;

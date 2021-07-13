@@ -38,6 +38,8 @@
             <div class="col-lg-12 text-end gy-4">
                 <button class="btn btn-lg btn-primary" id="storage_search">Search Storage</button>
             </div>
+            <div class="col-lg-12" id="storage_con">
+            </div>
             <div class="col-lg-12 gy-4">
                 <hr>
             </div>
@@ -79,6 +81,13 @@
                 var dom = self.listCollected(res.storage.data);
                 $(con).html(dom);
             });
+        },
+        showStorage: function(data) {
+            var dom = '';
+            dom += `<div class="row"><div class="col-lg-12 gy-4">
+                        <textarea class="form-control" disabled="disabled" cols="30" rows="4">${JSON.stringify(data)}</textarea>
+                    </div></div>`;
+            return dom;
         },
         listCollected: function(list) {
             if (!list) return 'No record';
@@ -129,11 +138,13 @@
     $('#storage_search').on('click', function() {
         var k = $('#serach_key').val();
         if (!k) return false;
-
+        var con = '#storage_con';
         simPolk.request('storage', 'key', {
             'k': k
         }, function(res) {
-            console.log(res)
+            if (!res.success || !res.data) return $(con).html('No such storage');
+            var dom = self.showStorage(res.data);
+            $(con).html(dom);
         });
 
     });

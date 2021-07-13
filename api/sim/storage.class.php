@@ -11,10 +11,12 @@ class Storage{
 		
 		switch ($act) {
 			case 'key':
-				$key=$param['k'];
-				
+				$hash=$param['k'];
+				$ekey=$cfg['keys']['storage_entry'];
+				$list=$core->getHash($ekey,array($hash));
 				return array(
-					'success'	=>	true
+					'success'	=>	true,
+					'data'		=>	json_decode($list[$hash],true),
 				);
 				break;
 
