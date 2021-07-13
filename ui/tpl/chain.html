@@ -79,7 +79,12 @@
         </div>
     </div>
 </div>
-
+<style>
+    .row_transaction {
+        cursor: pointer;
+        user-select: none;
+    }
+</style>
 <script type="text/javascript">
     var self = {
         domList: function(list) {
@@ -149,9 +154,13 @@
                 if (res.pending) $('#pendding_info').show();
                 else $('#pendding_info').hide();
 
-                var tdom = self.domList(res.transaction.data);
-                var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transaction.merkle)
-                $('#collected_transfer').html(tdom).append(mtree);
+                //var tdom = self.domList(res.transaction.data);
+                //var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(res.transaction.merkle)
+                //$('#collected_transfer').html(tdom).append(mtree);
+
+                var rst = self.domTransaction(res.transaction.data, res.transaction.merkle);
+                $('#collected_transfer').html(rst.dom);
+                if (rst.auto) rst.auto();
 
                 var sdom = self.domList(res.storage.data);
                 var stree = '<h5>Merkle tree</h5>' + self.domMerkle(res.storage.merkle);
@@ -161,6 +170,60 @@
                 var ctree = '<h5>Merkle tree</h5>' + self.domMerkle(res.contact.merkle);
                 $('#collected_contact').html(cdom).append(ctree);
             });
+        },
+        domTransaction: function(list, merkle) {
+            var tdom = self.domList(list);
+            var mtree = '<h5>Merkle tree</h5>' + self.domMerkle(merkle);
+            var dom = '';
+            for (var k in list) {
+                var row = list[k];
+
+                var domFrom = `<div class="col-lg-6 col-sm-6 row_con"><div class="row">`;
+                for (var index in row.from) {
+                    var rowFrom = row.from[index];
+                    domFrom = domFrom + `<div class="col-lg-12 col-sm-12">${rowFrom.amount}</div>
+                        <div class="col-lg-12 col-sm-12">
+                        <textarea disabled="disabled">${rowFrom.hash}</textarea></div>`;
+                }
+                domFrom += '</div></div>';
+
+                var domTo = `<div class="col-lg-6 col-sm-6 row_con"><div class="row"> `;
+                for (var index in row.to) {
+                    var rowTo = row.to[index];
+                    domTo = domTo + `<div class="col-lg-12 col-sm-12">${rowTo.amount}</div>
+                    <div class="col-lg-12 col-sm-12"><textarea disabled="disabled">${rowTo.account}</textarea></div>`;
+                }
+                domTo += '</div></div>';
+
+                dom = dom + `<div class="col-lg-12 list-group-item d-flex justify-content-between lh-sm row_transaction" data="${k}">
+                    <div class="row">
+                    <div class="col-lg-12 gy-2">row[${k}],purpose:[${row.purpose}]</div>
+                    <div class="col-lg-6 col-sm-6">From[${row.from.length}]</div>
+                    <div class="col-lg-6 col-sm-6">To[${row.to.length}]</div>
+                    <div class="col-lg-12"><div class="row" id="con_${k}" style="display:none">${domFrom} ${domTo}</div></div>
+                    <div class="col-lg-12"><hr></div>
+                    </div>
+                    </div>`;
+            }
+
+            var auto = function() {
+                $('.row_transaction').off('click').on('click', function() {
+                    //$('.row_con').hide();
+                    var index = $(this).attr('data');
+                    var sel = $('#con_' + index);
+                    console.log(sel.is(":hidden"));
+                    if (sel.is(":hidden")) {
+                        sel.slideDown();
+                    } else {
+                        sel.slideUp();
+                    }
+
+                });
+            }
+            return {
+                dom: dom,
+                auto: auto
+            };
         },
         transformTime(timestamp) {
             var addZero = self.addZero;

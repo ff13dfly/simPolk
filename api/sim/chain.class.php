@@ -150,7 +150,7 @@ class Chain{
 			$this->db->merkle($mtree);
 		}
 		return array(
-			'data'		=>	$list,
+			'data'		=>	$cs,
 			'merkle'	=>	$mtree,
 		);
 	}
