@@ -93,26 +93,7 @@ class Simulator extends CORE{
 	/*******************************************************/
 	/***************uncategoried****************************/
 	/*******************************************************/
-	public function freshCurrentBlock(){
-		$cfg=$this->setting;
 
-		//1.获取当前已写块的数据
-		$h=$this->getKey($cfg['keys']['height']);
-		$n=$h-1;
-		$key=$cfg['prefix']['chain'].$n;
-		if(!$this->existsKey($key)){
-			return false;
-		}
-		$res=$this->getKey($key);
-		$data=json_decode($res);
-
-		return $data;
-		//2.merge进新的数据
-
-		//3.重新写块
-
-		return $n;
-	}
 
 	/*******************************************************/
 	/***************control logic***************************/
@@ -319,6 +300,27 @@ class Simulator extends CORE{
 		$this->structRow($data);
 		$this->saveToChain($n,$data);
 		return TRUE;
+	}
+
+	public function freshCurrentBlock(){
+		$cfg=$this->setting;
+
+		//1.获取当前已写块的数据
+		$n=$this->getKey($cfg['keys']['height']);
+		$key=$cfg['prefix']['chain'].$n;
+		if(!$this->existsKey($key)){
+			return false;
+		}
+		$res=$this->getKey($key);
+		$data=json_decode($res,true);
+
+		$this->mergeCollected($data);
+		$this->structRow($data);
+
+		//echo json_encode($data);
+
+		$this->saveToChain($n,$data);
+		return true;
 	}
 
 		//获取写块服务器数据

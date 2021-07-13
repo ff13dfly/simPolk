@@ -195,20 +195,26 @@
                 }
                 domTo += '</div></div>';
 
-                dom = dom + `<div class="col-lg-12 list-group-item d-flex justify-content-between lh-sm row_transaction" data="${k}">
+                dom = dom + `<div class="col-lg-12 list-group-item d-flex justify-content-between lh-sm" >
                     <div class="row">
-                    <div class="col-lg-12 gy-2">row[${k}],purpose:[${row.purpose}]</div>
-                    <div class="col-lg-6 col-sm-6">From[${row.from.length}]</div>
-                    <div class="col-lg-6 col-sm-6">To[${row.to.length}]</div>
-                    <div class="col-lg-12"><div class="row" id="con_${k}" style="display:none">${domFrom} ${domTo}</div></div>
-                    <div class="col-lg-12"><hr></div>
+                        <div class="col-lg-12">
+                        <div class="row row_transaction" data="${k}">
+                            <div class="col-lg-12 gy-2 ">row[${k}],purpose:[${row.purpose}]</div>
+                            <div class="col-lg-6 col-sm-6">From[${row.from.length}]</div>
+                            <div class="col-lg-6 col-sm-6">To[${row.to.length}]</div>
+                        </div>
+                        </div>
+                        <div class="col-lg-12">
+                        <div class="row">
+                        <div class="col-lg-12"><div class="row" id="con_${k}" style="display:none">${domFrom} ${domTo}</div></div>
+                        </div>
+                        </div>
                     </div>
                     </div>`;
             }
 
             var auto = function() {
                 $('.row_transaction').off('click').on('click', function() {
-                    //$('.row_con').hide();
                     var index = $(this).attr('data');
                     var sel = $('#con_' + index);
                     console.log(sel.is(":hidden"));
