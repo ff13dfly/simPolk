@@ -8,7 +8,8 @@
             'basic': {},
         },
 
-        server: 'http://localhost/simPolk/api/entry.php',
+        //server: 'http://localhost/simPolk/api/entry.php',
+        server: 'http://simpolk.qqpi.net/api/entry.php',
     };
     var tasks = [];
     var enableTasks = false;
