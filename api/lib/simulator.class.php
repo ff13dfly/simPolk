@@ -223,6 +223,22 @@ class Simulator extends CORE{
 		return $result;
 	}
 
+	// private function calcDelta(){
+	// 	$cfg=$this->setting;
+
+	// 	//1.check if it is the start of a simchain.
+	// 	$key_start=$cfg['keys']['start'];
+	// 	$start=$this->getKey($key_start);
+
+	// 	if(!$start){
+	// 		$start=time();
+	// 		$this->setKey($key_start,$start);
+	// 	}
+
+	// 	$curBlock=ceil((time()-$start)/$cfg['speed']);
+	// 	$curBlock=$curBlock==0?1:$curBlock;
+	// }
+
 	/*******************************************************/
 	/***************account functions***********************/
 	/*******************************************************/
@@ -315,13 +331,19 @@ class Simulator extends CORE{
 		}
 		$res=$this->getKey($key);
 		$data=json_decode($res,true);
+		//$uxto['stamp']=time()-$delta;
+		$delta=time()-$data['stamp'] +$cfg['speed'];
+		$this->createBlock($n+1,$delta,false);
 
-		$this->mergeCollected($data);
-		$this->structRow($data);
+		$this->setKey($cfg['keys']['height'],$n+1);
 
-		//echo json_encode($data);
+		//1.old way merge data to current block
+		// $this->mergeCollected($data);
+		// $this->structRow($data);
 
-		$this->saveToChain($n,$data);
+		// //echo json_encode($data);
+
+		// $this->saveToChain($n,$data);
 		return true;
 	}
 

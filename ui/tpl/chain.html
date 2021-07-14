@@ -38,7 +38,7 @@
                 <button class="btn btn-md btn-danger" id="collected_clean">Clean Collected</button>
             </div>
             <div class="col-lg-6 gy-4 text-end">
-                <button class="btn btn-md btn-primary" id="block_append">Append To Pre Block</button>
+                <button class="btn btn-md btn-primary" id="block_append">Append To Chain</button>
             </div>
         </div>
 
@@ -325,9 +325,9 @@
 
     $('#block_append').off('click').on('click', function() {
         simPolk.request('chain', 'write', {}, function(res) {
-            console.log(res);
-            //if (!res.success) return false;
-            //location.reload();
+            //console.log(res);
+            if (!res.success) return false;
+            location.reload();
         });
     });
 </script>
