@@ -7,14 +7,30 @@
             'contact': {},
             'basic': {},
         },
-
+        entry: 'api/entry.php',
+        server: '',
         //server: 'http://localhost/simPolk/api/entry.php',
-        server: 'http://simpolk.qqpi.net/api/entry.php',
+        //server: 'http://simpolk.qqpi.net/api/entry.php',
     };
     var tasks = [];
     var enableTasks = false;
 
     var self = {
+        setServer: function(endpoint) {
+            me.server = endpoint;
+        },
+        autoGetServer: function() {
+            var u = location.origin + '/';
+            var path = location.pathname.substring(1, location.pathname.length - 1).split('/');
+            if (path.length != 1) {
+                for (var i = 0; i < path.length - 1; i++) {
+                    u += path[i] + '/';
+                }
+            }
+            u += me.entry;
+            me.server = u;
+            //console.log(u);
+        },
         load: function(page, target) {
             var purl = 'tpl/' + page + '.html';
             $(target).hide();
@@ -33,6 +49,7 @@
          *
          * */
         request: function(mod, act, param, ck) {
+            if (me.server == '') self.autoGetServer();
             var cfg = { mod: mod, act: act, param: param };
             self.jsonp(me.server, cfg, function(res) {
                 if (ck) ck(res);
