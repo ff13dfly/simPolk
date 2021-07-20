@@ -521,9 +521,6 @@ class Simulator extends CORE{
 
 		foreach($list as $k=>$v){
 			$hash=$mtree[$k];
-
-			//echo $hash.'<br>';
-
 			//1.remove account uxto
 			if($k!=0){
 				foreach($v['from'] as $kk=>$vv){
@@ -537,7 +534,8 @@ class Simulator extends CORE{
 					array_shift($as[$from_account]['uxto']);
 
 					//remove the input hash data;
-					$this->delHash($ekey,$input_hash);
+					//this will cause error;
+					//$this->delHash($ekey,$input_hash);
 				}
 			}
 			
