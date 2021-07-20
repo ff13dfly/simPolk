@@ -28,7 +28,7 @@ class Simulator extends CORE{
 	);
 
 	//transaction data struct
-	private $UTXO=array(
+	private $utxo=array(
 		'from'		=>	array(),
 		'to'		=>	array(),
 		'purpose'	=>	'transaction',		//[transaction,storage,contact]
@@ -73,7 +73,7 @@ class Simulator extends CORE{
 	*/
 	public function getTransactionFormat(){
 		return array(
-			'row'	=>	$this->UTXO,
+			'row'	=>	$this->utxo,
 			'from'	=>	$this->from,
 			'to'	=>	$this->to,
 		);
@@ -613,7 +613,7 @@ class Simulator extends CORE{
 		$this->checkAccount($svc['account'],$svc['sign']);		//检查账户，并建立
 
 		$data=$this->raw;
-		$UTXO=$this->UTXO;
+		$UTXO=$this->utxo;
 
 		//basecoin UTXO data struct
 		$from=$this->from;
