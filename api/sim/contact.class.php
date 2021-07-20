@@ -17,25 +17,10 @@ class Contact{
 
 				break;
 			case 'add':
-				$row=array(
-					'body'	=>	$param['body'],
-					'owner'	=>	$param['u'],
-					'stamp'	=>	time(),
-				);
-				$key=$cfg['keys']['contact_collected'];
-				$core->pushList($key,json_encode($row));
-				return array(
-					'success'	=>TRUE,
-					'count'		=>$core->lenList($key),
-				);
+				$result=$this->addNewContact($param);
 
 				break;
 			case 'list':
-				$list=$this->contactList($param['p'],$param['count']);
-				return array(
-					'success'	=>	TRUE,
-					'list'		=>	$list,
-				);
 				
 				break;
 			default:
@@ -45,28 +30,30 @@ class Contact{
 		return $result;
 	}
 	
-	private function contactCreate($str){
+	private function addNewContact($param){
+		$account=$param['u'];
+		$uxto=$this->db->checkUXTO($account,$this->env['cost']['contact']);
 
-	}
-	
-	private function contactList($page,$count){
-		$list=array();
-		for($i=0;$i<$count;$i++){
-			$list[]=array(
-				'hash'	=>	$this->hashContact(),
-				'body'	=>	$this->contactBody()
+		if(!$uxto['avalid']){
+			return array(
+				'success'	=>	false,
+				'message'	=>	'not enough input',
 			);
 		}
-		return $list;
-	}
 
-	private function hashContact(){
-		return hash('sha256',uniqid());
-	}
+		$row=array(
+			'content'	=>	$param['body'],
+			'owner'		=>	$account,
+			'signature'	=>	$uxto['user']['sign'],
+			'stamp'		=>	time(),
+		);
 
-	private function contactBody($res=''){
-		$max=rand(100,1000);
-		for($i=0;$i<$max;$i++)$res.=chr($i%2?rand(65, 90):rand(97,122));
-		return $res;
+
+		$key=$this->env['keys']['contact_collected'];
+		$this->db->pushList($key,json_encode($row));
+		return array(
+			'success'	=>TRUE,
+			'count'		=>$this->db->lenList($key),
+		);
 	}
 }

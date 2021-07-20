@@ -12,7 +12,7 @@
 		
 		'cost'			=>	array(
 			'transfer'	=>	array(1,20),	//transfer cost range
-			'storage'	=>	10,				//storage set cost
+			'storage'	=>	100,				//storage set cost
 			'contact'	=>	10,				//contact run cost
 		),
 

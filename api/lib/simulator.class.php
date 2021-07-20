@@ -591,6 +591,20 @@ class Simulator extends CORE{
 		return $arr;
 	}
 
+	private function createUxtoFromContact($list,$miner){
+		$arr=array();
+		$amount=$this->setting['cost']['contact'];
+		foreach($list as $k=>$v){
+			$owner=$v['owner'];
+			$uxto=$this->checkUXTO($owner,$amount);
+
+			$final=$this->calcUXTO($uxto['out'],$owner,$miner,$amount);
+			$final['purpose']='contact';
+			$arr[]=$final;
+		}
+		return $arr;
+	}
+
 	/*simulator mining 
 	*/
 	private function getCoinbaseBlock($n,$delta,$svc){
@@ -630,7 +644,9 @@ class Simulator extends CORE{
 		$arr=array();
 		$rows=array();
 		$cols=$this->getAllCollected();
-		$this->getUsedInput($cols['transaction']['data'],$rows);
+		$this->getUsedInput($cols['transaction']['data'],'transaction',$rows);
+		//$this->getUsedInput($cols['contact']['data'],'contact',$rows);
+		//$this->getUsedInput($cols['storage']['data'],$rows);
 		foreach($uxto as $v){
 			if(in_array($v,$rows)) continue;
 			$arr[]=$v;
@@ -639,12 +655,26 @@ class Simulator extends CORE{
 		return $arr;
 	}
 
-	private function getUsedInput(&$list,&$rows){
-		foreach($list as $k=>$v){
-			foreach($v['from'] as $kk=>$vv){
-				$rows[]=$vv['hash'];
-			}
+	private function getUsedInput(&$list,$type,&$rows){
+		switch ($type) {
+			case 'transaction':
+				foreach($list as $k=>$v){
+					foreach($v['from'] as $kk=>$vv){
+						$rows[]=$vv['hash'];
+					}
+				}
+				break;
+			case 'contact':
+				//echo json_encode($rows).'<hr>';
+				foreach($list as $k=>$v){
+					echo json_encode($v);
+				}
+				break;
+			default:
+				# code...
+				break;
 		}
+		
 		return true;
 	}
 
