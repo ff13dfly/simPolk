@@ -10,7 +10,7 @@ class Account{
 		'nickname'		=>	'',
 		'last'			=>	0,
 		'sign'			=>	'',
-		'uxto'			=>	array(),		//hash stack
+		'utxo'			=>	array(),		//hash stack
 		'storage'		=>	array(),		//hash stack
 		'contact'		=>	array(),		//hash stack
 	);
@@ -54,7 +54,7 @@ class Account{
 				);
 				break;
 
-			case 'uxto':
+			case 'utxo':
 				$hash=	$param['hash'];
 
 				$arr=$core->getHash($cfg['keys']['transaction_entry'],array($hash));
@@ -63,11 +63,11 @@ class Account{
 					'message'	=>	'no such hash',
 				);
 
-				$uxto=json_decode($arr[$hash],true);
+				$UTXO=json_decode($arr[$hash],true);
 
 				return array(
 					'success'	=>	TRUE,
-					'data'		=>	$uxto['to'] ,
+					'data'		=>	$UTXO['to'] ,
 				);
 				break;
 
@@ -84,7 +84,7 @@ class Account{
 				foreach($acs  as $hash => $data){
 					//echo json_encode($account).'<br>';
 					$user=json_decode($data,TRUE);
-					$user['total']=$core->calcAccountUXTO($user['uxto'],$hash);
+					$user['total']=$core->calcAccountUTXO($user['utxo'],$hash);
 					$arr[]=array_merge(array('account'=>$hash),$user);
 
 				}

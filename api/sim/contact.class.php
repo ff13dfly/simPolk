@@ -32,9 +32,9 @@ class Contact{
 	
 	private function addNewContact($param){
 		$account=$param['u'];
-		$uxto=$this->db->checkUXTO($account,$this->env['cost']['contact']);
+		$UTXO=$this->db->checkUTXO($account,$this->env['cost']['contact']);
 
-		if(!$uxto['avalid']){
+		if(!$UTXO['avalid']){
 			return array(
 				'success'	=>	false,
 				'message'	=>	'not enough input',
@@ -44,7 +44,7 @@ class Contact{
 		$row=array(
 			'content'	=>	$param['body'],
 			'owner'		=>	$account,
-			'signature'	=>	$uxto['user']['sign'],
+			'signature'	=>	$UTXO['user']['sign'],
 			'stamp'		=>	time(),
 		);
 

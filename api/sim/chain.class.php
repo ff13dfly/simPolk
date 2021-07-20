@@ -77,17 +77,17 @@ class Chain{
 		$acc_to=$param['to'];
 		$amount=(int)$param['value'];
 
-		//1.calc the from account uxto
-		$uxto=$this->db->checkUXTO($acc_from,$amount);
-		if($uxto==false || !$uxto['avalid']){
+		//1.calc the from account UTXO
+		$UTXO=$this->db->checkUTXO($acc_from,$amount);
+		if($UTXO==false || !$UTXO['avalid']){
 			return array(
 				'success'	=>	false,
-				'message'	=>	'not enough input , max : '.$uxto['amount'],
+				'message'	=>	'not enough input , max : '.$UTXO['amount'],
 			);
 		}
 		
-		//2.setup the uxto data struct
-		$final=$this->db->calcUXTO($uxto['out'],$acc_from,$acc_to,$amount);
+		//2.setup the UTXO data struct
+		$final=$this->db->calcUTXO($UTXO['out'],$acc_from,$acc_to,$amount);
 		$final['stamp']=time();
 
 		//2.1.add to collected transaction;
