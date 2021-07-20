@@ -30,6 +30,10 @@ class Account{
 		$this->env=$cfg;
 		$this->cur=$cur;
 		$this->db=$core;
+
+		$result=array(
+			'success'=>false,
+		);
 			
 		switch ($act) {
 			case 'new':
@@ -97,6 +101,8 @@ class Account{
 				
 				break;
 		}
+
+		return $result;
 	}
 	
 	public function saveAccout($hash,$data,&$keys){

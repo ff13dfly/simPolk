@@ -1,11 +1,17 @@
 <?php
 class Contact{
-	private $struct=array(
-		'owner'	=>	'account hash',
-
-	);
+	private $env;
+	private $cur;
+	private $db;
 	
 	public function task($act,$param,&$core,$cur,$cfg){
+		$this->env=$cfg;
+		$this->cur=$cur;
+		$this->db=$core;
+
+		$result=array(
+			'success'=>false,
+		);
 		switch ($act) {
 			case 'exec':	//contact autorun 
 
@@ -36,6 +42,7 @@ class Contact{
 				
 				break;
 		}
+		return $result;
 	}
 	
 	private function contactCreate($str){

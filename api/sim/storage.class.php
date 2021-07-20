@@ -8,68 +8,65 @@ class Storage{
 		$this->env=$cfg;
 		$this->cur=$cur;
 		$this->db=$core;
-		
+
+		$result=array(
+			'success'=>false,
+		);
+
 		switch ($act) {
 			case 'key':
-				$hash=$param['k'];
-				$ekey=$cfg['keys']['storage_entry'];
-				$list=$core->getHash($ekey,array($hash));
-				return array(
-					'success'	=>	true,
-					'data'		=>	json_decode($list[$hash],true),
-				);
+				$result=$this->getStorageByKey($param);
 				break;
 
 			case 'get':
-				return array(
-					'success'	=>	true
-				);
 				break;
 
 			case 'set':
-				$account=$param['u'];
-				$uxto=$core->checkUXTO($account,$cfg['cost']['storage']);
-
-				//echo json_encode($uxto).'<hr>';
-				//exit();
-
-				if(!$uxto['avalid']){
-					return array(
-						'success'	=>	false,
-						'message'	=>	'not enough input',
-					);
-				}
-
-				$row=array(
-					'key'		=>	$param['k'],
-					'value'		=>	$param['v'],
-					'owner'		=>	$account,
-					'signature'	=>	$uxto['user']['sign'],
-					'stamp'		=>	time(),
-				);
-
-
-				$key=$cfg['keys']['storage_collected'];
-				$core->pushList($key,json_encode($row));
-				return array(
-					'success'	=>TRUE,
-					'count'		=>$core->lenList($key),
-				);
+				$result=$this->setStorage($param);
 				break;
 			default:
 				
 				break;
 		}
+
+		return $result;
+	}
+
+	private function setStorage($param){
+		$account=$param['u'];
+		$uxto=$this->db->checkUXTO($account,$this->env['cost']['storage']);
+
+		if(!$uxto['avalid']){
+			return array(
+				'success'	=>	false,
+				'message'	=>	'not enough input',
+			);
+		}
+
+		$row=array(
+			'key'		=>	$param['k'],
+			'value'		=>	$param['v'],
+			'owner'		=>	$account,
+			'signature'	=>	$uxto['user']['sign'],
+			'stamp'		=>	time(),
+		);
+
+
+		$key=$this->env['keys']['storage_collected'];
+		$this->db->pushList($key,json_encode($row));
+		return array(
+			'success'	=>TRUE,
+			'count'		=>$this->db->lenList($key),
+		);
 	}
 	
-	
-	private function setStorage(){
-		
+	private function getStorageByKey($param){
+		$hash=$param['k'];
+		$ekey=$this->env['keys']['storage_entry'];
+		$list=$this->db->getHash($ekey,array($hash));
+		return array(
+			'success'	=>	true,
+			'data'		=>	json_decode($list[$hash],true),
+		);
 	}
-	
-	
-	private function getKey($param){
-		
-	}
-	
 }

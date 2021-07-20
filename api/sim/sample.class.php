@@ -8,7 +8,11 @@ class Sample{
 		$this->env=$cfg;
 		$this->cur=$cur;
 		$this->db=$core;
-		
+
+		$result=array(
+			'success'=>false,
+		);
+
 		switch ($act) {
 			case 'list':
 				return array(
@@ -30,5 +34,7 @@ class Sample{
 				
 				break;
 		}
+
+		return $result;
 	}
 }
