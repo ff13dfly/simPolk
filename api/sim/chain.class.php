@@ -78,16 +78,16 @@ class Chain{
 		$amount=(int)$param['value'];
 
 		//1.calc the from account UTXO
-		$UTXO=$this->db->checkUTXO($acc_from,$amount);
-		if($UTXO==false || !$UTXO['avalid']){
+		$utxo=$this->db->checkUTXO($acc_from,$amount);
+		if($utxo==false || !$utxo['avalid']){
 			return array(
 				'success'	=>	false,
-				'message'	=>	'not enough input , max : '.$UTXO['amount'],
+				'message'	=>	'not enough input , max : '.$utxo['amount'],
 			);
 		}
 		
 		//2.setup the UTXO data struct
-		$final=$this->db->calcUTXO($UTXO['out'],$acc_from,$acc_to,$amount);
+		$final=$this->db->calcUTXO($utxo['out'],$acc_from,$acc_to,$amount);
 		$final['stamp']=time();
 
 		//2.1.add to collected transaction;

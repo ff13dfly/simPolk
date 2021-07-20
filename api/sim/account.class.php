@@ -63,11 +63,11 @@ class Account{
 					'message'	=>	'no such hash',
 				);
 
-				$UTXO=json_decode($arr[$hash],true);
+				$utxo=json_decode($arr[$hash],true);
 
 				return array(
 					'success'	=>	TRUE,
-					'data'		=>	$UTXO['to'] ,
+					'data'		=>	$utxo['to'] ,
 				);
 				break;
 

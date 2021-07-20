@@ -18,14 +18,14 @@
     <div class="col-lg-4 gy-4">
         <div class="row ">
             <div class="col-lg-8 ">
-                <label for="uxto_hash">UXTO Input Hash</label>
-                <input type="text" class="form-control" name="uxto_hash" id="uxto_hash" value="">
+                <label for="utxo_hash">utxo Input Hash</label>
+                <input type="text" class="form-control" name="utxo_hash" id="utxo_hash" value="">
             </div>
             <div class="col-lg-4 text-end gy-4">
-                <button class="btn btn-md btn-primary" id="uxto_search">Search</button>
+                <button class="btn btn-md btn-primary" id="utxo_search">Search</button>
             </div>
             <div class="col-lg-12 gy-4">
-                <div class="row" id="uxto_con"></div>
+                <div class="row" id="utxo_con"></div>
             </div>
             <div class="col-lg-12 ">
                 <hr>
@@ -138,14 +138,14 @@
         self.showUserList(1);
     });
 
-    $('#uxto_search').off('click').on('click', function() {
-        var hash = $('#uxto_hash').val();
+    $('#utxo_search').off('click').on('click', function() {
+        var hash = $('#utxo_hash').val();
         //if (!hash || hash.length != 64) return self.info('Error hash', '#info_view');
-        var con = '#uxto_con';
-        simPolk.request('account', 'uxto', {
+        var con = '#utxo_con';
+        simPolk.request('account', 'utxo', {
             'hash': hash,
         }, function(res) {
-            if (!res.success || res.data == null) return $(con).html('No such UXTO');
+            if (!res.success || res.data == null) return $(con).html('No such utxo');
             console.log(res);
             var dom = self.inputList(res.data);
             $(con).html(dom);

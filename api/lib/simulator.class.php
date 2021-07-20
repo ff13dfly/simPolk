@@ -533,7 +533,7 @@ class Simulator extends CORE{
 					if(!isset($as[$from_account])){
 						$as[$from_account]=$this->checkAccount($from_account);
 					}
-					array_shift($as[$from_account]['UTXO']);
+					array_shift($as[$from_account]['utxo']);
 
 					//remove the input hash data;
 					//this will cause error;
@@ -584,9 +584,9 @@ class Simulator extends CORE{
 		$amount=$this->setting['cost']['storage'];
 		foreach($list as $k=>$v){
 			$owner=$v['owner'];
-			$UTXO=$this->checkUTXO($owner,$amount);
+			$utxo=$this->checkUTXO($owner,$amount);
 
-			$final=$this->calcUTXO($UTXO['out'],$owner,$miner,$amount);
+			$final=$this->calcUTXO($utxo['out'],$owner,$miner,$amount);
 			$final['purpose']='storage';
 			$arr[]=$final;
 		}
@@ -598,9 +598,9 @@ class Simulator extends CORE{
 		$amount=$this->setting['cost']['contact'];
 		foreach($list as $k=>$v){
 			$owner=$v['owner'];
-			$UTXO=$this->checkUTXO($owner,$amount);
+			$utxo=$this->checkUTXO($owner,$amount);
 
-			$final=$this->calcUTXO($UTXO['out'],$owner,$miner,$amount);
+			$final=$this->calcUTXO($utxo['out'],$owner,$miner,$amount);
 			$final['purpose']='contact';
 			$arr[]=$final;
 		}
@@ -613,7 +613,7 @@ class Simulator extends CORE{
 		$this->checkAccount($svc['account'],$svc['sign']);		//检查账户，并建立
 
 		$data=$this->raw;
-		$UTXO=$this->utxo;
+		$utxo=$this->utxo;
 
 		//basecoin UTXO data struct
 		$from=$this->from;
@@ -622,16 +622,16 @@ class Simulator extends CORE{
 		
 		unset($from['hash']);
 		unset($from['account']);
-		$UTXO['from'][]=$from;
+		$utxo['from'][]=$from;
 
 		$to=$this->to;
 		$to['amount']=$this->setting['basecoin'];
 		$to['account']=$svc['account'];
-		$UTXO['to'][]=$to;
+		$utxo['to'][]=$to;
 
-		$UTXO['stamp']=time()-$delta;
+		$utxo['stamp']=time()-$delta;
 
-		$data['list_transaction'][]=$UTXO;
+		$data['list_transaction'][]=$utxo;
 		$data['height']=$n;
 		$data['signature']=$svc['sign'];
 		$data['creator']=$svc['account'];
@@ -643,7 +643,7 @@ class Simulator extends CORE{
 	}
 
 	//$list=array('transaction','storage','contact');
-	private function skipUsedUTXO($UTXO){
+	private function skipUsedUTXO($utxo){
 		$arr=array();
 		$rows=array();		//input that will be used
 		$cols=$this->getAllCollected();
@@ -655,7 +655,7 @@ class Simulator extends CORE{
 		// 	$this->getUsedInput($cols['transaction']['data'],$type,$rows);
 		// }
 		
-		foreach($UTXO as $v){
+		foreach($utxo as $v){
 			if(in_array($v,$rows)) continue;
 			$arr[]=$v;
 		}
@@ -695,11 +695,11 @@ class Simulator extends CORE{
 		if(empty($atmp)) return false;
 		$user_from=json_decode($atmp[$account],true);
 
-		//echo json_encode($user_from['UTXO']).'<hr>';
-		$UTXO=$this->skipUsedUTXO($user_from['UTXO']);
+		//echo json_encode($user_from['utxo']).'<hr>';
+		$utxo=$this->skipUsedUTXO($user_from['utxo']);
 
 		//echo json_encode($UTXO).'<hr>';exit();
-		if(empty($UTXO)){
+		if(empty($utxo)){
 			return array(
 				'avalid'	=>	false,
 				'amount'	=>	'-1',
@@ -709,7 +709,7 @@ class Simulator extends CORE{
 		$out=array();
 		$left=array();
 		$count=0;
-		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$UTXO);
+		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$utxo);
 		
 		foreach($arr as $hash=>$v){
 			$row=json_decode($v,true);
@@ -732,10 +732,10 @@ class Simulator extends CORE{
 		);
 	}
 
-	public function calcAccountUTXO($UTXO,$account){
+	public function calcAccountUTXO($utxo,$account){
 		//echo json_encode($UTXO).'<br>';
 		//echo $account."<br>";
-		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$UTXO);
+		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$utxo);
 		$count=0;
 		foreach($arr as $k =>$v){
 			$row=json_decode($v,true);
