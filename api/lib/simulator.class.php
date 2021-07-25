@@ -307,15 +307,29 @@ class Simulator extends CORE{
 		$svc=$nodes[rand(0, count($nodes)-1)];
 		$data=$this->getCoinbaseBlock($n,$delta,$svc);
 
+		
+
 		//merge the collected data to the basic data struct
 		if(!$skip){
 			$this->mergeCollected($data);
 		}
-
-		//struct all the neccessary cache;
-		$this->structRow($data);
+		$this->formatTransaction($data['list_transaction'],$svc);
+		
+		$this->structRow($data,$svc);
+		//$this->formatTransaction($data);
 		$this->saveToChain($n,$data);
 		return TRUE;
+	}
+
+	private function formatTransaction(&$list,&$svc){
+		foreach($list as $k=>$v){
+			if(!isset($v['to']) || empty($v['to'])) continue;
+			foreach($v['to'] as $kk=>$vv){
+				if(!empty($vv['account'])) continue;
+				$list[$k]['to'][$kk]['account']=$svc['account'];
+			}
+			
+		}
 	}
 
 	/* add collected data write to current block
@@ -336,18 +350,12 @@ class Simulator extends CORE{
 		$this->createBlock($n+1,$delta,false);
 
 		$this->setKey($cfg['keys']['height'],$n+1);
-
-		//1.old way merge data to current block
-		// $this->mergeCollected($data);
-		// $this->structRow($data);
-
-		// //echo json_encode($data);
-
-		// $this->saveToChain($n,$data);
 		return true;
 	}
 
-		//获取写块服务器数据
+
+
+	//获取写块服务器数据
 	private function getServer($servers){
 		$count=count($servers);
 		$ball=rand(1, $count);		//random ball
@@ -454,32 +462,16 @@ class Simulator extends CORE{
 		}
 
 		//2.clean the collected data;
-
 		$this->cleanCollectedData();
 		return true;
 	}
 
-
 	/* calc the block params method
 
 	*/
-	private function structRow(&$raw){
-		$cfg=$this->setting;
-		$keys=$cfg['keys'];
-		//1.storage and contact UTXO create
-		//1.1.create UTXO of storage;
-		$sts=$this->createUTXOFromStorage($raw['list_storage'],$raw['creator']);
-		if(!empty($sts)){
-			foreach($sts as $v) $raw['list_transaction'][]=$v;
-		}
-		
-		//1.2.create UTXO of contact;
-		// $cts=$this->createUTXOFromContact($raw['list_contact'],$raw['creator']);
-		// if(!empty($cts)){
-		// 	foreach($cts as $v) $raw['list_transaction'][]=$v;
-		// }
-		
-		//2.merkle calculation
+	private function structRow(&$raw,$svc){
+		//echo json_encode($raw).'<hr>';
+		//2.merkle calculation	
 		//2.1.transfer merkle
 		$mtree=$this->createTree($raw['list_transaction']);
 		$raw['merkle_transaction']=$mtree;
@@ -535,10 +527,6 @@ class Simulator extends CORE{
 						$as[$from_account]=$this->checkAccount($from_account);
 					}
 					array_shift($as[$from_account]['utxo']);
-
-					//remove the input hash data;
-					//this will cause error;
-					//$this->delHash($ekey,$input_hash);
 				}
 			}
 			
@@ -548,6 +536,7 @@ class Simulator extends CORE{
 				if(!isset($as[$account])){
 					$as[$account]=$this->checkAccount($account);
 				}
+				if(in_array($hash,$as[$account]['utxo'])) continue;		//skip the same hash
 				$as[$account]['utxo'][]=$hash;
 			}
 
@@ -757,30 +746,31 @@ class Simulator extends CORE{
 				//echo json_encode($v).'<hr>';
 				foreach($v['to'] as $index=>$vv){
 					if($account!=$vv['account'] || $vv['amount']<$amount) continue;
+					return array(
+						'way'	=>	'collected',			//add action to collected
+						'type'	=>	$type,			//
+						'row'	=>	$k,
+						'index'	=>	$index,
+					);
 					//echo json_encode($vv);
 					//对于非交易类型，进行再次判断，看看是不是已经被用掉
-					switch ($type) {
-						case 'transaction':
-							return array(
-								'way'	=>	'collected',			//add action to collected
-								'type'	=>	'transaction',			//
-								'row'	=>	$k,
-								'index'	=>	$index,
-							);
-							break;
+					// switch ($type) {
+					// 	case 'transaction':
+							
+					// 		break;
 
-						case 'storage':
-								# code...
-							break;
+					// 	case 'storage':
+					// 			# code...
+					// 		break;
 
-						case 'contact':
-								# code...
-							break;
+					// 	case 'contact':
+					// 			# code...
+					// 		break;
 
-						default:
-							# code...
-							break;
-					}
+					// 	default:
+					// 		# code...
+					// 		break;
+					// }
 					
 				}
 			}
@@ -839,7 +829,7 @@ class Simulator extends CORE{
 		//$this->db->pushList($key,json_encode($final));
 	}
 
-	public function calcUTXO($out,$from,$to,$amount){
+	public function calcUTXO($out,$from,$to,$amount,$purpose='transaction'){
 		$format=$this->getTransactionFormat();
 		$row=$format['row'];
 		$fmt_from=$format['from'];
@@ -866,11 +856,13 @@ class Simulator extends CORE{
 		//2.calc the amount of output
 		$fmt_to['amount']=$amount;
 		$fmt_to['account']=$to;
+		$fmt_to['purpose']=$purpose;
 		$row['to'][]=$fmt_to;
 
 		if($sum!==$amount){
 			$fmt_to['amount']=$sum-$amount;
 			$fmt_to['account']=$from;
+			$fmt_to['purpose']='transaction';
 			$row['to'][]=$fmt_to;
 		}
 		

@@ -33,8 +33,11 @@ class Storage{
 	}
 
 	private function setStorage($param){
+		//$acc_from=$param['from'];
+		$acc_to='';
+		$amount=$this->env['cost']['storage'];
 		$account=$param['u'];
-		$utxo=$this->db->checkUTXO($account,$this->env['cost']['storage'],'storage');
+		$utxo=$this->db->checkUTXO($account,$amount,'storage');
 
 		if(!$utxo['avalid']){
 			return array(
@@ -42,15 +45,38 @@ class Storage{
 				'message'	=>	'not enough input',
 			);
 		}
+		//echo json_encode($utxo).'<hr>';
+		//exit();
+		
+		//1.处理utxo数据
+		$key=$this->env['keys']['transaction_collected'];
+		switch ($utxo['way']) {
+			case 'collected':
+				$final=$this->db->embedUTXO($utxo['row'],$utxo['index'],$account,$acc_to,$amount,'storage');
+				$this->db->setList($key,$utxo['row'],json_encode($final));
 
+				break;
+			case 'more':
+				$final=$this->db->calcUTXO($utxo['out'],$account,$acc_to,$amount,'storage');
+				$final['stamp']=time();
+				$this->db->pushList($key,json_encode($final));
+
+				//2.1.add to collected transaction;
+				
+				break;
+			default:
+				# code...
+				break;
+		}
+
+		//2.处理storage数据
 		$row=array(
 			'key'		=>	$param['k'],
 			'value'		=>	$param['v'],
 			'owner'		=>	$account,
-			'signature'	=>	$utxo['user']['sign'],
+			'signature'	=>	'',
 			'stamp'		=>	time(),
 		);
-
 
 		$key=$this->env['keys']['storage_collected'];
 		$this->db->pushList($key,json_encode($row));
