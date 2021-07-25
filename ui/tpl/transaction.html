@@ -184,7 +184,7 @@
             to: a_to,
             value: val
         }, function(res) {
-            console.log(res);
+            //console.log(res);
             if (!res.success) return self.info(res.message, '#transaction_info');
             self.clearCache();
             location.reload();

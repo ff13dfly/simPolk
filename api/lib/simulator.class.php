@@ -31,7 +31,6 @@ class Simulator extends CORE{
 	private $utxo=array(
 		'from'		=>	array(),
 		'to'		=>	array(),
-		'purpose'	=>	'transaction',		//[transaction,storage,contact]
 		'version'	=>	2021,
 		'stamp'		=>	0,
 	);
@@ -47,6 +46,7 @@ class Simulator extends CORE{
 	private $to=array(
 		'amount'		=>	0,
 		'account'		=>	'account_hash_64byte',	//account public key
+		'purpose'		=>	'',						//[transaction,storage,contact]
 	);
 
 	public function __construct(){}
@@ -472,6 +472,7 @@ class Simulator extends CORE{
 		if(!empty($sts)){
 			foreach($sts as $v) $raw['list_transaction'][]=$v;
 		}
+		
 		//1.2.create UTXO of contact;
 		// $cts=$this->createUTXOFromContact($raw['list_contact'],$raw['creator']);
 		// if(!empty($cts)){
@@ -627,6 +628,7 @@ class Simulator extends CORE{
 		$to=$this->to;
 		$to['amount']=$this->setting['basecoin'];
 		$to['account']=$svc['account'];
+		$to['purpose']='coinbase';
 		$utxo['to'][]=$to;
 
 		$utxo['stamp']=time()-$delta;
@@ -690,10 +692,22 @@ class Simulator extends CORE{
 		return true;
 	}
 
-	public function checkUTXO($account,$amount){
+	public function checkUTXO($account,$amount,$type='transaction'){
 		$atmp=$this->getHash($this->setting['keys']['accounts'],array($account));
 		if(empty($atmp)) return false;
 		$user_from=json_decode($atmp[$account],true);
+		
+		//echo json_encode($user_from).'<hr>';
+
+		//1.计算所有已经收集的交易中是否有可用的交易
+		$rows=$this->calcAccountCollected($account,$amount,$type);
+		if($rows!=false){
+			//1.1.处理
+			//echo json_encode($rows);
+			$rows['avalid']=true;
+			return $rows;
+		}
+		//2.去除不可用的utxo，判断输出
 
 		//echo json_encode($user_from['utxo']).'<hr>';
 		$utxo=$this->skipUsedUTXO($user_from['utxo']);
@@ -725,6 +739,7 @@ class Simulator extends CORE{
 		}
 		return array(
 			'avalid'	=>	$count>=$amount?true:false,
+			'way'		=>	'more',
 			'out'		=>	$out,
 			'left'		=>	$left,
 			'user'		=>	$user_from,
@@ -732,22 +747,96 @@ class Simulator extends CORE{
 		);
 	}
 
+	/*	calc user whole collected
+	*
+	*/
+	public function calcAccountCollected($account,$amount,$type='transaction'){
+		$raw=$this->getAllCollected();
+		if(!empty($raw['transaction']['data'])){
+			foreach($raw['transaction']['data'] as $k=>$v){
+				//echo json_encode($v).'<hr>';
+				foreach($v['to'] as $index=>$vv){
+					if($account!=$vv['account'] || $vv['amount']<$amount) continue;
+					//echo json_encode($vv);
+					//对于非交易类型，进行再次判断，看看是不是已经被用掉
+					switch ($type) {
+						case 'transaction':
+							return array(
+								'way'	=>	'collected',			//add action to collected
+								'type'	=>	'transaction',			//
+								'row'	=>	$k,
+								'index'	=>	$index,
+							);
+							break;
+
+						case 'storage':
+								# code...
+							break;
+
+						case 'contact':
+								# code...
+							break;
+
+						default:
+							# code...
+							break;
+					}
+					
+				}
+			}
+		}
+		return false;
+	}
+
+	/*	calc user whole coins
+	*
+	*/
 	public function calcAccountUTXO($utxo,$account){
-		//echo json_encode($UTXO).'<br>';
-		//echo $account."<br>";
 		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$utxo);
 		$count=0;
 		foreach($arr as $k =>$v){
 			$row=json_decode($v,true);
 			if(empty($row)) continue;
-			//echo 'row:'.$v.'<br>';
 			foreach($row['to'] as $kk=>$vv){
 				if($vv['account']!=$account) continue;
 				$count+=$vv['amount'];
 			}
-			//echo '<hr>';
 		}
 		return $count;
+	}
+
+	public function embedUTXO($row,$index,$account_from,$account_to,$amount,$type){
+		$keys=$this->setting['keys'];
+		$cs=$this->getCollected($keys['transaction_collected']);
+		if(!isset($cs['data']) || !isset($cs['data'][$row]) || !isset($cs['data'][$row]['to'][$index])) return false;
+		if($cs['data'][$row]['to'][$index]['account']!=$account_from) return false;
+
+		//echo json_encode($cs['data'][$row]).'<hr>';
+
+		//1.calc new output
+		$from=$cs['data'][$row]['to'][$index];
+		$from['amount']-=$amount;
+
+		$to=$this->to;
+		$to['account']=$account_to;
+		$to['amount']=$amount;
+		$to['purpose']=$type;
+
+		//2.create new collected transaction
+		$ts=array();
+		foreach($cs['data'][$row]['to'] as $k=>$v){
+			if($k==$index) continue;
+			$ts[]=$v;
+		}
+		$ts[]=$from;
+		$ts[]=$to;
+		$cs['data'][$row]['to']=$ts;
+
+
+		return $cs['data'][$row];
+		//3.save new collected data
+		//$key=$keys['transaction_collected'];
+		//$this->db->pushList($key,json_encode($final));
 	}
 
 	public function calcUTXO($out,$from,$to,$amount){

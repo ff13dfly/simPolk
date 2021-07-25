@@ -34,9 +34,9 @@ class Storage{
 
 	private function setStorage($param){
 		$account=$param['u'];
-		$UTXO=$this->db->checkUTXO($account,$this->env['cost']['storage']);
+		$utxo=$this->db->checkUTXO($account,$this->env['cost']['storage'],'storage');
 
-		if(!$UTXO['avalid']){
+		if(!$utxo['avalid']){
 			return array(
 				'success'	=>	false,
 				'message'	=>	'not enough input',
@@ -47,7 +47,7 @@ class Storage{
 			'key'		=>	$param['k'],
 			'value'		=>	$param['v'],
 			'owner'		=>	$account,
-			'signature'	=>	$UTXO['user']['sign'],
+			'signature'	=>	$utxo['user']['sign'],
 			'stamp'		=>	time(),
 		);
 

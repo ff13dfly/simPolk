@@ -85,21 +85,37 @@ class Chain{
 				'message'	=>	'not enough input , max : '.$utxo['amount'],
 			);
 		}
-		
-		//2.setup the UTXO data struct
-		$final=$this->db->calcUTXO($utxo['out'],$acc_from,$acc_to,$amount);
-		$final['stamp']=time();
 
-		//2.1.add to collected transaction;
 		$key=$this->env['keys']['transaction_collected'];
-		$this->db->pushList($key,json_encode($final));
+		switch ($utxo['way']) {
+			case 'collected':
+				$final=$this->db->embedUTXO($utxo['row'],$utxo['index'],$acc_from,$acc_to,$amount,'transaction');
+				$this->db->setList($key,$utxo['row'],json_encode($final));
+				return array(
+					'success'	=>TRUE,
+					'count'		=>$this->db->lenList($key),
+				);
+				break;
 
-		//2.2.remove input hash list
+			case 'more':
+				//2.setup the UTXO data struct
+				$final=$this->db->calcUTXO($utxo['out'],$acc_from,$acc_to,$amount);
+				$final['stamp']=time();
 
-		return array(
-			'success'	=>TRUE,
-			'count'		=>$this->db->lenList($key),
-		);
+				//2.1.add to collected transaction;
+				$this->db->pushList($key,json_encode($final));
+
+				//2.2.remove input hash list
+				return array(
+					'success'	=>TRUE,
+					'count'		=>$this->db->lenList($key),
+				);
+				break;
+				
+			default:
+				# code...
+				break;
+		}
 	}
 
 	private function getCurrentStatus($param){
