@@ -24,12 +24,23 @@ class Storage{
 			case 'set':
 				$result=$this->setStorage($param);
 				break;
+			case 'pub':
+				$result=$this->setGlobalStorage($param);
+				break;
 			default:
 				
 				break;
 		}
 
 		return $result;
+	}
+
+	private function setGlobalStorage($param){
+		//1.normal storage set;
+		$res=$this->setStorage($param);
+
+		//2.check global storage
+		
 	}
 
 	private function setStorage($param){

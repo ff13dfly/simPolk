@@ -43,6 +43,7 @@
 			'contact_collected'		=>	'sim_contact',		//contact map entry key
 			'transaction_entry'		=>	'en_chain',			//transaction map entry name (for redis hash)
 			'storage_entry'			=>	'en_storage',		//storage map entry name (for redis hash)
+			'global_entry'			=>	'en_global',		//global storage can access by key
 			'contact_entry'			=>	'en_contact',		//contact map entry name (for redis hash)
 		),
 		'prefix'		=>	array(
