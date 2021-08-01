@@ -4,11 +4,19 @@ class Storage{
 	private $cur;
 	private $db;
 
+	private $raw=array(
+		'key'			=>	'key_name',
+		'value'			=>	'hello world',
+		'owner'			=>	'account hash',
+		'signature'		=>	'',
+		'stamp'			=>	0,
+		'type'			=>	'normal'			//[ normal, global ]
+	);
+
 	public function task($act,$param,&$core,$cur,$cfg){
 		$this->env=$cfg;
 		$this->cur=$cur;
 		$this->db=$core;
-
 		$result=array(
 			'success'=>false,
 		);
@@ -81,13 +89,11 @@ class Storage{
 		}
 
 		//2.处理storage数据
-		$row=array(
-			'key'		=>	$param['k'],
-			'value'		=>	$param['v'],
-			'owner'		=>	$account,
-			'signature'	=>	'',
-			'stamp'		=>	time(),
-		);
+		$row=$this->raw;
+		$row['key']=$param['k'];
+		$row['value']=$param['v'];
+		$row['owner']=$account;
+		$row['stamp']=time();
 
 		$key=$this->env['keys']['storage_collected'];
 		$this->db->pushList($key,json_encode($row));
