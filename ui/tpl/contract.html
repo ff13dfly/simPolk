@@ -44,7 +44,7 @@
         var u = $('#contact_owner').val();
         if (!body || !u) return false;
 
-        simPolk.request('contact', 'add', {
+        simPolk.request('contract', 'add', {
             'body': body,
             'u': u,
         }, function(res) {

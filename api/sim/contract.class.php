@@ -1,5 +1,5 @@
 <?php
-class Contact{
+class Contract{
 	private $env;
 	private $cur;
 	private $db;
