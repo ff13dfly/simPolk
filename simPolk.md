@@ -37,7 +37,7 @@
 * As an application developer myself, I agree with the conception of Polkadot , and focus on application of Polkadot (like [virtual block world](https://github.com/ff13dfly/VirtualBlockWorld)). There are a huge number of developers like me, as a common web developer, the coding stack is "PHP + JS". We have a steep learning curve for the compiled languages RUST, and can be blocked from blockchain development in the early stage easily . Blockchain is a complex technology, and various concepts are rarely touched in daily development.
 * In the process of developing simPolk, I had a deeper understanding of blockchain structure, utxo, smart contract and other important blockchain concepts. In particular, simPolk has developed the function of pending simchain.  It is very helpful to understand Polkadot.Developer can  statically observe the simchain and understand the relationship between various data items.
 * After checking the official support projects of Polkadot, no similar projects have been found at present. The current solution for developers is completely open source and provides a large number of test networks, but the complexity is too high for a web developer. New developers need to spend a lot of time to build their own applications.
-* After using simpolk skillfully, you can first carry out prototype development based on simPolk, which greatly improves the development efficiency. I have used this method in the development of  [virtual block world](https://github.com/ff13dfly/VirtualBlockWorld) and quickly solved several problems, which are caused by the differences between blockchain development and web development.
+* After using simpolk skillfully, you can first carry out prototype development based on simPolk, which greatly improves the development efficiency. I have used this method in the development of  [virtual block world](https://github.com/ff13dfly/VirtualBlockWorld) and quickly solved several problems, which are caused by the differences between blockchain  and web.
 
 
 
@@ -45,14 +45,14 @@
 
 ### Team members
 
-* Zhongqiang Fu 
+* Zhongqiang Fu , a web developer and metaverse devoeloper.
 
 
 ### Contact
 
 * **Contact Name:** Zhongqiang Fu
 * **Contact Email:** ff13dfly@163.com
-* **Website:** [https://github.com/ff13dfly/simPolk](https://github.com/ff13dfly/simPolk)
+* **Website:** [https://github.com/ff13dfly](https://github.com/ff13dfly)
 
 
 
@@ -64,7 +64,7 @@
 
 ### Team's experience
 
-My personal development experience mainly focuses on the web development part. It is precisely because I want to develop applications based on Polkadot that simPolk comes into being. 
+My personal development experience mainly focuses on the web development. It is precisely because I want to develop applications based on Polkadot that simPolk comes into being. 
 
 * virtual block world ( [https://github.com/ff13dfly/VirtualBlockWorld](https://github.com/ff13dfly/VirtualBlockWorld) )，a metaverse virtual world rely on Polkadot. A virtual world totally on blockchain, both data and application.
 * Jeditor ( [https://github.com/ff13dfly/Jeditor](https://github.com/ff13dfly/Jeditor) )，a simple json editor. With only one reference, you can quickly edit JSON data. Jeditor  is also used in simPolk 's UI development.
@@ -84,7 +84,7 @@ My personal development experience mainly focuses on the web development part. I
 
 ## Development Status :open_book:
 
-* SimPolk has released version 0.1, details as follow.
+* SimPolk has released version 0.1, details as follow. SimPolk have both  API and UI, developer can use it directly.
   * Demo of simPolk :  [http://simpolk.android.im/ui/](http://simpolk.android.im/ui/)
   
   * Github of simPolk : [https://github.com/ff13dfly/simPolk](https://github.com/ff13dfly/simPolk)
@@ -95,7 +95,7 @@ My personal development experience mainly focuses on the web development part. I
 
   * Simpolk implements the goal of simplicity and ease of use and does not use any PHP framework. There is only one PHP file in the simulation part of the blockchain, which is easy to understand and read.
 
-  * simPolk's file list（simPolk/API/）
+  * SimPolk's file list（simPolk/API/）
 
     | 目录  | 文件名              | 功能描述                                                     |
     | :---: | ------------------- | ------------------------------------------------------------ |
@@ -118,26 +118,28 @@ My personal development experience mainly focuses on the web development part. I
 
     | 参数     | 值      | 说明                                                         |
     | :------- | ------- | ------------------------------------------------------------ |
-    | mod      | account | Parameter for routing，必须，used to include file as sim/{mod}.class.php |
-    | act      | list    | Parameter for routing，必须，used to call task method {act}  in {mod}.class.php |
-    | callback | ?       | Parameter for JSONP callback，非必须                         |
-    | p        | 3       | More parameters，非必须，sent to the target method           |
+    | mod      | account | Parameter for routing，required，used to include file as sim/{mod}.class.php |
+    | act      | list    | Parameter for routing，required，used to call task method {act}  in {mod}.class.php |
+    | callback | ?       | Parameter for JSONP callback，not required                   |
+    | p        | 3       | More parameters，not required，sent to the target method     |
 
     
 
-  * simPolk use redis (key-value database) as data engine, and using file as data engine will be developed later, which is more convenient for observing the data structure.
+  * SimPolk use redis (key-value database) as data engine, and using file as data engine will be developed later, which is more convenient for observing the data structure.
 
     
 
 * UI introduction
 
-  * Setting of simchain, such as pending simchain , blockchain speed , coin name, basecoin and more. One of the important functions is to pend the simchain. By using this function, the simchain will pend the generation of blocks, developer can observe the status of the blockchain and carry out operations on the chain.
+  * Setting of simchain, such as pending simchain , blockchain speed , coin name, basecoin award and more. One of the important functions is to pend the simchain. By using this function, the simchain will pend the generation of blocks, developer can observe the status of the blockchain and carry out operations on the chain.
 
     ![config](images/ui_config.png)
 
     
 
   * Data browsing of the simchain. Developer  can see the current status of the simchain, browse the specified block (JSON mode) on chain, and check the list of the collected transactions, storage and smart contracts.
+
+    ![config](images/ui_chain.png)
 
   * Account management of simchain. You can display the list of all accounts in the simchain, search the details of the specified account and the details of the specified available input.
 
@@ -214,7 +216,7 @@ My personal development experience mainly focuses on the web development part. I
 * **FTE:**  1FTE
 * **Costs:** 6,000 USD
 
-SimPolk has completed the framework development of blockchain, but the data structure is different from that of Polkadot network. It is necessary to understand the block structure of Polkadot network and make gradual correction. The purpose is to make the data structure and data type of the simchain consistent with the real Polkadot  network, so as to give developers a more real experience, and provide support for the data connection of the subsequent simchain gateway.
+SimPolk has completed the framework development of blockchain, but the data structure is different from that of Polkadot. It is necessary to understand the block structure of Polkadot network and make gradual correction. The purpose is to make the data structure and data type of the simchain consistent with the real Polkadot, so as to give developers a more real experience, and provide support for the data connection of the subsequent simchain gateway.
 
 | Number | Deliverable   | Specification                                                |
 | :----- | ------------- | ------------------------------------------------------------ |
@@ -267,7 +269,6 @@ Switch the data request of virtual block world to simPolk to verify whether simP
 
 * In the near future, simPolk's gateway will be assumed to access the Polkadot  parachian in KV way. It can participate in the Polkadot  ecosystem only by configuring the necessary parameters.
 
-  
 
 
 
