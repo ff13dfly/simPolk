@@ -1,7 +1,35 @@
-<div class="row" id="node_list">
+<div class="row">
+    <div class="col-lg-7">
+        <div class="row">
+            <div class="col-lg-12  gy-4">
+                <label for="mining_prefix">Prefix string (simlate this as the pre block hash)</label>
+                <input type="text" class="form-control" name="mining_prefix" id="mining_prefix" value="" placeholder="Pre block hash" />
+            </div>
 
+            <div class="col-lg-12  gy-4">
+                <label for="mining_words">Your words</label>
+                <input type="text" class="form-control" name="mining_words" id="mining_words" value="" placeholder="Your words" />
+            </div>
+
+            <div class="col-lg-12  gy-4">
+                <label for="mining_words">Difficult (simlutor use sha256 to calc the hash)</label>
+                <input type="text" class="form-control" name="mining_words" id="mining_words" value="0x0000" placeholder="Calc difficulty" />
+            </div>
+            <div class="col-lg-8 text-start gy-4" id="info_con">
+
+            </div>
+            <div class="col-lg-4 text-end gy-4">
+                <button class="btn btn-lg btn-primary" id="storage_set">Mining</button>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-1"></div>
+    <div class="col-lg-4">
+        <div class="row" id="node_list">
+
+        </div>
+    </div>
 </div>
-<script type="text/javascript" charset="utf-8" src="lib/pager.js"></script>
 <script type="text/javascript">
     var self = {
         nodeList: function() {
@@ -15,15 +43,18 @@
                 var dom = '';
                 for (var k in res.node) {
                     var row = res.node[k];
-                    dom += `<div class="col-lg-6 gy-4">
+                    dom += `<div class="col-lg-12 gy-2">
                             <div class="row list-group-item">
-                                <div class="col-lg-12"><small>${row.account}</small></div>
-                                <div class="col-lg-12"><h2>${row.url}<h2></div>
+                                <div class="col-lg-10"><small>${self.shorten(row.account,16)}</small></div>
+                                <div class="col-lg-10"><p>${row.url}<p></div>
                             </div>
                         </div>`;
                 }
                 $(con).html(dom);
             });
+        },
+        shorten: function(str, n) {
+            return str.substr(0, n) + '......' + str.substr(str.length - n, n);
         },
         transformTime(timestamp) {
             var addZero = self.addZero;
