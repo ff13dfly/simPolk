@@ -60,9 +60,9 @@ class Node{
 			$hash='0x'.hash('sha256',$str.'_'.$i);
 			if(substr($hash, 0,strlen($check))===$check){
 				return array(
+					'type'		=>	'sha256',
+					'result'	=>	$hash,
 					'string'	=>	$str.'_'.$i,
-					'hash'		=>	$hash,
-					'type'		=>	'sha256'
 				);
 			}
 		}

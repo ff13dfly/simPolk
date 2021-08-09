@@ -16,7 +16,7 @@
                 <input type="text" class="form-control" name="mining_diffculty" id="mining_diffculty" value="0x0000" placeholder="Calc difficulty" />
             </div>
             <div class="col-lg-6  gy-4">
-                <label for="mining_count">Count</label>
+                <label for="mining_count">Count (calc amount per request)</label>
                 <input type="text" class="form-control" name="mining_count" id="mining_count" value="100000" placeholder="Calc step count" />
             </div>
             <div class="col-lg-8 text-start gy-4" id="info_con">
@@ -31,7 +31,7 @@
     </div>
     <div class="col-lg-1"></div>
     <div class="col-lg-4">
-        <div class="row" id="node_list">
+        <div class="row gy-4" id="node_list">
 
         </div>
     </div>
@@ -89,6 +89,7 @@
             var words = $('#mining_words').val();
             var diff = $('#mining_diffculty').val();
             var n = $('#mining_count').val();
+            self.info('Calc hash from ' + (step - 1) * n + ' to ' + step * n, '#info_con');
             simPolk.request('node', 'mining', {
                 'pre': pre,
                 's': words,
@@ -115,6 +116,7 @@
             if (res.success) {
                 var txt = `<textarea name="" id="" cols="90" rows="4" disabled>${JSON.stringify(res.code)}</textarea>`
                 self.info(txt, '#mining_con');
+                self.info('', '#info_con');
             }
         });
     });
