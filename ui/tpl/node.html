@@ -3,23 +3,29 @@
         <div class="row">
             <div class="col-lg-12  gy-4">
                 <label for="mining_prefix">Prefix string (simlate this as the pre block hash)</label>
-                <input type="text" class="form-control" name="mining_prefix" id="mining_prefix" value="" placeholder="Pre block hash" />
+                <input type="text" class="form-control" name="mining_prefix" id="mining_prefix" value="3c8c311ce432a8b6627bdf2939308f822d8fb861a31b63cb9d368637c3ac0a1f" placeholder="Pre block hash" />
             </div>
 
             <div class="col-lg-12  gy-4">
                 <label for="mining_words">Your words</label>
-                <input type="text" class="form-control" name="mining_words" id="mining_words" value="" placeholder="Your words" />
+                <input type="text" class="form-control" name="mining_words" id="mining_words" value="hello" placeholder="Your words" />
             </div>
 
-            <div class="col-lg-12  gy-4">
-                <label for="mining_words">Difficult (simlutor use sha256 to calc the hash)</label>
-                <input type="text" class="form-control" name="mining_words" id="mining_words" value="0x0000" placeholder="Calc difficulty" />
+            <div class="col-lg-6  gy-4">
+                <label for="mining_diffculty">Difficult (sha256)</label>
+                <input type="text" class="form-control" name="mining_diffculty" id="mining_diffculty" value="0x0000" placeholder="Calc difficulty" />
+            </div>
+            <div class="col-lg-6  gy-4">
+                <label for="mining_count">Count</label>
+                <input type="text" class="form-control" name="mining_count" id="mining_count" value="100000" placeholder="Calc step count" />
             </div>
             <div class="col-lg-8 text-start gy-4" id="info_con">
 
             </div>
             <div class="col-lg-4 text-end gy-4">
-                <button class="btn btn-lg btn-primary" id="storage_set">Mining</button>
+                <button class="btn btn-lg btn-primary" id="mining_test">Mining</button>
+            </div>
+            <div class="col-lg-12  gy-4" id="mining_con">
             </div>
         </div>
     </div>
@@ -32,6 +38,9 @@
 </div>
 <script type="text/javascript">
     var self = {
+        info: function(txt, con) {
+            $(con).html(txt);
+        },
         nodeList: function() {
             var con = '#node_list';
             simPolk.request('node', 'list', {
@@ -74,9 +83,39 @@
         addZero: function(m) {
             return m < 10 ? '0' + m : m;
         },
+
+        mining: function(step, ck) {
+            var pre = $('#mining_prefix').val();
+            var words = $('#mining_words').val();
+            var diff = $('#mining_diffculty').val();
+            var n = $('#mining_count').val();
+            simPolk.request('node', 'mining', {
+                'pre': pre,
+                's': words,
+                'di': diff,
+                'step': step,
+                'n': n,
+            }, function(res) {
+                if (!res.success) {
+                    return self.mining(step + 1, ck);
+                } else {
+                    ck && ck(res);
+                }
+            });
+        },
     }
 
     $(function() {
         self.nodeList();
+    });
+
+    $('#mining_test').off('click').on('click', function() {
+        self.mining(1, function(res) {
+            console.log(res);
+            if (res.success) {
+                var txt = `<textarea name="" id="" cols="90" rows="4" disabled>${JSON.stringify(res.code)}</textarea>`
+                self.info(txt, '#mining_con');
+            }
+        });
     });
 </script>
