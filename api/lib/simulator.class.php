@@ -1,10 +1,20 @@
 <?php
 define('LENGTH_MAX', 256);		//simple string max length
-class Simulator extends CORE{	
+class Simulator extends CORE{
+	public function __construct(){}
+	public function __destruct(){}
+	public static function getInstance(){
+		return CORE::init(get_class());
+	}
+
 	private $callback=0;
 	private $setting=array();
 
-	//block head struct
+	/*******************************************************/
+	/******************data struct**************************/
+	/*******************************************************/
+
+	//block data struct, this part need to be modified as same as Polkadot's
 	private $raw=array(
 		'parent_hash'		=>	'',				//parent hash , used to vertify the blockchain data
 		'merkle_root'		=>	'',				//block merkle root or block hash
@@ -35,6 +45,7 @@ class Simulator extends CORE{
 		'stamp'		=>	0,
 	);
 
+	//utxo input data struct
 	private $from=array(
 		'hash'			=>	'sha256_hash',			//from hash	['', merkle hash]
 		'amount'		=>	0,						//from amount 
@@ -43,43 +54,54 @@ class Simulator extends CORE{
 		'signature'		=>	'account_signature',	//account encry
 	);
 
+	//utxo output data struct
 	private $to=array(
 		'amount'		=>	0,
 		'account'		=>	'account_hash_64byte',	//account public key
 		'purpose'		=>	'',						//[transaction,storage,contact]
 	);
 
-	public function __construct(){}
-	public function __destruct(){}
-	public static function getInstance(){
-		return CORE::init(get_class());
-	}
 
+	/*******************************************************/
+	/******************config function**********************/
+	/*******************************************************/
 
+	/* get simchain setting
+	*	@param	$cfg	array	//the setting from local file ../config.php
+	*
+	*  return
+	*  array		//setting of current simchain, and save to cache.
+	*/
 	public function getConfig($cfg){
 		$key=$cfg['keys']['setting'];
-		if(!$this->existsKey($key)) return $cfg;
+		if(!$this->existsKey($key)) return $cfg;			//check cache to get current setting
 		$ncfg=json_decode($this->getKey($key),true);
 		return $ncfg;
 	}
 
+	/* set simchain setting 
+	* @param	$cfg	array	//the setting need to set
+	*
+	* return 
+	* boolean		//result of saving
+	*/
 	public function setConfig($cfg){
 		$key=$cfg['keys']['setting'];
-		$this->setKey($key,json_encode($cfg));
-		return true;
-	}
-	
-	/*return the basic datastruct of transaction
-	*/
-	public function getTransactionFormat(){
-		return array(
-			'row'	=>	$this->utxo,
-			'from'	=>	$this->from,
-			'to'	=>	$this->to,
-		);
+		if($this->setKey($key,json_encode($cfg))) return true;
+		return false;
 	}
 
-	//自动加载class的方法
+
+	/*******************************************************/
+	/******************pallet function**********************/
+	/*******************************************************/
+
+	/*	load the extend class as Polkadot's pallet
+	*	@param	$cls	string		//name of the pallet need to load
+	*
+	*	return
+	*   instance of target class
+	*/
 	private function loadClass($cls){
 		spl_autoload_register(function($class_name) {
 			$target='sim'.DS.$class_name.'.class.php';
@@ -89,80 +111,62 @@ class Simulator extends CORE{
 		if(!class_exists($cls)) return false;
 		return new $cls();
 	}
-
+	
 	/*******************************************************/
-	/***************uncategoried****************************/
-	/*******************************************************/
-
-
-	/*******************************************************/
-	/***************control logic***************************/
+	/***************transaction functions*******************/
 	/*******************************************************/
 
-	/*curl方式跨域post数据的方法
-	 * @param	$url	string		//请求的url地址
-	 * @param	$data	array		//post的值，kv形式的
-	 * @param	$toJSON	boolean		//是否强制转换结果为JSON串
-	 * 
-	 * */
-	private function curlPost($url,$data,$toJSON=true){
-		//echo $url;
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-			
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-		//避免https 的ssl验证
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
-		curl_setopt($ch, CURLOPT_SSLVERSION, 		false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 	false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
-			
-		$res = curl_exec($ch);
-		if($res === false) $err=curl_error($ch);
-		curl_close($ch);
-
-		if(isset($err)) return $err;
-		return $toJSON?json_decode($res,TRUE):$res;
+	/*get the basic data struct of transaction
+	* @param null
+	*
+	* return 
+	* array			//data struct of transaction
+	*/
+	public function getTransactionFormat(){
+		return array(
+			'row'	=>	$this->utxo,
+			'from'	=>	$this->from,
+			'to'	=>	$this->to,
+		);
 	}
 
-	/* get all params to be an array	
-	 * 
-	 * */
-	private function getParam(){
-		$result=array();
-		foreach($_GET as $k=>$v){
-			if($k=='mod' || $k=='act' || $k=='callback') continue;
-			$result[$k]=$v;
-		}
-		return $result;
-	}
+	/*******************************************************/
+	/********************control logic**********************/
+	/*******************************************************/
 
-	//主入口，进行自动路由的地方
-	
-	//执行逻辑
-	//1.获取缓存的数据（collected的交易等其他信息）;
-	//2.更新height到当前(按照时间戳进行计算)，供下次访问的时候，建立区块;
-	//3.把当前配置交给对应的方法进行处理;
-	
+	/*	application entry method
+	*	steps:
+	*	1.get the collected transaction, include storage and contract
+	*	2.create blank blocks up to the start time of simchain
+	*	3.router to pallet, supply neccessary parameters and instance
+	*
+	*	router rules:	
+	*		mod=classname		//load the class file in sim/{classname}.class.php
+	*		act=action			//router name for pallet, call like this : $cls->task($act,$params,$core,$cur,$cfg)
+	*
+	*	@param	$cfg	array					//setting of simchain
+	*	@param	&$core	pointer of instance		//db engine instance
+	*
+	*	return
+	*	array					//the result of the method of target pallet
+	*/
 	public function autoRun($cfg,&$core){
-		$this->setting=$cfg;
+		$this->setting=$cfg;	//cache the setting
 		
-		$this->callback=$_GET['callback'];
+		if($_GET['callback'])$this->callback=$_GET['callback'];			//save jsonp's callback marking
 		if(!isset($_GET['mod']) || !isset($_GET['act'])) return $this->error('error request');
 		
 		$cls=$_GET['mod'];
 		$act=$_GET['act'];
 		
-		//1.对配置进行检测，处理初始化,跳块处理，检查数据和区块高度
-		$cur=$this->autoConfig();		//autoConfig里会进行跳块处理
+		//1.auto config, will create blank blocks.
+		$cur=$this->autoConfig();		
 		
-		//2.加载对应的模块进行处理
+		//2.load target pallet
 		$a=$this->loadClass($cls);
 		if(empty($a)) return $this->error('Failed to load class');
 
+		//3.return the result
 		return $a->task($act,$this->getParam(),$core,$cur,$cfg);
 	}
 
@@ -183,6 +187,25 @@ class Simulator extends CORE{
 		$result['server']=$cfg['nodes'][$index];		
 		return $result;
 	}
+
+	/* get all params to be an array	
+	* @param null
+	*
+	* return 
+	* array			//key-value array of all parameters
+	*/
+	private function getParam(){
+		$result=array();
+		foreach($_GET as $k=>$v){
+			if($k=='mod' || $k=='act' || $k=='callback') continue;
+			$result[$k]=$v;
+		}
+		return $result;
+	}
+
+
+
+	
 
 	private function autoFillData(){
 		$cfg=$this->setting;
@@ -222,22 +245,6 @@ class Simulator extends CORE{
 		}
 		return $result;
 	}
-
-	// private function calcDelta(){
-	// 	$cfg=$this->setting;
-
-	// 	//1.check if it is the start of a simchain.
-	// 	$key_start=$cfg['keys']['start'];
-	// 	$start=$this->getKey($key_start);
-
-	// 	if(!$start){
-	// 		$start=time();
-	// 		$this->setKey($key_start,$start);
-	// 	}
-
-	// 	$curBlock=ceil((time()-$start)/$cfg['speed']);
-	// 	$curBlock=$curBlock==0?1:$curBlock;
-	// }
 
 	/*******************************************************/
 	/***************account functions***********************/
@@ -907,5 +914,34 @@ class Simulator extends CORE{
 			return hash('sha256', hash('sha256', json_encode($data), true), true);
 		}
 		return hash('sha256', hash('sha256',$data,true),true);
+	}
+
+	/*curl方式跨域post数据的方法
+	 * @param	$url	string		//请求的url地址
+	 * @param	$data	array		//post的值，kv形式的
+	 * @param	$toJSON	boolean		//是否强制转换结果为JSON串
+	 * 
+	 * */
+	private function curlPost($url,$data,$toJSON=true){
+		//echo $url;
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+			
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		//避免https 的ssl验证
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
+		curl_setopt($ch, CURLOPT_SSLVERSION, 		false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 	false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
+			
+		$res = curl_exec($ch);
+		if($res === false) $err=curl_error($ch);
+		curl_close($ch);
+
+		if(isset($err)) return $err;
+		return $toJSON?json_decode($res,TRUE):$res;
 	}
 }
