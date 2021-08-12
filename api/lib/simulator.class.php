@@ -170,43 +170,53 @@ class Simulator extends CORE{
 		return $a->task($act,$this->getParam(),$core,$cur,$cfg);
 	}
 
-	//自动写块，处理已经收集信息的方法
-	//返回后继方法需要操作的基础配置信息
-	//请求写到块和写入操作，是两次不同的请求上完成的
-	
+	/*	auto config the current operation
+	*	steps:
+	*	1.auto fill the blank blocks 
+	*	2.get the status of current simchain
+	*	3.get the right server
+	*
+	* @param null
+	*
+	* return
+	*	array	//current status of the simchain
+		{
+			'current_block'	:	0,		//current block number of writing, simchain can be pendded, so this value is different from block height
+			'block_height'	:	0,		//actual block height if simchain is not pendded
+			'chain_start'	:	0,		//actual time of simchain started
+			'server'		:	{},		//the server detail which will write current block
+		}
+	*/
 	private function autoConfig(){
 		$cfg=$this->setting;
 		$result=array();
 		
-		$status=$this->autoFillData();
-		$result['current_block']=$status['current'];
+		//1.fill the blank blocks and get the basic informaion of current simchain
+		$status=$this->autoFillData();		//auto add blank blocks.
+		$result['current_block']=$status['current'];		
 		$result['block_height']=$status['height'];
 		$result['chain_start']=$status['start'];
 		
+		//2.get the server which have the right to write block
+		//this is simple select without mining, but guessing the number 
 		$index=$this->getServer($cfg['nodes']);
 		$result['server']=$cfg['nodes'][$index];		
 		return $result;
 	}
 
-	/* get all params to be an array	
-	* @param null
+	/* create the blank blocks (only basecoin)
+	* simPolk is coded by PHP, it is not easy to create the block in time as the actual parachain
+	* when simchain is called, this method will calc the block height and create the blocks which only have basecoin
+	*	
+	*	steps:
+	*	1.calc the block height by start time and simchian block-create speed
+	*	2.if simchain is not pendding, create the blocks
 	*
-	* return 
-	* array			//key-value array of all parameters
+	* 	@param null
+	*	
+	*	return 
+	*	array		//status of simchain
 	*/
-	private function getParam(){
-		$result=array();
-		foreach($_GET as $k=>$v){
-			if($k=='mod' || $k=='act' || $k=='callback') continue;
-			$result[$k]=$v;
-		}
-		return $result;
-	}
-
-
-
-	
-
 	private function autoFillData(){
 		$cfg=$this->setting;
 
@@ -230,7 +240,7 @@ class Simulator extends CORE{
 			'start'		=>	$start,
 		);
 
-		//skip data writing ,when simchain pending.
+		//skip data writing ,when simchain is pending.
 		if($cfg['pending']) return $result;
 
 		//3.create the blank block
@@ -238,10 +248,25 @@ class Simulator extends CORE{
 			$pre=$this->setting['prefix']['chain'];
 			for($i=$height;$i<$curBlock;$i++){
 				$bkey=$pre.$i;
-				$delta=($curBlock-$i-1)*$cfg['speed'];		//自动补块的stamp处理
+				$delta=($curBlock-$i-1)*$cfg['speed'];		//calc the block stamp
 				if(!$this->existsKey($bkey))$this->createBlock($i,$delta,$i!=($curBlock-1));
 			}
 			$this->setKey($key_height,$curBlock-1);
+		}
+		return $result;
+	}
+
+	/* get all params to be an array	
+	* @param null
+	*
+	* return 
+	* array			//key-value array of all parameters
+	*/
+	private function getParam(){
+		$result=array();
+		foreach($_GET as $k=>$v){
+			if($k=='mod' || $k=='act' || $k=='callback') continue;
+			$result[$k]=$v;
 		}
 		return $result;
 	}
@@ -251,6 +276,11 @@ class Simulator extends CORE{
 	/*******************************************************/
 
 	/* check the account is valid, if not exsist, created it.
+	*	@param	$hash		//account hash
+	*	@param	$sign		//private key of account
+	*
+	*	return
+	*	array				//details of account
 	*/
 	private function checkAccount($hash,$sign=''){
 		$keys=$this->setting['keys'];
@@ -270,18 +300,91 @@ class Simulator extends CORE{
 		return json_decode($list[$hash],true);
 	}
 	
-
-	private function saveAccountStatus(&$as){
-		$key=$this->setting['keys']['accounts'];
-		foreach($as as $acc=>$v){
-			$this->setHash($key,$acc,json_encode($v));
-		}
-	}
-
 	/*******************************************************/
 	/***************block data struct***********************/
 	/*******************************************************/
+	
+	/*	create the block data struct and cache to user
+	*	@param	$n		integer 	//block number
+	*	@param	$delta	integer		//delta from now,if simchain is pendding,use this to calc right timestamp
+	*	@param	$skip	boolean		//skip the collected rows
+	*
+	*	return
+	*	boolean		//result of block creation
+	*/
+	private function createBlock($n,$delta,$skip=true){
+		//1.get the node
+		$nodes=$this->setting['nodes'];
+		$index=$this->getServer($nodes);
+		$svc=$nodes[$index];
+		$data=$this->getCoinbaseBlock($n,$delta,$svc);
 
+		//2.merge the collected data to the basic data struct
+		if(!$skip){
+			$this->mergeCollected($data);
+		}
+
+		//3.struct the block's data
+		$this->formatTransaction($data['list_transaction'],$svc);
+		$this->structRow($data,$svc);
+		$this->saveToChain($n,$data);
+		return TRUE;
+	}
+
+	/* get the data of block only have coinbase transaction
+	* 	@param	$n		integer		//block height
+	*	@param	$delta	integer		//delta from now,if simchain is pendding,use this to calc right timestamp
+	*	@param	$svc	array		//details of writing block node
+	*
+	*	return
+	*	array			//data of block , only basecoin
+	*/
+	private function getCoinbaseBlock($n,$delta,$svc){
+		//1.check the account of the node
+		$this->checkAccount($svc['account'],$svc['sign']);		//检查账户，并建立
+		
+		//2.get the data format and fill the right value
+		$data=$this->raw;
+		$utxo=$this->utxo;
+
+		//basecoin UTXO data struct
+		$from=$this->from;
+		$from['amount']=$this->setting['basecoin'];
+		$from['signature']=$svc['sign'];
+		
+		unset($from['hash']);
+		unset($from['account']);
+		$utxo['from'][]=$from;
+
+		$to=$this->to;
+		$to['amount']=$this->setting['basecoin'];	
+		$to['account']=$svc['account'];
+		$to['purpose']='coinbase';
+		$utxo['to'][]=$to;
+
+		$utxo['stamp']=time()-$delta;
+
+		$data['list_transaction'][]=$utxo;
+		$data['height']=$n;
+		$data['signature']=$svc['sign'];
+		$data['creator']=$svc['account'];
+		$data['stamp']=time()-$delta;			
+		$data['nonce']=rand(1,20000);			//random number, no-scene, just simulate
+		$data['diffcult']=rand(1,100);			//random number, no-scene, just simulate
+
+		return $data;
+	}
+
+	/*	calc merkle tree of list
+	*
+	*	encry method is in the core.class.php, currently, like this :
+	*	sha256(sha256(string))	
+	* 
+	*	@param	$list	array		//string array
+	*	
+	*	return
+	*	array		//merkle tree of the list
+	*/
 	private function createTree($list){
 		$mtree=array();
 		foreach($list as $k=>$v){
@@ -291,6 +394,9 @@ class Simulator extends CORE{
 		return $mtree;
 	}
 	
+	/*
+	
+	*/
 	private function getParentHash($n){
 		if($n==0) return '';
 		$key=$this->setting['prefix']['chain'].($n-1);
@@ -305,28 +411,7 @@ class Simulator extends CORE{
 		return true;
 	}
 
-	/*	create the block data struct and cache to user
-	@param	$n		integer 	//block number
-	@param	$skip	boolean		//skip the collected rows
-	*/
-	private function createBlock($n,$delta,$skip=true){
-		$nodes=$this->setting['nodes'];
-		$svc=$nodes[rand(0, count($nodes)-1)];
-		$data=$this->getCoinbaseBlock($n,$delta,$svc);
 
-		
-
-		//merge the collected data to the basic data struct
-		if(!$skip){
-			$this->mergeCollected($data);
-		}
-		$this->formatTransaction($data['list_transaction'],$svc);
-		
-		$this->structRow($data,$svc);
-		//$this->formatTransaction($data);
-		$this->saveToChain($n,$data);
-		return TRUE;
-	}
 
 	private function formatTransaction(&$list,&$svc){
 		foreach($list as $k=>$v){
@@ -360,9 +445,20 @@ class Simulator extends CORE{
 		return true;
 	}
 
+	/*******************************************************/
+	/******************* mining simulate *******************/
+	/*******************************************************/
 
-
-	//获取写块服务器数据
+	/*	get a random server which have the right to write block
+	*	steps:
+	*	1.sent a number to the nodes, record the server guess the right number
+	*	2.random select a node as the block writer
+	*	
+	*	@param	$servers	array		//list of node
+	*	
+	*	return
+	*	array		//details of server
+	*/
 	private function getServer($servers){
 		$count=count($servers);
 		$ball=rand(1, $count);		//random ball
@@ -385,7 +481,13 @@ class Simulator extends CORE{
 		return $ok[rand(0, count($ok)-1)];
 	}
 		
-	//测试服务器的响应
+	/*	sent a number to server
+	*	@param	$url	string	//target node url
+	*	@param	$max	number	//the max number node can guess
+	*	
+	*	return
+	*	array	//result from node
+	* */
 	private function pingServer($url,$max){
 		$data=array(
 			'stamp'	=>	time(),
@@ -394,6 +496,37 @@ class Simulator extends CORE{
 			
 		$res=$this->curlPost($url,$data);
 		return $res;
+	}
+	
+	/* curl to get the node response
+	 * @param	$url	string		//target node url
+	 * @param	$data	array		//key-value data that will post to node
+	 * @param	$toJSON	boolean		//force to json,default true
+	 * 
+	 * return
+	 * array	//json format of node's response
+	 * */
+	private function curlPost($url,$data,$toJSON=true){
+		//echo $url;
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
+			
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		//避免https 的ssl验证
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
+		curl_setopt($ch, CURLOPT_SSLVERSION, 		false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 	false);
+		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
+			
+		$res = curl_exec($ch);
+		if($res === false) $err=curl_error($ch);
+		curl_close($ch);
+
+		if(isset($err)) return $err;
+		return $toJSON?json_decode($res,TRUE):$res;
 	}
 
 	/*******************************************************/
@@ -516,6 +649,13 @@ class Simulator extends CORE{
 		return true;
 	}
 
+	private function saveAccountStatus(&$as){
+		$key=$this->setting['keys']['accounts'];
+		foreach($as as $acc=>$v){
+			$this->setHash($key,$acc,json_encode($v));
+		}
+	}
+
 	private function structAccount($list,&$mtree,&$as){
 		$ekey=$this->setting['keys']['transaction_entry'];
 		//echo json_encode($list).'<hr>';exit();
@@ -604,41 +744,7 @@ class Simulator extends CORE{
 		return $arr;
 	}
 
-	/*simulator mining 
-	*/
-	private function getCoinbaseBlock($n,$delta,$svc){
-		$this->checkAccount($svc['account'],$svc['sign']);		//检查账户，并建立
 
-		$data=$this->raw;
-		$utxo=$this->utxo;
-
-		//basecoin UTXO data struct
-		$from=$this->from;
-		$from['amount']=$this->setting['basecoin'];
-		$from['signature']=$svc['sign'];
-		
-		unset($from['hash']);
-		unset($from['account']);
-		$utxo['from'][]=$from;
-
-		$to=$this->to;
-		$to['amount']=$this->setting['basecoin'];
-		$to['account']=$svc['account'];
-		$to['purpose']='coinbase';
-		$utxo['to'][]=$to;
-
-		$utxo['stamp']=time()-$delta;
-
-		$data['list_transaction'][]=$utxo;
-		$data['height']=$n;
-		$data['signature']=$svc['sign'];
-		$data['creator']=$svc['account'];
-		$data['stamp']=time()-$delta;
-		$data['nonce']=rand(1,20000);
-		$data['diffcult']=rand(1,100);
-
-		return $data;
-	}
 
 	//$list=array('transaction','storage','contact');
 	private function skipUsedUTXO($utxo){
@@ -916,32 +1022,5 @@ class Simulator extends CORE{
 		return hash('sha256', hash('sha256',$data,true),true);
 	}
 
-	/*curl方式跨域post数据的方法
-	 * @param	$url	string		//请求的url地址
-	 * @param	$data	array		//post的值，kv形式的
-	 * @param	$toJSON	boolean		//是否强制转换结果为JSON串
-	 * 
-	 * */
-	private function curlPost($url,$data,$toJSON=true){
-		//echo $url;
-		$ch = curl_init();
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		curl_setopt($ch, CURLOPT_CONNECTTIMEOUT, 30);
-			
-		curl_setopt($ch, CURLOPT_POST, 1);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
-		//避免https 的ssl验证
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
-		curl_setopt($ch, CURLOPT_SSLVERSION, 		false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 	false);
-		curl_setopt($ch, CURLOPT_SSL_VERIFYHOST, 	false);
-			
-		$res = curl_exec($ch);
-		if($res === false) $err=curl_error($ch);
-		curl_close($ch);
 
-		if(isset($err)) return $err;
-		return $toJSON?json_decode($res,TRUE):$res;
-	}
 }
