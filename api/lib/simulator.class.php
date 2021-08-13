@@ -66,11 +66,11 @@ class Simulator extends CORE{
 	/******************config function**********************/
 	/*******************************************************/
 
-	/* get simchain setting
+	/*	get simchain setting
 	*	@param	$cfg	array	//the setting from local file ../config.php
 	*
-	*  return
-	*  array		//setting of current simchain, and save to cache.
+	*	return
+	*	array		//setting of current simchain, and save to cache.
 	*/
 	public function getConfig($cfg){
 		$key=$cfg['keys']['setting'];
@@ -79,11 +79,11 @@ class Simulator extends CORE{
 		return $ncfg;
 	}
 
-	/* set simchain setting 
-	* @param	$cfg	array	//the setting need to set
+	/*	set simchain setting 
+	*	@param	$cfg	array	//the setting need to set
 	*
-	* return 
-	* boolean		//result of saving
+	* 	return 
+	* 	boolean		//result of saving
 	*/
 	public function setConfig($cfg){
 		$key=$cfg['keys']['setting'];
@@ -116,11 +116,11 @@ class Simulator extends CORE{
 	/***************transaction functions*******************/
 	/*******************************************************/
 
-	/*get the basic data struct of transaction
-	* @param null
+	/*	get the basic data struct of transaction
+	* 	@param null
 	*
-	* return 
-	* array			//data struct of transaction
+	* 	return 
+	* 	array			//data struct of transaction
 	*/
 	public function getTransactionFormat(){
 		return array(
@@ -176,9 +176,9 @@ class Simulator extends CORE{
 	*	2.get the status of current simchain
 	*	3.get the right server
 	*
-	* @param null
+	* 	@param null
 	*
-	* return
+	* 	return
 	*	array	//current status of the simchain
 		{
 			'current_block'	:	0,		//current block number of writing, simchain can be pendded, so this value is different from block height
@@ -204,9 +204,9 @@ class Simulator extends CORE{
 		return $result;
 	}
 
-	/* create the blank blocks (only basecoin)
-	* simPolk is coded by PHP, it is not easy to create the block in time as the actual parachain
-	* when simchain is called, this method will calc the block height and create the blocks which only have basecoin
+	/* 	create the blank blocks (only basecoin)
+	* 	simPolk is coded by PHP, it is not easy to create the block in time as the actual parachain
+	* 	when simchain is called, this method will calc the block height and create the blocks which only have basecoin
 	*	
 	*	steps:
 	*	1.calc the block height by start time and simchian block-create speed
@@ -256,11 +256,11 @@ class Simulator extends CORE{
 		return $result;
 	}
 
-	/* get all params to be an array	
-	* @param null
+	/* 	get all params to be an array	
+	* 	@param null
 	*
-	* return 
-	* array			//key-value array of all parameters
+	* 	return 
+	* 	array			//key-value array of all parameters
 	*/
 	private function getParam(){
 		$result=array();
@@ -275,7 +275,7 @@ class Simulator extends CORE{
 	/***************account functions***********************/
 	/*******************************************************/
 
-	/* check the account is valid, if not exsist, created it.
+	/* 	check the account is valid, if not exsist, created it.
 	*	@param	$hash		//account hash
 	*	@param	$sign		//private key of account
 	*
@@ -303,8 +303,37 @@ class Simulator extends CORE{
 	/*******************************************************/
 	/***************block data struct***********************/
 	/*******************************************************/
-	
-	/*	create the block data struct and cache to user
+
+	/*	add collected data write to current height
+	*	steps:
+	*	1.check current block data;
+	*	2.calc delta and append new block
+	*
+	* 	@param null
+	*
+	* 	return 
+	* 	boolean			//success or not
+	*/
+	public function addBlockToChain(){
+		$cfg=$this->setting;
+
+		//1.get current block data
+		$n=$this->getKey($cfg['keys']['height']);
+		$key=$cfg['prefix']['chain'].$n;
+		if(!$this->existsKey($key)){
+			return false;
+		}
+		$res=$this->getKey($key);
+		$data=json_decode($res,true);
+		
+		$delta=time()-$data['stamp'] +$cfg['speed'];
+		$this->createBlock($n+1,$delta,false);
+
+		$this->setKey($cfg['keys']['height'],$n+1);
+		return true;
+	}
+
+	/*	append new block to simchain and update account cache
 	*	@param	$n		integer 	//block number
 	*	@param	$delta	integer		//delta from now,if simchain is pendding,use this to calc right timestamp
 	*	@param	$skip	boolean		//skip the collected rows
@@ -329,6 +358,199 @@ class Simulator extends CORE{
 		$this->structRow($data,$svc);
 		$this->saveToChain($n,$data);
 		return TRUE;
+	}
+
+	/*	struct the block data
+	*	steps:	
+	*	1.calc merkle tree of transaction 
+	*	2.calc merkle tree of storage
+	*	3.calc merkle tree of contract
+	*	4.calc merkle root
+	*	5.update account cache
+	*	
+	*	@param	&$raw	pointer		//pointer to block data
+	*	@param	$svc	array		//details of node which has the right to write block
+	*
+	*	return
+	*	boolean			//success or not
+	*/
+	private function structRow(&$raw,$svc){
+		//1.transfer merkle
+		$mtree=$this->createTree($raw['list_transaction']);
+		$raw['merkle_transaction']=$mtree;
+		$raw['root_transaction']=$mtree[count($mtree)-1];
+
+		//2.storage merkle
+		$slist=empty($raw['list_storage'])?array($this->encry($raw['height'].'_storage')):$raw['list_storage'];
+		$stree=$this->createTree($slist);
+		$raw['merkle_storage']=$stree;
+		$raw['root_storage']=$stree[count($stree)-1];
+
+		//3.contact merkle
+		$clist=empty($raw['list_contact'])?array($this->encry($raw['height'].'_contact')):$raw['list_contact'];
+		$ctree=$this->createTree($clist);
+		$raw['root_contact']=$ctree[count($ctree)-1];
+
+		//4.merkle root
+		$atree=array(
+			$raw['root_transaction'],
+			$raw['root_storage'],
+			$raw['root_contact'],
+		);
+		$this->merkle($atree);
+		$raw['merkle_root']=$atree[count($atree)-1];
+
+		//5.account cache
+		$as=array();
+		$this->structStorage($raw['list_storage'],$stree,$as);		//计算storage，进行UTXO处理
+		$this->structContract($raw['list_contact'],$ctree,$as);
+		$this->structTransaction($raw['list_transaction'],$mtree,$as);
+
+		$raw['parent_hash']=$this->getParentHash($raw['height']);  //5.get the parent hash
+		$this->saveAccountStatus($as);  //6.save accout data
+
+		return true;
+	}
+
+	/*	update transaction cache
+	*	steps:
+	*	1.remove output hash of UTXO
+	*	2.add input hash of UTXO
+	*	3.set UTXO cache
+	*	
+	*	@param	$list		array		//transaction list
+	*	@param	&$mtree		pointer		//pointer to merkle tree of transaction
+	*	@param	&$as		pointer		//pointer to account list needed to update
+	*
+	*	return
+	*	boolean			//success or not
+	*/
+	private function structTransaction($list,&$mtree,&$as){
+		$ekey=$this->setting['keys']['transaction_entry'];
+		foreach($list as $k=>$v){
+			$hash=$mtree[$k];
+			//1.remove account UTXO
+			if($k!=0){
+				foreach($v['from'] as $kk=>$vv){
+					//$input_hash=$vv['hash'];
+					$from_account=$vv['account'];
+
+					//get the account data and remove the input from UTXO;
+					if(!isset($as[$from_account])){
+						$as[$from_account]=$this->checkAccount($from_account);
+					}
+					array_shift($as[$from_account]['utxo']);
+				}
+			}
+			
+			//2.add account UTXO
+			foreach($v['to'] as $vv){
+				$account=$vv['account'];
+				if(!isset($as[$account])){
+					$as[$account]=$this->checkAccount($account);
+				}
+				if(in_array($hash,$as[$account]['utxo'])) continue;		//skip the same hash
+				$as[$account]['utxo'][]=$hash;
+			}
+
+			//3.set UTXO hash 
+			$this->setHash($ekey,$hash,json_encode($v));
+		}
+		return true;
+	}
+
+	/*	update storage cache
+	*	steps:
+	*	1.update account cache
+	*	3.update storage cache
+	*	
+	*	@param	$list		array		//storage list
+	*	@param	&$mtree		pointer		//pointer to merkle tree of storage
+	*	@param	&$as		pointer		//pointer to account list needed to update
+	*
+	*	return
+	*	boolean			//success or not
+	*/
+	private function structStorage($list,&$mtree,&$as){
+		$ekey=$this->setting['keys']['storage_entry'];
+		foreach($list as $k=>$v){
+			$hash=$mtree[$k];
+			$account=$v['owner'];
+			if(!isset($as[$account])){
+				$as[$account]=$this->checkAccount($account);
+			}
+			$as[$account]['storage'][]=$hash;
+			$this->setHash($ekey,$hash,json_encode($v));
+		}
+		return true;
+	}
+
+	/*	update contract cache
+	*	steps:
+	*	1.update account cache
+	*	3.update contract cache
+	*	
+	*	@param	$list		array		//contract list
+	*	@param	&$mtree		pointer		//pointer to merkle tree of contract
+	*	@param	&$as		pointer		//pointer to account list needed to update
+	*
+	*	return
+	*	boolean			//success or not
+	*/
+	private function structContract($list,&$mtree,&$as){
+
+	}
+
+	/* 	merge the collected rows to the block data, clean collected pool
+	*	steps:
+	*	1.merge collected transaction list  to block data;
+	*	2.merge collected storage list to block data;
+	*	3.merge collected contract list to block data;
+	*	4.clean collected pool
+	*
+	*	@param	&$data	pointer		//pointer to block data prepairing for new block
+	*	
+	*	return
+	*	boolean			//success or not
+	*/
+	private function mergeCollected(&$data){
+		$cds=$this->getAllCollected();
+
+		//1.merge transaction list
+		$list=$cds['transaction']['data'];
+		if(!empty($list)){
+			foreach($list as $v) $data['list_transaction'][]=$v;
+		}
+
+		//2.merge storage list
+		$list=$cds['storage']['data'];
+		if(!empty($list)){
+			foreach($list as $v)$data['list_storage'][]=$v;
+		}
+
+		//3.merge contract list
+		$list=$cds['contact']['data'];
+		if(!empty($list)){
+			foreach($list as $v)$data['list_contact'][]=$v;
+		}
+
+		//4.clean the collected data;
+		$this->cleanCollectedData();
+		return true;
+	}
+
+	/*	cache account status
+	*	@param	&$as	pointer			//pointer to changed account list
+	*	
+	*	return
+	*	boolean			//success or not
+	*/
+	private function saveAccountStatus(&$as){
+		$key=$this->setting['keys']['accounts'];
+		foreach($as as $acc=>$v){
+			$this->setHash($key,$acc,json_encode($v));
+		}
+		return true;
 	}
 
 	/* get the data of block only have coinbase transaction
@@ -394,8 +616,11 @@ class Simulator extends CORE{
 		return $mtree;
 	}
 	
-	/*
-	
+	/* get parent block hash
+	*	@param	$n	integer		//block number of simchain
+	*	
+	*	return
+	*	string				//root hash of block
 	*/
 	private function getParentHash($n){
 		if($n==0) return '';
@@ -405,13 +630,26 @@ class Simulator extends CORE{
 		return $res['merkle_root'];
 	}
 
+	/*	add a new block to simchain
+	*	@param	$n		integer		//block number to write
+	*	@param	$data	array		//simchain data, format can be regrouped here.
+	*
+	*	return	
+	*	boolean				//success or not
+	*/
 	private function saveToChain($n,$data){
 		$key=$this->setting['prefix']['chain'].$n;
 		$this->setKey($key,json_encode($data));
 		return true;
 	}
 
-
+	/*	add target node to utxo
+	*	@param	&$list	pointer			//pointer to the transaction list
+	*	@param	&$svc	pointer			//pointer to the node details
+	*
+	*	return
+	*	boolean			//success or not 
+	*/
 
 	private function formatTransaction(&$list,&$svc){
 		foreach($list as $k=>$v){
@@ -420,30 +658,11 @@ class Simulator extends CORE{
 				if(!empty($vv['account'])) continue;
 				$list[$k]['to'][$kk]['account']=$svc['account'];
 			}
-			
 		}
-	}
-
-	/* add collected data write to current block
-	*/
-	public function freshCurrentBlock(){
-		$cfg=$this->setting;
-
-		//1.get current block data
-		$n=$this->getKey($cfg['keys']['height']);
-		$key=$cfg['prefix']['chain'].$n;
-		if(!$this->existsKey($key)){
-			return false;
-		}
-		$res=$this->getKey($key);
-		$data=json_decode($res,true);
-		//$UTXO['stamp']=time()-$delta;
-		$delta=time()-$data['stamp'] +$cfg['speed'];
-		$this->createBlock($n+1,$delta,false);
-
-		$this->setKey($cfg['keys']['height'],$n+1);
 		return true;
 	}
+
+
 
 	/*******************************************************/
 	/******************* mining simulate *******************/
@@ -528,225 +747,223 @@ class Simulator extends CORE{
 		if(isset($err)) return $err;
 		return $toJSON?json_decode($res,TRUE):$res;
 	}
-
-	/*******************************************************/
-	/***************collected data functions****************/
-	/*******************************************************/
-
-	private function cleanCollectedData(){
-		$cfg=$this->setting;
-		$this->delKey($cfg['keys']['transaction_collected']);
-		$this->delKey($cfg['keys']['storage_collected']);
-		$this->delKey($cfg['keys']['contact_collected']);
-		return true;
-	}
-
-	private function getAllCollected(){
-		$cfg=$this->setting;
-		return array(
-			'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),
-			'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),
-			'contact'		=>	$this->getCollected($cfg['keys']['contact_collected']),	
-		);
-	}
-
-	private function getCollected($key){
-		$list=$this->getList($key);
-		$cs=array();
-		//$mtree=array();
-		if(!empty($list)){
-			foreach($list as $v){
-				$cs[]=json_decode($v,TRUE);
-				//$mtree[]=$this->encry($v);
-			}
-		}
-		
-		// if(!empty($mtree)){
-		// 	$this->merkle($mtree);
-		// }
-		return array(
-			'data'		=>	$cs,
-			//'merkle'	=>	$mtree,
-		);
-	}
-	/* merget the collected rows to the block
 	
-	*/
-	private function mergeCollected(&$data){
-		$cds=$this->getAllCollected();
-
-		//1.merge all data
-
-		//merge the transaction data
-		$list=$cds['transaction']['data'];
-		if(!empty($list)){
-			foreach($list as $k=>$v){
-				$data['list_transaction'][]=$v;
-			}
-		}
-
-		//merge the storage data
-		$list=$cds['storage']['data'];
-		if(!empty($list)){
-			foreach($list as $k=>$v){
-				$data['list_storage'][]=$v;
-			}
-		}
-
-		//merge the contact data
-		$list=$cds['contact']['data'];
-		if(!empty($list)){
-			foreach($list as $k=>$v){
-				$data['list_contact'][]=$v;
-			}
-		}
-
-		//2.clean the collected data;
-		$this->cleanCollectedData();
-		return true;
-	}
-
-	/* calc the block params method
-
-	*/
-	private function structRow(&$raw,$svc){
-		//echo json_encode($raw).'<hr>';
-		//2.merkle calculation	
-		//2.1.transfer merkle
-		$mtree=$this->createTree($raw['list_transaction']);
-		$raw['merkle_transaction']=$mtree;
-		$raw['root_transaction']=$mtree[count($mtree)-1];
-
-		//2.2.storage merkle
-		$slist=empty($raw['list_storage'])?array($this->encry($raw['height'].'_storage')):$raw['list_storage'];
-		$stree=$this->createTree($slist);
-		$raw['merkle_storage']=$stree;
-		$raw['root_storage']=$stree[count($stree)-1];
-
-		//2.3.contact merkle
-		$clist=empty($raw['list_contact'])?array($this->encry($raw['height'].'_contact')):$raw['list_contact'];
-		$ctree=$this->createTree($clist);
-		$raw['root_contact']=$ctree[count($ctree)-1];
-
-		//2.4.merkle root
-		$atree=array(
-			$raw['root_transaction'],
-			$raw['root_storage'],
-			$raw['root_contact'],
-		);
-		$this->merkle($atree);
-		$raw['merkle_root']=$atree[count($atree)-1];
-
-		//3.account cache
-		$as=array();
-		$this->structStorage($raw['list_storage'],$stree,$as);		//计算storage，进行UTXO处理
-		$this->structContact($raw['list_contact'],$ctree,$as);
-		$this->structAccount($raw['list_transaction'],$mtree,$as);
-
-		$raw['parent_hash']=$this->getParentHash($raw['height']);  //5.get the parent hash
-		$this->saveAccountStatus($as);  //6.save accout data
-
-		return true;
-	}
-
-	private function saveAccountStatus(&$as){
-		$key=$this->setting['keys']['accounts'];
-		foreach($as as $acc=>$v){
-			$this->setHash($key,$acc,json_encode($v));
-		}
-	}
-
-	private function structAccount($list,&$mtree,&$as){
-		$ekey=$this->setting['keys']['transaction_entry'];
-		//echo json_encode($list).'<hr>';exit();
-		//echo json_encode($mtree).'<hr>';exit();
-
-		foreach($list as $k=>$v){
-			$hash=$mtree[$k];
-			//1.remove account UTXO
-			if($k!=0){
-				foreach($v['from'] as $kk=>$vv){
-					$input_hash=$vv['hash'];
-					$from_account=$vv['account'];
-
-					//get the account data and remove the input from UTXO;
-					if(!isset($as[$from_account])){
-						$as[$from_account]=$this->checkAccount($from_account);
-					}
-					array_shift($as[$from_account]['utxo']);
-				}
-			}
-			
-			//2.add account UTXO
-			foreach($v['to'] as $vv){
-				$account=$vv['account'];
-				if(!isset($as[$account])){
-					$as[$account]=$this->checkAccount($account);
-				}
-				if(in_array($hash,$as[$account]['utxo'])) continue;		//skip the same hash
-				$as[$account]['utxo'][]=$hash;
-			}
-
-			//3.set UTXO hash 
-			$this->setHash($ekey,$hash,json_encode($v));
-		}
-
-		//exit();
-	}
-
-	private function structStorage($list,&$mtree,&$as){
-		$ekey=$this->setting['keys']['storage_entry'];
-		foreach($list as $k=>$v){
-			$hash=$mtree[$k];
-			$account=$v['owner'];
-			if(!isset($as[$account])){
-				$as[$account]=$this->checkAccount($account);
-			}
-			$as[$account]['storage'][]=$hash;
-			$this->setHash($ekey,$hash,json_encode($v));
-		}
-	}
-
-	private function structContact($list,&$mtree,&$as){
-
-	}
-
-	
-
 	/*******************************************************/
 	/***************UTXO cale functions*********************/
 	/*******************************************************/
-	private function createUTXOFromStorage($list,$miner){
-		$arr=array();
-		$amount=$this->setting['cost']['storage'];
-		foreach($list as $k=>$v){
-			$owner=$v['owner'];
-			$utxo=$this->checkUTXO($owner,$amount);
 
-			$final=$this->calcUTXO($utxo['out'],$owner,$miner,$amount);
-			$final['purpose']='storage';
-			$arr[]=$final;
+	/*	check UTXO by account and amount
+	*	steps:
+	*	1.check collected transaction
+	*	2.skip inavalid input of UTXO
+	*	3.calc the output from avalid input of UTXO
+	*	
+	*	@param		$account		string		//account hash
+	*	@param		$amount			integer		//transaction amount
+	*	@param		$type			string		//transaction type	['transaction','storage','contract']
+	*
+	*	return
+	*	boolean | array		//failed or details of UTXO
+	*/
+	public function checkUTXO($account,$amount,$type='transaction'){
+		//check account 
+		$atmp=$this->getHash($this->setting['keys']['accounts'],array($account));
+		if(empty($atmp)) return false;
+		$user_from=json_decode($atmp[$account],true);
+
+		//1.check collected transaction
+		$rows=$this->calcAccountCollected($account,$amount,$type);
+		if($rows!=false){
+			$rows['avalid']=true;
+			return $rows;
 		}
-		return $arr;
+
+		//2.skip inavalid input of UTXO
+		$utxo=$this->skipUsedUTXO($user_from['utxo']);
+		if(empty($utxo)){
+			return array(
+				'avalid'	=>	false,
+				'amount'	=>	'-1',
+			);
+		}
+
+		//3.calc the output from avalid input of UTXO
+		$out=array();
+		$left=array();
+		$count=0;
+		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$utxo);
+		
+		foreach($arr as $hash=>$v){
+			$row=json_decode($v,true);
+			if($count>=$amount){
+				$left[]=array('hash'=>$hash,'data'=>$row);
+			}else{
+				foreach($row['to'] as $kk=>$vv){
+					if($vv['account']!=$account) continue;
+					$count+=$vv['amount'];
+				} 
+				$out[]=array('hash'=>$hash,'data'=>$row);
+			}
+		}
+		return array(
+			'avalid'	=>	$count>=$amount?true:false,
+			'way'		=>	'more',
+			'out'		=>	$out,				//valid input of UTXO
+			'left'		=>	$left,
+			'user'		=>	$user_from,
+			'amount'	=>	$count,
+		);
 	}
 
-	private function createUTXOFromContact($list,$miner){
-		$arr=array();
-		$amount=$this->setting['cost']['contact'];
-		foreach($list as $k=>$v){
-			$owner=$v['owner'];
-			$utxo=$this->checkUTXO($owner,$amount);
+	/*	calc UTXO output by account
+	*
+	*	@param	$out			array		//list of valid UTXO output, calced in  checkUTXO
+	*	@param	$account_from	string		//account hash
+	*	@param	$account_to		string		//account hash
+	*	@param	$amount			integer		//amount of output
+	*	@param	$purpose		string		//type of output
+	*
+	*	return
+	*	array		//new output row
+	*/
+	public function newUTXO($out,$account_from,$account_to,$amount,$purpose='transaction'){
+		$format=$this->getTransactionFormat();
+		$row=$format['row'];
+		$fmt_from=$format['from'];
+		$fmt_to=$format['to'];
 
-			$final=$this->calcUTXO($utxo['out'],$owner,$miner,$amount);
-			$final['purpose']='contact';
-			$arr[]=$final;
+		//1.calc the amount of input
+		$sum=0;
+		foreach($out as $k=>$v){
+			$fmt_from['hash']=$v['hash'];
+			$fmt_from['type']='normal';
+			$fmt_from['account']=$account_from;
+
+			foreach($v['data']['to'] as $vv){
+				if($vv['account']!=$account_from) continue;
+
+				$fmt_from['amount']=$vv['amount'];
+				$sum+=(int)$vv['amount'];
+			}
+			$row['from'][]=$fmt_from;	
 		}
-		return $arr;
+
+		//2.calc the amount of output
+		$fmt_to['amount']=$amount;
+		$fmt_to['account']=$account_to;
+		$fmt_to['purpose']=$purpose;
+		$row['to'][]=$fmt_to;
+
+		if($sum!==$amount){
+			$fmt_to['amount']=$sum-$amount;
+			$fmt_to['account']=$account_from;
+			$fmt_to['purpose']='transaction';
+			$row['to'][]=$fmt_to;
+		}
+		
+		return $row;
+	}
+
+	/*	calc valid input amount of account
+	*	@param	$utxo		array		//list of UTXO input hash
+	*	@param	$account	string		//account hash
+	*
+	*	return
+	*	integer			//amount of coin
+	*/
+	public function calcAccountUTXO($utxo,$account){
+		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$utxo);
+		$count=0;
+		foreach($arr as $k =>$v){
+			$row=json_decode($v,true);
+			if(empty($row)) continue;
+			foreach($row['to'] as $kk=>$vv){
+				if($vv['account']!=$account) continue;
+				$count+=$vv['amount'];
+			}
+		}
+		return $count;
 	}
 
 
 
-	//$list=array('transaction','storage','contact');
+	/*	calc collected transaction to find usable UTXO
+	*
+	*	@param		$account		string		//account hash
+	*	@param		$amount			integer		//transaction amount
+	*	@param		$type			string		//transaction type	['transaction','storage','contract']
+	*
+	*	return
+	*	boolean | array		//failed or details of usable collected UTXO
+	*/
+	public function calcAccountCollected($account,$amount,$type='transaction'){
+		$raw=$this->getAllCollected();
+		if(!empty($raw['transaction']['data'])){
+			foreach($raw['transaction']['data'] as $k=>$v){
+				foreach($v['to'] as $index=>$vv){
+					if($account!=$vv['account'] || $vv['amount']<$amount) continue;
+					return array(
+						'way'	=>	'collected',		//add action to collected
+						'type'	=>	$type,	
+						'row'	=>	$k,
+						'index'	=>	$index,
+					);
+				}
+			}
+		}
+		return false;
+	}
+
+	/*	embed output to collected transaction	, related with calcAccountCollected
+	*	
+	*	@param	$row			integer		//index of collected row
+	*	@param	$index			integer		//index of output
+	*	@param	$account_from	string		//account hash
+	*	@param	$account_to		string		//account hash
+	*	@param	$amount			integer		//amount of output
+	*	@param	$purpose		string		//type of output
+	*
+	*	return
+	*	array		//new output row
+	*/
+	public function embedUTXO($row,$index,$account_from,$account_to,$amount,$purpose){
+		$keys=$this->setting['keys'];
+		$cs=$this->getCollected($keys['transaction_collected']);
+		if(!isset($cs['data']) || !isset($cs['data'][$row]) || !isset($cs['data'][$row]['to'][$index])) return false;
+		if($cs['data'][$row]['to'][$index]['account']!=$account_from) return false;
+
+		//echo json_encode($cs['data'][$row]).'<hr>';
+
+		//1.calc new output
+		$from=$cs['data'][$row]['to'][$index];
+		$from['amount']-=$amount;
+
+		$to=$this->to;
+		$to['account']=$account_to;
+		$to['amount']=$amount;
+		$to['purpose']=$purpose;
+
+		//2.create new collected transaction
+		$ts=array();
+		foreach($cs['data'][$row]['to'] as $k=>$v){
+			if($k==$index) continue;
+			$ts[]=$v;
+		}
+		$ts[]=$from;
+		$ts[]=$to;
+		$cs['data'][$row]['to']=$ts;
+
+
+		return $cs['data'][$row];
+	}
+
+	/*	filter the UTXO from collected
+	*
+	*	@param	$utxo	array		//list of UTXO intput 
+	*
+	*	return
+	*	array		//list of valid UTXO input
+	*/
 	private function skipUsedUTXO($utxo){
 		$arr=array();
 		$rows=array();		//input that will be used
@@ -754,10 +971,6 @@ class Simulator extends CORE{
 
 		//1.先去除trasnaction里的hash
 		$this->getUsedInput($cols['transaction']['data'],'transaction',$rows);
-		//2.在剩余的UTXO里计算contact和storage需要的量，先计算storage
-		// foreach($list as $type){
-		// 	$this->getUsedInput($cols['transaction']['data'],$type,$rows);
-		// }
 		
 		foreach($utxo as $v){
 			if(in_array($v,$rows)) continue;
@@ -767,6 +980,14 @@ class Simulator extends CORE{
 		return $arr;
 	}
 
+	/*	get the list of collected UTXO input
+	*	@param	&$list	pointer		//pointer to collected transaction
+	*	@param	$type	string		//UTXO type
+	*	@param	&$row	pointer		//pointer to invalid input list
+	*	
+	*	return
+	*	boolean			//success or not
+	*/
 	private function getUsedInput(&$list,$type,&$rows){
 		switch ($type) {
 			case 'transaction':
@@ -794,193 +1015,44 @@ class Simulator extends CORE{
 		return true;
 	}
 
-	public function checkUTXO($account,$amount,$type='transaction'){
-		$atmp=$this->getHash($this->setting['keys']['accounts'],array($account));
-		if(empty($atmp)) return false;
-		$user_from=json_decode($atmp[$account],true);
-		
-		//echo json_encode($user_from).'<hr>';
 
-		//1.计算所有已经收集的交易中是否有可用的交易
-		$rows=$this->calcAccountCollected($account,$amount,$type);
-		if($rows!=false){
-			//1.1.处理
-			//echo json_encode($rows);
-			$rows['avalid']=true;
-			return $rows;
-		}
-		//2.去除不可用的utxo，判断输出
 
-		//echo json_encode($user_from['utxo']).'<hr>';
-		$utxo=$this->skipUsedUTXO($user_from['utxo']);
+	/*******************************************************/
+	/***************collected data functions****************/
+	/*******************************************************/
 
-		//echo json_encode($UTXO).'<hr>';exit();
-		if(empty($utxo)){
-			return array(
-				'avalid'	=>	false,
-				'amount'	=>	'-1',
-			);
-		}
+	private function cleanCollectedData(){
+		$cfg=$this->setting;
+		$this->delKey($cfg['keys']['transaction_collected']);
+		$this->delKey($cfg['keys']['storage_collected']);
+		$this->delKey($cfg['keys']['contact_collected']);
+		return true;
+	}
 
-		$out=array();
-		$left=array();
-		$count=0;
-		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$utxo);
-		
-		foreach($arr as $hash=>$v){
-			$row=json_decode($v,true);
-			if($count>=$amount){
-				$left[]=array('hash'=>$hash,'data'=>$row);
-			}else{
-				foreach($row['to'] as $kk=>$vv){
-					if($vv['account']!=$account) continue;
-					$count+=$vv['amount'];
-				} 
-				$out[]=array('hash'=>$hash,'data'=>$row);
-			}
-		}
+	private function getAllCollected(){
+		$cfg=$this->setting;
 		return array(
-			'avalid'	=>	$count>=$amount?true:false,
-			'way'		=>	'more',
-			'out'		=>	$out,
-			'left'		=>	$left,
-			'user'		=>	$user_from,
-			'amount'	=>	$count,
+			'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),
+			'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),
+			'contact'		=>	$this->getCollected($cfg['keys']['contact_collected']),	
 		);
 	}
 
-	/*	calc user whole collected
-	*
-	*/
-	public function calcAccountCollected($account,$amount,$type='transaction'){
-		$raw=$this->getAllCollected();
-		if(!empty($raw['transaction']['data'])){
-			foreach($raw['transaction']['data'] as $k=>$v){
-				//echo json_encode($v).'<hr>';
-				foreach($v['to'] as $index=>$vv){
-					if($account!=$vv['account'] || $vv['amount']<$amount) continue;
-					return array(
-						'way'	=>	'collected',			//add action to collected
-						'type'	=>	$type,			//
-						'row'	=>	$k,
-						'index'	=>	$index,
-					);
-					//echo json_encode($vv);
-					//对于非交易类型，进行再次判断，看看是不是已经被用掉
-					// switch ($type) {
-					// 	case 'transaction':
-							
-					// 		break;
+	private function getCollected($key){
+		$list=$this->getList($key);
+		$cs=array();
 
-					// 	case 'storage':
-					// 			# code...
-					// 		break;
-
-					// 	case 'contact':
-					// 			# code...
-					// 		break;
-
-					// 	default:
-					// 		# code...
-					// 		break;
-					// }
-					
-				}
+		if(!empty($list)){
+			foreach($list as $v){
+				$cs[]=json_decode($v,TRUE);
 			}
-		}
-		return false;
-	}
-
-	/*	calc user whole coins
-	*
-	*/
-	public function calcAccountUTXO($utxo,$account){
-		$arr=$this->getHash($this->setting['keys']['transaction_entry'],$utxo);
-		$count=0;
-		foreach($arr as $k =>$v){
-			$row=json_decode($v,true);
-			if(empty($row)) continue;
-			foreach($row['to'] as $kk=>$vv){
-				if($vv['account']!=$account) continue;
-				$count+=$vv['amount'];
-			}
-		}
-		return $count;
-	}
-
-	public function embedUTXO($row,$index,$account_from,$account_to,$amount,$type){
-		$keys=$this->setting['keys'];
-		$cs=$this->getCollected($keys['transaction_collected']);
-		if(!isset($cs['data']) || !isset($cs['data'][$row]) || !isset($cs['data'][$row]['to'][$index])) return false;
-		if($cs['data'][$row]['to'][$index]['account']!=$account_from) return false;
-
-		//echo json_encode($cs['data'][$row]).'<hr>';
-
-		//1.calc new output
-		$from=$cs['data'][$row]['to'][$index];
-		$from['amount']-=$amount;
-
-		$to=$this->to;
-		$to['account']=$account_to;
-		$to['amount']=$amount;
-		$to['purpose']=$type;
-
-		//2.create new collected transaction
-		$ts=array();
-		foreach($cs['data'][$row]['to'] as $k=>$v){
-			if($k==$index) continue;
-			$ts[]=$v;
-		}
-		$ts[]=$from;
-		$ts[]=$to;
-		$cs['data'][$row]['to']=$ts;
-
-
-		return $cs['data'][$row];
-		//3.save new collected data
-		//$key=$keys['transaction_collected'];
-		//$this->db->pushList($key,json_encode($final));
-	}
-
-	public function calcUTXO($out,$from,$to,$amount,$purpose='transaction'){
-		$format=$this->getTransactionFormat();
-		$row=$format['row'];
-		$fmt_from=$format['from'];
-		$fmt_to=$format['to'];
-
-		//1.calc the amount of input
-		$sum=0;
-		foreach($out as $k=>$v){
-			//echo 'UTXO['.$k.'] :'.json_encode($v).'<hr>';
-
-			$fmt_from['hash']=$v['hash'];
-			$fmt_from['type']='normal';
-			$fmt_from['account']=$from;
-
-			foreach($v['data']['to'] as $vv){
-				if($vv['account']!=$from) continue;
-
-				$fmt_from['amount']=$vv['amount'];
-				$sum+=(int)$vv['amount'];
-			}
-			$row['from'][]=$fmt_from;	
-		}
-
-		//2.calc the amount of output
-		$fmt_to['amount']=$amount;
-		$fmt_to['account']=$to;
-		$fmt_to['purpose']=$purpose;
-		$row['to'][]=$fmt_to;
-
-		if($sum!==$amount){
-			$fmt_to['amount']=$sum-$amount;
-			$fmt_to['account']=$from;
-			$fmt_to['purpose']='transaction';
-			$row['to'][]=$fmt_to;
 		}
 		
-		return $row;
+		return array(
+			'data'		=>	$cs,
+		);
 	}
+
 	/*******************************************************/
 	/***************ajax export functions*******************/
 	/*******************************************************/
@@ -1012,15 +1084,4 @@ class Simulator extends CORE{
 		);
 		$this->export($rst);
 	}
-	/*******************************************************/
-	/***************other functions*************************/
-	/*******************************************************/
-	private function getEncryHash($data){
-		if(is_array($data)){
-			return hash('sha256', hash('sha256', json_encode($data), true), true);
-		}
-		return hash('sha256', hash('sha256',$data,true),true);
-	}
-
-
 }

@@ -99,7 +99,7 @@ class Chain{
 
 			case 'more':
 				//2.setup the UTXO data struct
-				$final=$this->db->calcUTXO($utxo['out'],$acc_from,$acc_to,$amount);
+				$final=$this->db->newUTXO($utxo['out'],$acc_from,$acc_to,$amount);
 				$final['stamp']=time();
 
 				//2.1.add to collected transaction;
@@ -145,7 +145,7 @@ class Chain{
 	}
 
 	private function writeToChain($param){
-		$height=$this->db->freshCurrentBlock();
+		$height=$this->db->addBlockToChain();
 		return array(
 			'block'	=>	$height,
 			'success'	=>	TRUE,

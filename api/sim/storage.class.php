@@ -76,7 +76,7 @@ class Storage{
 
 				break;
 			case 'more':
-				$final=$this->db->calcUTXO($utxo['out'],$account,$acc_to,$amount,'storage');
+				$final=$this->db->newUTXO($utxo['out'],$account,$acc_to,$amount,'storage');
 				$final['stamp']=time();
 				$this->db->pushList($key,json_encode($final));
 
