@@ -1019,6 +1019,56 @@ class Simulator extends CORE{
 	/***************collected pool functions****************/
 	/*******************************************************/
 
+	public function addToCollected($data,$type='transaction'){
+		$cfg=$this->setting;
+		$key='';
+		switch ($type) {
+			case 'transaction':
+				$key=$cfg['keys']['transaction_collected'];
+				break;
+
+			case 'storage':
+				$key=$cfg['keys']['storage_collected'];
+				break;
+
+			case 'contract':
+				$key=$cfg['keys']['contract_collected'];
+				break;
+
+			default:
+				# code...
+				break;
+		}
+		if(empty($key)) return false;
+
+		return $this->pushList($key,json_encode($data));
+	}
+
+	public function updateCollected($index,$data,$type='transaction'){
+		$cfg=$this->setting;
+		$key='';
+		switch ($type) {
+			case 'transaction':
+				$key=$cfg['keys']['transaction_collected'];
+				break;
+
+			case 'storage':
+				$key=$cfg['keys']['storage_collected'];
+				break;
+
+			case 'contract':
+				$key=$cfg['keys']['contract_collected'];
+				break;
+
+			default:
+				# code...
+				break;
+		}
+		if(empty($key)) return false;
+		
+		return $this->setList($key,$index,json_encode($data));
+	}
+
 	/*	clean collected pool
 	*
 	*	@param	null
@@ -1030,7 +1080,7 @@ class Simulator extends CORE{
 		$cfg=$this->setting;
 		$this->delKey($cfg['keys']['transaction_collected']);
 		$this->delKey($cfg['keys']['storage_collected']);
-		$this->delKey($cfg['keys']['contact_collected']);
+		$this->delKey($cfg['keys']['contract_collected']);
 		return true;
 	}
 
@@ -1046,7 +1096,7 @@ class Simulator extends CORE{
 		return array(
 			'transaction'	=>	$this->getCollected($cfg['keys']['transaction_collected']),
 			'storage'		=>	$this->getCollected($cfg['keys']['storage_collected']),
-			'contact'		=>	$this->getCollected($cfg['keys']['contact_collected']),	
+			'contact'		=>	$this->getCollected($cfg['keys']['contract_collected']),	
 		);
 	}
 

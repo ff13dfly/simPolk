@@ -126,7 +126,7 @@ class Chain{
 			'speed'			=>	$this->env['speed'],
 			'transaction'	=>	$this->getCollected($keys['transaction_collected']),		//collected transfer
 			'storage'		=>	$this->getCollected($keys['storage_collected']),			//collected storage
-			'contact'		=>	$this->getCollected($keys['contact_collected']),			//collected storage
+			'contact'		=>	$this->getCollected($keys['contract_collected']),			//collected storage
 			'current'		=>	$this->cur,
 		);
 	}

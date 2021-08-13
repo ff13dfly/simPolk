@@ -73,14 +73,12 @@ class Storage{
 			case 'collected':
 				$final=$this->db->embedUTXO($utxo['row'],$utxo['index'],$account,$acc_to,$amount,'storage');
 				$this->db->setList($key,$utxo['row'],json_encode($final));
-
+				
 				break;
 			case 'more':
 				$final=$this->db->newUTXO($utxo['out'],$account,$acc_to,$amount,'storage');
 				$final['stamp']=time();
 				$this->db->pushList($key,json_encode($final));
-
-				//2.1.add to collected transaction;
 				
 				break;
 			default:

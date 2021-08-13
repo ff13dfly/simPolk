@@ -14,7 +14,7 @@
 			'transfer'	=>	array(1,20),	//transfer cost range
 			'storage'	=>	100,			//storage set cost
 			'global'	=>	1000,			//global storage entry
-			'contact'	=>	10,				//contact run cost
+			'contract'	=>	10,				//contact run cost
 		),
 
 		//sim-chain db setting
@@ -41,7 +41,7 @@
 
 			'transaction_collected'	=>	'sim_collected',	//what is collected now.
 			'storage_collected'		=>	'sim_storage',		//storage map entry key
-			'contact_collected'		=>	'sim_contact',		//contact map entry key
+			'contract_collected'	=>	'sim_contract',		//contact map entry key
 			'transaction_entry'		=>	'en_chain',			//transaction map entry name (for redis hash)
 			'storage_entry'			=>	'en_storage',		//storage map entry name (for redis hash)
 			'global_entry'			=>	'en_global',		//global storage can access by key
