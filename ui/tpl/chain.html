@@ -274,8 +274,7 @@
         simPolk.request('chain', 'view', {
             n: num
         }, function(res) {
-            if (!res.success) return false;
-            if (!res.data) return $('#block_info').html('No block data.');
+            if (!res.success || !res.data) return $('#block_info').html('No block data.');
             self.jsonBlock(res.data, '#block_info');
             $('#opt_menu').show();
         });
@@ -289,8 +288,7 @@
         simPolk.request('chain', 'view', {
             n: num - 1
         }, function(res) {
-            if (!res.success) return false;
-            if (!res.data) return $('#block_info').html('No block data.');
+            if (!res.success || !res.data) return $('#block_info').html('No block data.');
             self.jsonBlock(res.data, '#block_info');
         });
     });
@@ -303,8 +301,7 @@
         simPolk.request('chain', 'view', {
             n: num + 1
         }, function(res) {
-            if (!res.success) return false;
-            if (!res.data) return $('#block_info').html('No block data.');
+            if (!res.success || !res.data) return $('#block_info').html('No block data.');
             self.jsonBlock(res.data, '#block_info');
         });
     });

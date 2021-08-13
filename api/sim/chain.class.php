@@ -30,8 +30,11 @@ class Chain{
 				break;
 
 			case 'view':
-				$result=$this->blockView($param);
-				
+				$res=$this->blockView($param);
+				if(!empty($res)){
+					$result['success']=true;
+					$result['data']=$res;
+				}
 				break;
 
 			case 'write':
@@ -138,10 +141,7 @@ class Chain{
 			return false;
 		}
 		$res=$this->db->getKey($key);
-		return array(
-			'success'	=>	TRUE,
-			'data'		=>	json_decode($res,true),
-		);
+		return json_decode($res,true);
 	}
 
 	private function writeToChain($param){

@@ -40,7 +40,7 @@
         clsBool: hash(),
         row: {
             left: 3,
-            right: 9,
+            right: 8,
             note: 0,
         },
         ui: {
@@ -89,6 +89,7 @@
             lock = [];
         },
         init: function(obj, cfg, skip) {
+            console.log(cfg)
             self.clean();
             cache = obj;
             if (!skip) {
@@ -97,6 +98,8 @@
                     data: self.clone(obj),
                 }
                 self.setting(cfg);
+            } else {
+                format = self.clone(cfg.format);
             }
 
             const jID = self.hash();
@@ -746,6 +749,7 @@
             const checked = v ? '"checked"' : '';
             agent.push(function() {
                 if (v == true) {
+                    console.log('count');
                     $("#" + id).off('click').trigger('click');
                 }
 
