@@ -1015,12 +1015,17 @@ class Simulator extends CORE{
 		return true;
 	}
 
-
-
 	/*******************************************************/
-	/***************collected data functions****************/
+	/***************collected pool functions****************/
 	/*******************************************************/
 
+	/*	clean collected pool
+	*
+	*	@param	null
+	*
+	*	return
+	*	boolean		//success or not
+	*/
 	private function cleanCollectedData(){
 		$cfg=$this->setting;
 		$this->delKey($cfg['keys']['transaction_collected']);
@@ -1029,6 +1034,13 @@ class Simulator extends CORE{
 		return true;
 	}
 
+	/*	get all collected data
+	*
+	*	@param	null
+	*
+	*	return
+	*	array		//list of collected pool 
+	*/
 	private function getAllCollected(){
 		$cfg=$this->setting;
 		return array(
@@ -1038,6 +1050,13 @@ class Simulator extends CORE{
 		);
 	}
 
+	/*	get target collected data list
+	*
+	*	@param	$key	string		//target type
+	*
+	*	return
+	*	array		//list of target collected 
+	*/
 	private function getCollected($key){
 		$list=$this->getList($key);
 		$cs=array();
@@ -1057,7 +1076,12 @@ class Simulator extends CORE{
 	/***************ajax export functions*******************/
 	/*******************************************************/
 	
-	/*通用输出方法*/
+	/*	export result to json
+	*	@param	$data	array		//data need to export
+	*
+	*	return
+	*	exit to output
+	*/
 	public function export($data){
 		if(DEBUG){
 			global $debug;
@@ -1077,11 +1101,18 @@ class Simulator extends CORE{
 		}
 	}
 	
+	/*	error result to json
+	*	@param	$msg	string		//error message
+	*
+	*	return
+	*	boolean		//success or not
+	*/
 	public function error($msg){
 		$rst=array(
 			'success'=>false,
 			'message'=>$msg,
 		);
 		$this->export($rst);
+		return true;
 	}
 }
